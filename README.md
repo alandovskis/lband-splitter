@@ -58,6 +58,14 @@ docker compose up --build
 The nginx service serves the UI on port 8080 while proxying WebSocket traffic to the daemon on port 9002. The development webapp runs on port 4200, and the STM32 mock container is available for integration tests.
 It continuously prints simulated port status changes to its logs, making it easy to observe MCU behavior.
 
+## Dev Container
+
+For a fully configured development environment, this repository includes a
+VS Code [Dev Container](https://containers.dev/). Reopen the folder in the
+container via the Dev Containers extension and all required tools—Conan,
+CMake, and Node—will be available so the provided `Makefile` targets work
+out of the box.
+
 ## STM32 microcontroller implementation
 
 An embedded variant places the FFT and monitoring on an STM32 MCU using the CMSIS-DSP library. Example code in `src/stm32/fft_monitor.cpp` computes the center frequency of a sample buffer and sends the result over UART.
