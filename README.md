@@ -4,6 +4,17 @@ This directory contains sample C++ code and an Angular component stub for a 32-p
 
 The C++ demo computes the center frequency of a synthetic signal using an FFT and stores the result in a `PortState` object.
 
+## Prerequisites
+
+The daemon and tests depend on Protobuf and Boost. On Ubuntu these can be
+installed with:
+
+```
+sudo apt-get install protobuf-compiler libprotobuf-dev libboost-all-dev
+```
+
+## Build and run
+
 Build and run using CMake:
 
 ```
