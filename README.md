@@ -6,29 +6,29 @@ The C++ demo computes the center frequency of a synthetic signal using an FFT an
 
 ## Prerequisites
 
-The daemon and tests depend on Protobuf and Boost. On Ubuntu these can be
-installed with:
+The project uses Conan to provide the required third-party packages such as
+Protobuf and Boost.  Install Conan (``pip install conan`` if needed) and let it
+detect your host profile:
 
 ```
-sudo apt-get install protobuf-compiler libprotobuf-dev libboost-all-dev
+conan profile detect --force
 ```
 
 ## Build and run
 
-Build and run using CMake:
+Install dependencies and build using CMake:
 
 ```
-mkdir build
-cd build
-cmake ..
-cmake --build .
-./splitter
+conan install . --output-folder build --build=missing
+cmake -S . -B build -DCMAKE_TOOLCHAIN_FILE=build/conan_toolchain.cmake
+cmake --build build
+./build/splitter
 ```
 
 Run unit tests with CTest:
 
 ```
-ctest
+cd build && ctest
 ```
 
 The Angular component (`web/port-status.component.*`) illustrates how a frontend might interact with the backend.
