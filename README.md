@@ -16,29 +16,37 @@ conan profile detect --force
 
 ## Build and run
 
-Install dependencies and build using CMake:
+Build with the provided `Makefile` to automatically install dependencies and
+configure CMake:
+
+```
+make build
+./build/splitter
+```
+
+To run the individual steps manually:
 
 ```
 conan install . --output-folder build --build=missing
 cmake -S . -B build -DCMAKE_TOOLCHAIN_FILE=build/conan_toolchain.cmake
 cmake --build build
-./build/splitter
 ```
+
+If `cmake` complains about a missing `conan_toolchain.cmake`, ensure the
+`conan install` step completed successfully before invoking it.
 
 Run unit tests with CTest:
 
 ```
-cd build && ctest
+make test
 ```
 
-For convenience, a `Makefile` streamlines common tasks. The following targets
-are available:
+Additional handy targets include:
 
 ```
-make build  # install dependencies and compile
-make run    # build and execute the demo
-make test   # build and run unit tests
-make clean  # remove the build directory
+make configure  # install dependencies and generate the build system
+make run        # build and execute the demo
+make clean      # remove the build directory
 ```
 
 The Angular component (`web/port-status.component.*`) illustrates how a frontend might interact with the backend.
