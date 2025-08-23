@@ -31,11 +31,32 @@ Run unit tests with CTest:
 cd build && ctest
 ```
 
+For convenience, a `Makefile` streamlines common tasks. The following targets
+are available:
+
+```
+make build  # install dependencies and compile
+make run    # build and execute the demo
+make test   # build and run unit tests
+make clean  # remove the build directory
+```
+
 The Angular component (`web/port-status.component.*`) illustrates how a frontend might interact with the backend.
 
 An example Nginx configuration in `web/nginx.conf` shows how to serve the
 compiled Angular assets while terminating TLS and proxying `/ws` WebSocket
 requests to the daemon running on port 9002.
+
+## Docker Compose
+
+A `docker-compose.yml` file orchestrates the web server, monitor daemon, frontend webapp, and an STM32 mock. Build and launch the stack with:
+
+```
+docker compose up --build
+```
+
+The nginx service serves the UI on port 8080 while proxying WebSocket traffic to the daemon on port 9002. The development webapp runs on port 4200, and the STM32 mock container is available for integration tests.
+It continuously prints simulated port status changes to its logs, making it easy to observe MCU behavior.
 
 ## STM32 microcontroller implementation
 
