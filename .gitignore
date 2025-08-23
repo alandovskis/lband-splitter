@@ -158,3 +158,11 @@ replay_pid*
 # Splitter build artifacts
 splitter/splitter
 splitter/src/*.o
+
+# CMake build artifacts
+build/
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+splitter
