@@ -14,4 +14,20 @@ cmake --build .
 ./splitter
 ```
 
+Run unit tests with CTest:
+
+```
+ctest
+```
+
 The Angular component (`web/port-status.component.*`) illustrates how a frontend might interact with the backend.
+
+## STM32 microcontroller implementation
+
+An embedded variant places the FFT and monitoring on an STM32 MCU using the CMSIS-DSP library. Example code in `src/stm32/fft_monitor.cpp` computes the center frequency of a sample buffer and sends the result over UART.
+
+The embedded build forbids C++ exceptions. A standalone CMake project in `src/stm32` builds the MCU code and compiles with `-fno-exceptions`.
+
+## Protobuf protocol and daemon
+
+A lightweight protocol defined in `proto/splitter.proto` allows the microcontroller to send FFT reports or receive commands such as start/stop and enabling or disabling individual ports. Each envelope includes a CRC32 checksum for basic integrity checking. A simple daemon (`monitor_daemon`) parses these protobuf messages on the Linux SBC, verifies the checksum, and prints the results.

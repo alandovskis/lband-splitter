@@ -1,0 +1,27 @@
+syntax = "proto3";
+package splitter;
+
+message FFTReport {
+  float center_mhz = 1;
+}
+
+message Command {
+  enum Type {
+    UNKNOWN = 0;
+    START = 1;
+    STOP = 2;
+    SET_PORT_ENABLED = 3;
+  }
+  Type type = 1;
+  uint32 port = 2;
+  bool enable = 3;
+}
+
+message Envelope {
+  oneof payload {
+    FFTReport report = 1;
+    Command command = 2;
+  }
+  // CRC32 of the serialized payload to ensure message integrity
+  uint32 crc32 = 3;
+}
