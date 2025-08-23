@@ -2,9 +2,23 @@
 #include <string>
 #include "splitter.pb.h"
 #include "crc32.hpp"
+#include "websocket_server.hpp"
+#include "netconf_server.hpp"
+#include "PortState.hpp"
+#include <vector>
 
 int main() {
     GOOGLE_PROTOBUF_VERIFY_VERSION;
+
+    std::vector<PortState> ports(32);
+
+    // Start WebSocket interface for Angular frontend
+    WebSocketServer ws(9002);
+    ws.run();
+
+    // NETCONF server for control and monitoring
+    NetconfServer netconf(ports);
+    netconf.start();
 
     splitter::Envelope env;
     if (!env.ParseFromIstream(&std::cin)) {

@@ -15,10 +15,12 @@ target_compile_options(splitter PRIVATE -O2 -Wall)
 
 # Build daemon that receives protobuf messages
 find_package(Protobuf REQUIRED)
+find_package(Boost REQUIRED COMPONENTS system)
+find_package(Threads REQUIRED)
 add_executable(monitor_daemon src/daemon/monitor_daemon.cpp src/proto/splitter.pb.cc)
 target_include_directories(monitor_daemon PRIVATE src src/proto ${Protobuf_INCLUDE_DIRS})
-target_link_libraries(monitor_daemon PRIVATE protobuf::libprotobuf)
-target_compile_options(monitor_daemon PRIVATE -O2 -Wall)
+target_link_libraries(monitor_daemon PRIVATE protobuf::libprotobuf Boost::system Threads::Threads)
+target_compile_options(monitor_daemon PRIVATE -O0 -Wall)
 
 enable_testing()
 
@@ -39,6 +41,11 @@ add_executable(uart_writer_test tests/uart_writer_test.cpp src/stm32/uart_writer
 target_include_directories(uart_writer_test PRIVATE src src/stm32)
 target_compile_options(uart_writer_test PRIVATE -fno-exceptions)
 add_test(NAME uart_writer_test COMMAND uart_writer_test)
+
+add_executable(netconf_server_test tests/netconf_server_test.cpp)
+target_include_directories(netconf_server_test PRIVATE src)
+target_link_libraries(netconf_server_test PRIVATE Boost::system Threads::Threads)
+add_test(NAME netconf_server_test COMMAND netconf_server_test)
 
 add_test(NAME monitor_daemon_report
   COMMAND bash -c "printf 'report { center_mhz: 1.23 } crc32: 3670215876' | protoc -I ${CMAKE_SOURCE_DIR}/proto --encode=splitter.Envelope ${CMAKE_SOURCE_DIR}/proto/splitter.proto | $<TARGET_FILE:monitor_daemon> > /dev/null")
