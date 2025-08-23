@@ -1,0 +1,9 @@
+<div class="port-grid">
+  <div *ngFor="let port of ports; index as i" class="port-card">
+    <div class="header">Port {{ i + 1 }}</div>
+    <div [class.enabled]="port.enabled">Enabled</div>
+    <div [class.present]="port.signalPresent">Signal Detected</div>
+    <div class="freq">{{ port.centerFreqMHz | number:'1.0-2' }} MHz</div>
+    <button (click)="toggle(i)">{{ port.enabled ? 'Disable' : 'Enable' }}</button>
+  </div>
+</div>
