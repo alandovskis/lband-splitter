@@ -1,17 +1,23 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { webSocket, WebSocketSubject } from 'rxjs/webSocket';
 
-export interface StatusResponse {
+export interface PortStatus {
+  port: number;
   enabled: boolean;
   frequencyHz: number;
 }
 
 @Injectable({ providedIn: 'root' })
 export class StatusService {
-  constructor(private http: HttpClient) {}
+  private socket: WebSocketSubject<PortStatus[]>;
 
-  getStatus(): Observable<StatusResponse> {
-    return this.http.get<StatusResponse>('/api/status');
+  constructor() {
+    const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+    this.socket = webSocket<PortStatus[]>(`${protocol}//${location.host}/api/status`);
+  }
+
+  getStatuses(): Observable<PortStatus[]> {
+    return this.socket.asObservable();
   }
 }

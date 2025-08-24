@@ -1,7 +1,21 @@
 <h1>Dashboard</h1>
-<div *ngIf="enabled !== undefined && frequencyMHz !== undefined; else loading">
-  <p>Enabled: {{ enabled }}</p>
-  <p>Detected Frequency: {{ frequencyMHz | number:'1.0-2' }} MHz</p>
+<div *ngIf="statuses?.length; else loading">
+  <table>
+    <thead>
+      <tr>
+        <th>Port</th>
+        <th>Enabled</th>
+        <th>Frequency (MHz)</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let s of statuses">
+        <td>{{ s.port }}</td>
+        <td>{{ s.enabled }}</td>
+        <td>{{ s.frequencyHz / 1_000_000 | number:'1.0-2' }}</td>
+      </tr>
+    </tbody>
+  </table>
 </div>
 <ng-template #loading>
   <p>Loading status...</p>

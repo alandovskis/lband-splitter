@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { StatusService } from './status.service';
+import { StatusService, PortStatus } from './status.service';
 
 @Component({
   selector: 'app-dashboard',
@@ -10,15 +10,13 @@ import { StatusService } from './status.service';
   styleUrl: './dashboard.component.css'
 })
 export class DashboardComponent implements OnInit {
-  enabled?: boolean;
-  frequencyMHz?: number;
+  statuses?: PortStatus[];
 
   constructor(private status: StatusService) {}
 
   ngOnInit(): void {
-    this.status.getStatus().subscribe(res => {
-      this.enabled = res.enabled;
-      this.frequencyMHz = res.frequencyHz / 1_000_000;
+    this.status.getStatuses().subscribe(res => {
+      this.statuses = res;
     });
   }
 }

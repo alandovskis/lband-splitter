@@ -1,7 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
 import { DashboardComponent } from './dashboard.component';
-import { StatusService } from './status.service';
+import { StatusService, PortStatus } from './status.service';
 
 describe('DashboardComponent', () => {
   beforeEach(() => {
@@ -11,18 +11,26 @@ describe('DashboardComponent', () => {
         {
           provide: StatusService,
           useValue: {
-            getStatus: () => of({ enabled: true, frequencyHz: 123_000_000 })
+            getStatuses: () =>
+              of(
+                Array.from({ length: 32 }, (_, i) => ({
+                  port: i,
+                  enabled: i % 2 === 0,
+                  frequencyHz: 123_000_000
+                })) as PortStatus[]
+              )
           }
         }
       ]
     });
   });
 
-  it('should display enabled status and frequency in MHz', () => {
+  it('should display a table of port statuses with frequency in MHz', () => {
     const fixture = TestBed.createComponent(DashboardComponent);
     fixture.detectChanges();
     const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.textContent).toContain('Enabled: true');
-    expect(compiled.textContent).toContain('Detected Frequency: 123 MHz');
+    expect(compiled.querySelectorAll('tbody tr').length).toBe(32);
+    expect(compiled.textContent).toContain('Port 0');
+    expect(compiled.textContent).toContain('123');
   });
 });
