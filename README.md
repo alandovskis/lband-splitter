@@ -58,13 +58,13 @@ requests to the daemon running on port 9002.
 ## Starting dependencies
 
 Use the `start_dependencies.sh` script to build and launch the monitor daemon
-and a simple web server:
+and the Angular development server:
 
 ```
 ./start_dependencies.sh
 ```
 
-The script serves the web UI at <http://localhost:8080> and starts the daemon
+The script serves the web UI via `ng serve` at <http://localhost:8080> and starts the daemon
 on port 9002. Press `Ctrl+C` to stop both processes.
 
 ## STM32 microcontroller implementation
