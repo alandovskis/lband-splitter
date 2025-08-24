@@ -1,0 +1,8 @@
+<h1>Dashboard</h1>
+<div *ngIf="enabled !== undefined && frequencyMHz !== undefined; else loading">
+  <p>Enabled: {{ enabled }}</p>
+  <p>Detected Frequency: {{ frequencyMHz | number:'1.0-2' }} MHz</p>
+</div>
+<ng-template #loading>
+  <p>Loading status...</p>
+</ng-template>
