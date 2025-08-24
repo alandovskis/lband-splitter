@@ -25,3 +25,5 @@ services:
     build:
       context: .
       dockerfile: docker/stm32-mock.Dockerfile
+    ports:
+      - "50051:50051"

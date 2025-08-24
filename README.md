@@ -66,6 +66,26 @@ docker compose up --build
 The nginx service serves the UI on port 8080 while proxying WebSocket traffic to the daemon on port 9002. The development webapp runs on port 4200, and the STM32 mock container is available for integration tests.
 It continuously prints simulated port status changes to its logs, making it easy to observe MCU behavior.
 
+### STM32 mock RPC
+
+The STM32 mock also exposes a simple protobuf-based RPC stream on port `50051`.
+Build the mock and a tiny client locally with CMake:
+
+```
+cmake -S src/stm32 -B build_stm32
+cmake --build build_stm32
+```
+
+Run the mock and connect with the generated client to watch status updates:
+
+```
+./build_stm32/stm32_status_mock &
+./build_stm32/stm32_client
+```
+
+Each reported status change includes the port number, whether it is enabled,
+the center frequency in MHz, and whether a signal is present.
+
 ## Dev Container
 
 For a fully configured development environment, this repository includes a
