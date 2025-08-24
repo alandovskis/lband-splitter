@@ -27,9 +27,9 @@ make build
 To run the individual steps manually:
 
 ```
-conan install . --output-folder build --build=missing
-cmake -S . -B build -DCMAKE_TOOLCHAIN_FILE=build/conan_toolchain.cmake
-cmake --build build
+conan install . --output-folder build -s build_type=Release --build=missing
+cmake -S . -B build -DCMAKE_TOOLCHAIN_FILE=$(find build -name conan_toolchain.cmake -print -quit) -DCMAKE_BUILD_TYPE=Release
+cmake --build build --config Release
 ```
 
 If `cmake` complains about a missing `conan_toolchain.cmake`, ensure the
@@ -55,24 +55,17 @@ An example Nginx configuration in `web/nginx.conf` shows how to serve the
 compiled Angular assets while terminating TLS and proxying `/ws` WebSocket
 requests to the daemon running on port 9002.
 
-## Docker Compose
+## Starting dependencies
 
-A `docker-compose.yml` file orchestrates the web server, monitor daemon, and frontend webapp. Build and launch the stack with:
+Use the `start_dependencies.sh` script to build and launch the monitor daemon
+and a simple web server:
 
 ```
-docker compose up --build
+./start_dependencies.sh
 ```
 
-The nginx service serves the UI on port 8080 while proxying WebSocket traffic to the daemon on port 9002. The development webapp runs on port 4200.
-
-
-## Dev Container
-
-For a fully configured development environment, this repository includes a
-VS Code [Dev Container](https://containers.dev/). Reopen the folder in the
-container via the Dev Containers extension and all required tools—Conan,
-CMake, and Node—will be available so the provided `Makefile` targets work
-out of the box.
+The script serves the web UI at <http://localhost:8080> and starts the daemon
+on port 9002. Press `Ctrl+C` to stop both processes.
 
 ## STM32 microcontroller implementation
 
