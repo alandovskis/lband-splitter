@@ -7,6 +7,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 add_library(stm32_fft_monitor
     center_freq_encoder.cpp
     fft_monitor.cpp
+    port_state.cpp
     uart_writer.cpp
     hal_stubs.cpp
     ../proto/splitter.pb.cc
