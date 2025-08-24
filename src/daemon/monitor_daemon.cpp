@@ -5,6 +5,7 @@
 #include "websocket_server.hpp"
 #include "netconf_server.hpp"
 #include "PortState.hpp"
+#include <httplib.h>
 #include <vector>
 
 int main() {
@@ -19,6 +20,10 @@ int main() {
     // NETCONF server for control and monitoring
     NetconfServer netconf(ports);
     netconf.start();
+
+    // Placeholder HTTP server demonstrating httplib usage
+    httplib::Server http;
+    (void)http;
 
     splitter::Envelope env;
     if (!env.ParseFromIstream(&std::cin)) {

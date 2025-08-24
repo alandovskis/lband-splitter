@@ -1,6 +1,7 @@
 [requires]
 boost/1.83.0
 protobuf/3.21.12
+cpp-httplib/0.16.3
 
 [generators]
 CMakeDeps
