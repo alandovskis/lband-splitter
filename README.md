@@ -69,7 +69,7 @@ on port 9002. Press `Ctrl+C` to stop both processes.
 
 ## STM32 microcontroller implementation
 
-An embedded variant places the FFT and monitoring on an STM32 MCU using the CMSIS-DSP library. Example code in `src/stm32/fft_monitor.cpp` computes the center frequency of a sample buffer and sends the result over UART.
+An embedded variant places the FFT and monitoring on an STM32 MCU using the CMSIS-DSP library. Example code in `src/stm32/fft_monitor.cpp` computes the center frequency of a sample buffer and stores it in a shared port table. The main loop in `src/stm32/main.cpp` periodically encodes each port's status and transmits it over UART.
 
 The embedded build forbids C++ exceptions. A standalone CMake project in `src/stm32` builds the MCU code and compiles with `-fno-exceptions`.
 

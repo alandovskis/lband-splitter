@@ -37,6 +37,15 @@ target_link_libraries(center_freq_encoder_test PRIVATE protobuf::libprotobuf)
 target_compile_options(center_freq_encoder_test PRIVATE -fno-exceptions)
 add_test(NAME center_freq_encoder_test COMMAND center_freq_encoder_test)
 
+add_executable(status_encoder_test
+    tests/status_encoder_test.cpp
+    src/stm32/status_encoder.cpp
+    src/proto/splitter.pb.cc)
+target_include_directories(status_encoder_test PRIVATE src src/stm32 src/proto)
+target_link_libraries(status_encoder_test PRIVATE protobuf::libprotobuf)
+target_compile_options(status_encoder_test PRIVATE -fno-exceptions)
+add_test(NAME status_encoder_test COMMAND status_encoder_test)
+
 add_executable(uart_writer_test tests/uart_writer_test.cpp src/stm32/uart_writer.cpp)
 target_include_directories(uart_writer_test PRIVATE src src/stm32)
 target_compile_options(uart_writer_test PRIVATE -fno-exceptions)

@@ -3,11 +3,8 @@
 #include "arm_math.h"
 #include <cstring>
 
-#include "center_freq_encoder.hpp"
-#include "port_state.hpp"
-
 void FFTMonitor::process(std::uint8_t port, const float *samples,
-                         float sampleRate, UartWriter &uart) noexcept {
+                         float sampleRate) noexcept {
   float fftInput[FFT_SIZE];
   std::memcpy(fftInput, samples, sizeof(float) * FFT_SIZE);
 
@@ -27,11 +24,4 @@ void FFTMonitor::process(std::uint8_t port, const float *samples,
   float centerMHz = centerHz / 1e6f;
 
   set_port_frequency(port, centerMHz);
-
-  CenterFreqEncoder encoder;
-  uint8_t buffer[CenterFreqEncoder::BUFFER_SIZE];
-  size_t written = 0;
-  if (encoder.encode(centerMHz, buffer, written)) {
-    uart.send(buffer, written);
-  }
 }
