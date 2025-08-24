@@ -112,10 +112,8 @@ A lightweight protocol defined in `proto/splitter.proto` allows the microcontrol
 C4Context
     title L-Band Splitter Controller - Context
     Person(operator, "Operator")
-    System(system, "L-Band Splitter Control System", "Manages splitter ports")
-    System_Ext(mcu, "STM32 Microcontroller", "Streams port status")
+    System(system, "L-Band Splitter Control System", "Manages splitter ports and includes STM32")
     operator -> system : uses
-    system -> mcu : polls status
 ```
 
 ### Container
@@ -128,12 +126,12 @@ C4Container
         Container(webapp, "Web App", "Angular", "Browser UI")
         Container(nginx, "Nginx", "Web Server", "Serves UI and proxies WebSocket")
         Container(daemon, "Monitor Daemon", "C++", "Processes protobuf and exposes APIs")
+        Container(stm32, "STM32 Microcontroller", "C++", "Streams port status")
     }
-    System_Ext(mcu, "STM32 Microcontroller", "Status stream")
     operator -> webapp : uses
     webapp -> nginx : HTTP
     nginx -> daemon : WebSocket
-    daemon -> mcu : TCP protobuf
+    daemon -> stm32 : TCP protobuf
 ```
 
 ### Component (Monitor Daemon)
