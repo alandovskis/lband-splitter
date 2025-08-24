@@ -1,0 +1,120 @@
+<div class="app-container">
+  <!-- Header -->
+  <mat-toolbar color="primary" class="app-header">
+    <span class="app-title">{{ title }}</span>
+    <span class="spacer"></span>
+    
+    <!-- System Status Indicators -->
+    <div class="status-indicators" *ngIf="systemStatus">
+      <mat-chip-set>
+        <mat-chip [color]="systemStatus.system_healthy ? 'accent' : 'warn'">
+          <mat-icon>{{ systemStatus.system_healthy ? 'check_circle' : 'error' }}</mat-icon>
+          {{ systemStatus.system_healthy ? 'Healthy' : 'Error' }}
+        </mat-chip>
+        
+        <mat-chip color="primary">
+          <mat-icon>power</mat-icon>
+          {{ systemStatus.enabled_ports }}/32 Enabled
+        </mat-chip>
+        
+        <mat-chip color="accent">
+          <mat-icon>radio</mat-icon>
+          {{ systemStatus.active_ports }} Active
+        </mat-chip>
+      </mat-chip-set>
+    </div>
+    
+    <!-- System Controls -->
+    <div class="system-controls">
+      <button mat-icon-button (click)="loadSystemStatus()" [disabled]="loading" matTooltip="Refresh">
+        <mat-icon>refresh</mat-icon>
+      </button>
+      
+      <button mat-icon-button [matMenuTriggerFor]="systemMenu" matTooltip="System Menu">
+        <mat-icon>more_vert</mat-icon>
+      </button>
+    </div>
+  </mat-toolbar>
+  
+  <!-- System Menu -->
+  <mat-menu #systemMenu="matMenu">
+    <button mat-menu-item (click)="enableAllPorts()" [disabled]="loading">
+      <mat-icon>power</mat-icon>
+      <span>Enable All Ports</span>
+    </button>
+    <button mat-menu-item (click)="disableAllPorts()" [disabled]="loading">
+      <mat-icon>power_off</mat-icon>
+      <span>Disable All Ports</span>
+    </button>
+    <mat-divider></mat-divider>
+    <button mat-menu-item (click)="runSystemTest()" [disabled]="loading">
+      <mat-icon>assignment_turned_in</mat-icon>
+      <span>Run System Test</span>
+    </button>
+    <button mat-menu-item (click)="calibrateSystem()" [disabled]="loading">
+      <mat-icon>tune</mat-icon>
+      <span>Calibrate System</span>
+    </button>
+  </mat-menu>
+  
+  <!-- Error Display -->
+  <mat-card *ngIf="error" class="error-card">
+    <mat-card-content class="error-content">
+      <mat-icon color="warn">error</mat-icon>
+      <span>{{ error }}</span>
+      <button mat-icon-button (click)="clearError()">
+        <mat-icon>close</mat-icon>
+      </button>
+    </mat-card-content>
+  </mat-card>
+  
+  <!-- Loading Indicator -->
+  <mat-progress-bar *ngIf="loading" mode="indeterminate" class="loading-bar"></mat-progress-bar>
+  
+  <!-- Main Content -->
+  <div class="app-content">
+    <mat-tab-group [(selectedIndex)]="selectedTab" (selectedIndexChange)="onTabChange($event)">
+      
+      <!-- Port Grid View -->
+      <mat-tab label="Port Grid">
+        <div class="tab-content">
+          <app-port-grid 
+            [systemStatus]="systemStatus"
+            [loading]="loading">
+          </app-port-grid>
+        </div>
+      </mat-tab>
+      
+      <!-- Port List View -->
+      <mat-tab label="Port List">
+        <div class="tab-content">
+          <app-port-list 
+            [systemStatus]="systemStatus"
+            [loading]="loading">
+          </app-port-list>
+        </div>
+      </mat-tab>
+      
+      <!-- System Overview -->
+      <mat-tab label="System Overview">
+        <div class="tab-content">
+          <app-system-overview 
+            [systemStatus]="systemStatus"
+            [loading]="loading">
+          </app-system-overview>
+        </div>
+      </mat-tab>
+      
+      <!-- Configuration -->
+      <mat-tab label="Configuration">
+        <div class="tab-content">
+          <app-system-config 
+            [systemStatus]="systemStatus"
+            [loading]="loading">
+          </app-system-config>
+        </div>
+      </mat-tab>
+      
+    </mat-tab-group>
+  </div>
+</div>

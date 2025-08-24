@@ -1,0 +1,383 @@
+module splitter-system {
+  yang-version 1.1;
+  namespace "urn:splitter:system";
+  prefix "spl";
+
+  organization "L-Band Splitter Project";
+  description "YANG model for 32-port L-band splitter/combiner system";
+
+  revision "2024-08-24" {
+    description "Initial revision";
+  }
+
+  typedef port-number {
+    type uint8 {
+      range "0..31";
+    }
+    description "Port number (0-31)";
+  }
+
+  typedef frequency-mhz {
+    type decimal64 {
+      fraction-digits 3;
+      range "0..5000.0";
+    }
+    units "MHz";
+    description "Frequency in MHz";
+  }
+
+  typedef power-dbm {
+    type decimal64 {
+      fraction-digits 2;
+      range "-120.0..10.0";
+    }
+    units "dBm";
+    description "Power level in dBm";
+  }
+
+  typedef port-state {
+    type enumeration {
+      enum disabled {
+        description "Port is disabled";
+      }
+      enum enabled {
+        description "Port is enabled";
+      }
+      enum error {
+        description "Port has an error";
+      }
+    }
+  }
+
+  container splitter-system {
+    description "L-band splitter/combiner system configuration and state";
+
+    container system-info {
+      config false;
+      description "System information and status";
+
+      leaf system-name {
+        type string;
+        description "System name";
+      }
+
+      leaf hardware-version {
+        type string;
+        description "Hardware version";
+      }
+
+      leaf software-version {
+        type string;
+        description "Software version";
+      }
+
+      leaf uptime {
+        type uint32;
+        units "seconds";
+        description "System uptime in seconds";
+      }
+
+      leaf system-healthy {
+        type boolean;
+        description "Overall system health status";
+      }
+
+      leaf enabled-ports {
+        type uint8;
+        description "Number of enabled ports";
+      }
+
+      leaf active-ports {
+        type uint8;
+        description "Number of ports with detected signals";
+      }
+    }
+
+    container global-config {
+      description "Global system configuration";
+
+      leaf enable-all-ports {
+        type boolean;
+        default false;
+        description "Enable all ports simultaneously";
+      }
+
+      leaf monitoring-interval {
+        type uint16 {
+          range "50..5000";
+        }
+        units "milliseconds";
+        default 100;
+        description "Frequency monitoring update interval";
+      }
+
+      leaf signal-threshold {
+        type power-dbm;
+        default -80.0;
+        description "Signal detection threshold";
+      }
+    }
+
+    list port {
+      key "port-number";
+      max-elements 32;
+      description "Individual port configuration and status";
+
+      leaf port-number {
+        type port-number;
+        description "Port number (0-31)";
+      }
+
+      container config {
+        description "Port configuration";
+
+        leaf enabled {
+          type boolean;
+          default false;
+          description "Enable/disable this port";
+        }
+
+        leaf description {
+          type string;
+          description "Port description";
+        }
+
+        leaf signal-threshold {
+          type power-dbm;
+          default -80.0;
+          description "Signal detection threshold for this port";
+        }
+      }
+
+      container state {
+        config false;
+        description "Port operational state";
+
+        leaf port-state {
+          type port-state;
+          description "Current port state";
+        }
+
+        leaf signal-detected {
+          type boolean;
+          description "Whether a signal is detected on this port";
+        }
+
+        leaf center-frequency {
+          type frequency-mhz;
+          description "Detected center frequency";
+        }
+
+        leaf power-level {
+          type power-dbm;
+          description "Measured power level";
+        }
+
+        leaf error-message {
+          type string;
+          description "Error message if port is in error state";
+        }
+
+        leaf last-update {
+          type yang:date-and-time;
+          description "Timestamp of last status update";
+        }
+      }
+
+      container statistics {
+        config false;
+        description "Port statistics";
+
+        leaf total-uptime {
+          type uint64;
+          units "seconds";
+          description "Total time this port has been enabled";
+        }
+
+        leaf signal-detection-count {
+          type uint64;
+          description "Number of times signal was detected";
+        }
+
+        leaf error-count {
+          type uint64;
+          description "Number of errors encountered";
+        }
+      }
+    }
+  }
+
+  rpc enable-port {
+    description "Enable a specific port";
+    input {
+      leaf port-number {
+        type port-number;
+        mandatory true;
+        description "Port number to enable";
+      }
+    }
+    output {
+      leaf success {
+        type boolean;
+        description "Whether the operation was successful";
+      }
+      leaf message {
+        type string;
+        description "Result message";
+      }
+    }
+  }
+
+  rpc disable-port {
+    description "Disable a specific port";
+    input {
+      leaf port-number {
+        type port-number;
+        mandatory true;
+        description "Port number to disable";
+      }
+    }
+    output {
+      leaf success {
+        type boolean;
+        description "Whether the operation was successful";
+      }
+      leaf message {
+        type string;
+        description "Result message";
+      }
+    }
+  }
+
+  rpc enable-all-ports {
+    description "Enable all ports";
+    output {
+      leaf success {
+        type boolean;
+        description "Whether the operation was successful";
+      }
+      leaf message {
+        type string;
+        description "Result message";
+      }
+    }
+  }
+
+  rpc disable-all-ports {
+    description "Disable all ports";
+    output {
+      leaf success {
+        type boolean;
+        description "Whether the operation was successful";
+      }
+      leaf message {
+        type string;
+        description "Result message";
+      }
+    }
+  }
+
+  rpc system-self-test {
+    description "Run system self-test";
+    output {
+      leaf success {
+        type boolean;
+        description "Whether self-test passed";
+      }
+      leaf message {
+        type string;
+        description "Test result message";
+      }
+    }
+  }
+
+  rpc calibrate-frequency-detectors {
+    description "Calibrate frequency detection system";
+    output {
+      leaf success {
+        type boolean;
+        description "Whether calibration was successful";
+      }
+      leaf message {
+        type string;
+        description "Calibration result message";
+      }
+    }
+  }
+
+  notification port-state-change {
+    description "Notification sent when a port changes state";
+    
+    leaf port-number {
+      type port-number;
+      description "Port that changed state";
+    }
+
+    leaf old-state {
+      type port-state;
+      description "Previous port state";
+    }
+
+    leaf new-state {
+      type port-state;
+      description "New port state";
+    }
+
+    leaf timestamp {
+      type yang:date-and-time;
+      description "When the state change occurred";
+    }
+  }
+
+  notification signal-detected {
+    description "Notification sent when a signal is detected on a port";
+    
+    leaf port-number {
+      type port-number;
+      description "Port where signal was detected";
+    }
+
+    leaf center-frequency {
+      type frequency-mhz;
+      description "Detected center frequency";
+    }
+
+    leaf power-level {
+      type power-dbm;
+      description "Signal power level";
+    }
+
+    leaf timestamp {
+      type yang:date-and-time;
+      description "When the signal was detected";
+    }
+  }
+
+  notification system-error {
+    description "Notification sent when a system error occurs";
+    
+    leaf severity {
+      type enumeration {
+        enum warning;
+        enum error;
+        enum critical;
+      }
+      description "Error severity level";
+    }
+
+    leaf message {
+      type string;
+      description "Error message";
+    }
+
+    leaf component {
+      type string;
+      description "System component that generated the error";
+    }
+
+    leaf timestamp {
+      type yang:date-and-time;
+      description "When the error occurred";
+    }
+  }
+}

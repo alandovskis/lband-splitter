@@ -1,0 +1,169 @@
+<div class="port-grid-container">
+  <!-- Port Grid -->
+  <div class="port-grid">
+    <mat-card 
+      *ngFor="let port of ports; trackBy: trackByPortNumber"
+      class="port-card"
+      [class.selected]="selectedPort?.port_number === port.port_number"
+      [class.loading]="loading"
+      (click)="onPortClick(port)">
+      
+      <!-- Port Header -->
+      <mat-card-header class="port-header">
+        <div class="port-number">
+          <span class="port-label">Port</span>
+          <span class="port-value">{{ port.port_number }}</span>
+        </div>
+        
+        <!-- Status Indicators -->
+        <div class="status-indicators">
+          <!-- Enable/Disable LED simulation -->
+          <div class="led-indicator" [class.enabled]="port.state === 'enabled'" 
+               [class.error]="port.state === 'error'"
+               matTooltip="Port Enable Status">
+          </div>
+          
+          <!-- Signal Detection LED simulation -->
+          <div class="led-indicator signal" [class.signal-detected]="port.signal_detected"
+               matTooltip="Signal Detection Status">
+          </div>
+        </div>
+      </mat-card-header>
+      
+      <!-- Port Content -->
+      <mat-card-content class="port-content">
+        <!-- Frequency Display -->
+        <div class="frequency-display">
+          <div class="frequency-value">
+            {{ formatFrequency(port.center_frequency_mhz) }}
+          </div>
+          <div class="power-value">
+            {{ formatPowerLevel(port.power_level_dbm) }}
+          </div>
+        </div>
+        
+        <!-- Port State -->
+        <div class="port-state">
+          <mat-chip [color]="getPortColor(port)" class="state-chip">
+            <mat-icon>{{ getPortIcon(port) }}</mat-icon>
+            {{ port.state | titlecase }}
+          </mat-chip>
+        </div>
+        
+        <!-- Error Message -->
+        <div *ngIf="port.error_message" class="error-message">
+          <mat-icon color="warn">warning</mat-icon>
+          <span>{{ port.error_message }}</span>
+        </div>
+      </mat-card-content>
+      
+      <!-- Port Actions -->
+      <mat-card-actions class="port-actions">
+        <button 
+          mat-icon-button
+          [color]="port.state === 'enabled' ? 'warn' : 'primary'"
+          (click)="togglePort(port); $event.stopPropagation()"
+          [disabled]="loading || port.state === 'error'"
+          [matTooltip]="port.state === 'enabled' ? 'Disable Port' : 'Enable Port'">
+          <mat-icon>{{ port.state === 'enabled' ? 'power_off' : 'power' }}</mat-icon>
+        </button>
+        
+        <button 
+          mat-icon-button
+          (click)="onPortClick(port); $event.stopPropagation()"
+          matTooltip="View Details">
+          <mat-icon>info</mat-icon>
+        </button>
+      </mat-card-actions>
+    </mat-card>
+  </div>
+  
+  <!-- Port Details Sidebar -->
+  <mat-drawer-container class="details-container" *ngIf="selectedPort">
+    <mat-drawer mode="side" opened position="end" class="port-details-drawer">
+      <div class="drawer-header">
+        <h2>Port {{ selectedPort.port_number }} Details</h2>
+        <button mat-icon-button (click)="closePortDetails()">
+          <mat-icon>close</mat-icon>
+        </button>
+      </div>
+      
+      <div class="drawer-content">
+        <!-- Status Summary -->
+        <mat-card class="status-summary">
+          <mat-card-header>
+            <mat-card-title>Status</mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            <div class="status-item">
+              <span class="label">State:</span>
+              <mat-chip [color]="getPortColor(selectedPort)">
+                <mat-icon>{{ getPortIcon(selectedPort) }}</mat-icon>
+                {{ selectedPort.state | titlecase }}
+              </mat-chip>
+            </div>
+            
+            <div class="status-item">
+              <span class="label">Signal Detected:</span>
+              <mat-icon [color]="selectedPort.signal_detected ? 'accent' : 'basic'">
+                {{ selectedPort.signal_detected ? 'radio' : 'radio_button_unchecked' }}
+              </mat-icon>
+              <span>{{ selectedPort.signal_detected ? 'Yes' : 'No' }}</span>
+            </div>
+            
+            <div class="status-item">
+              <span class="label">Center Frequency:</span>
+              <span class="value">{{ formatFrequency(selectedPort.center_frequency_mhz) }}</span>
+            </div>
+            
+            <div class="status-item">
+              <span class="label">Power Level:</span>
+              <span class="value">{{ formatPowerLevel(selectedPort.power_level_dbm) }}</span>
+            </div>
+            
+            <div class="status-item">
+              <span class="label">Last Update:</span>
+              <span class="value">{{ selectedPort.last_update | date:'medium' }}</span>
+            </div>
+          </mat-card-content>
+        </mat-card>
+        
+        <!-- Port Controls -->
+        <mat-card class="port-controls">
+          <mat-card-header>
+            <mat-card-title>Controls</mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            <div class="control-buttons">
+              <button 
+                mat-raised-button
+                [color]="selectedPort.state === 'enabled' ? 'warn' : 'primary'"
+                (click)="togglePort(selectedPort)"
+                [disabled]="loading || selectedPort.state === 'error'">
+                <mat-icon>{{ selectedPort.state === 'enabled' ? 'power_off' : 'power' }}</mat-icon>
+                {{ selectedPort.state === 'enabled' ? 'Disable' : 'Enable' }} Port
+              </button>
+            </div>
+          </mat-card-content>
+        </mat-card>
+        
+        <!-- Error Details -->
+        <mat-card *ngIf="selectedPort.error_message" class="error-details">
+          <mat-card-header>
+            <mat-card-title class="error-title">
+              <mat-icon color="warn">error</mat-icon>
+              Error Details
+            </mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            <p>{{ selectedPort.error_message }}</p>
+          </mat-card-content>
+        </mat-card>
+      </div>
+    </mat-drawer>
+    
+    <mat-drawer-content>
+      <!-- Empty content area -->
+    </mat-drawer-content>
+  </mat-drawer-container>
+</div>

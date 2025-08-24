@@ -1,0 +1,109 @@
+.app-container {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.app-header {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  
+  .app-title {
+    font-size: 1.2em;
+    font-weight: 500;
+  }
+  
+  .spacer {
+    flex: 1 1 auto;
+  }
+  
+  .status-indicators {
+    margin-right: 16px;
+    
+    mat-chip-set {
+      mat-chip {
+        margin-right: 8px;
+        
+        mat-icon {
+          margin-right: 4px;
+        }
+      }
+    }
+  }
+  
+  .system-controls {
+    button {
+      margin-left: 8px;
+    }
+  }
+}
+
+.error-card {
+  margin: 8px 16px;
+  background-color: #ffebee;
+  border-left: 4px solid #f44336;
+  
+  .error-content {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    
+    mat-icon {
+      color: #f44336;
+    }
+    
+    span {
+      flex: 1;
+    }
+  }
+}
+
+.loading-bar {
+  position: sticky;
+  top: 64px; // Height of toolbar
+  z-index: 999;
+}
+
+.app-content {
+  flex: 1;
+  overflow: hidden;
+  
+  mat-tab-group {
+    height: 100%;
+    
+    .tab-content {
+      padding: 16px;
+      height: calc(100vh - 64px - 48px); // Subtract toolbar and tab header
+      overflow-y: auto;
+    }
+  }
+}
+
+// Responsive design
+@media (max-width: 768px) {
+  .app-header {
+    .status-indicators {
+      display: none; // Hide on mobile to save space
+    }
+    
+    .app-title {
+      font-size: 1em;
+    }
+  }
+  
+  .app-content {
+    .tab-content {
+      padding: 8px;
+    }
+  }
+}
+
+// Dark theme support
+@media (prefers-color-scheme: dark) {
+  .error-card {
+    background-color: #3e2723;
+    border-left-color: #ff5722;
+  }
+}

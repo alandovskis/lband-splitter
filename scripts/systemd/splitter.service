@@ -1,0 +1,57 @@
+[Unit]
+Description=L-Band Splitter/Combiner Control Service
+Documentation=man:splitter(8)
+After=network.target network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=splitter
+Group=splitter
+ExecStart=/usr/local/bin/splitter --config /etc/splitter/splitter.conf
+ExecReload=/bin/kill -HUP $MAINPID
+KillMode=process
+Restart=on-failure
+RestartSec=5s
+TimeoutStartSec=60s
+TimeoutStopSec=30s
+
+# Security settings
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+PrivateDevices=no
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+RestrictRealtime=yes
+RestrictSUIDSGID=yes
+LockPersonality=yes
+MemoryDenyWriteExecute=yes
+
+# Allow access to configuration and log directories
+ReadWritePaths=/var/log/splitter /var/lib/splitter
+ReadOnlyPaths=/etc/splitter
+
+# Allow network access
+IPAddressDeny=any
+IPAddressAllow=localhost
+IPAddressAllow=192.168.0.0/16
+IPAddressAllow=10.0.0.0/8
+IPAddressAllow=172.16.0.0/12
+
+# Hardware access for GPIO and I2C
+SupplementaryGroups=gpio i2c spi
+
+# Environment
+Environment=PATH=/usr/local/bin:/usr/bin:/bin
+Environment=LD_LIBRARY_PATH=/usr/local/lib
+
+# Resource limits
+LimitNOFILE=65536
+LimitNPROC=512
+
+[Install]
+WantedBy=multi-user.target
+Alias=lband-splitter.service
