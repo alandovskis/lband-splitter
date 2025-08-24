@@ -113,7 +113,7 @@ C4Context
     title L-Band Splitter Controller - Context
     Person(operator, "Operator")
     System(system, "L-Band Splitter Control System", "Manages splitter ports and includes STM32")
-    operator -> system : uses
+    Rel(operator, system, "uses")
 ```
 
 ### Container
@@ -128,10 +128,10 @@ C4Container
         Container(daemon, "Monitor Daemon", "C++", "Processes protobuf and exposes APIs")
         Container(stm32, "STM32 Microcontroller", "C++", "Streams port status")
     }
-    operator -> webapp : uses
-    webapp -> nginx : HTTP
-    nginx -> daemon : WebSocket
-    daemon -> stm32 : TCP protobuf
+    Rel(operator, webapp, "uses")
+    Rel(webapp, nginx, "HTTP")
+    Rel(nginx, daemon, "WebSocket")
+    Rel(daemon, stm32, "TCP protobuf")
 ```
 
 ### Component (Monitor Daemon)
@@ -144,8 +144,8 @@ C4Component
         Component(ws, "WebSocket Server", "Pushes updates to clients")
         Component(netconf, "NETCONF Agent", "Configuration and telemetry")
     }
-    proto -> ws : broadcasts status
-    proto -> netconf : exposes state
+    Rel(proto, ws, "broadcasts status")
+    Rel(proto, netconf, "exposes state")
 ```
 
 ### Deployment
