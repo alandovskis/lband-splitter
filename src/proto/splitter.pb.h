@@ -55,11 +55,15 @@ extern EnvelopeDefaultTypeInternal _Envelope_default_instance_;
 class FFTReport;
 struct FFTReportDefaultTypeInternal;
 extern FFTReportDefaultTypeInternal _FFTReport_default_instance_;
+class Status;
+struct StatusDefaultTypeInternal;
+extern StatusDefaultTypeInternal _Status_default_instance_;
 }  // namespace splitter
 PROTOBUF_NAMESPACE_OPEN
 template<> ::splitter::Command* Arena::CreateMaybeMessage<::splitter::Command>(Arena*);
 template<> ::splitter::Envelope* Arena::CreateMaybeMessage<::splitter::Envelope>(Arena*);
 template<> ::splitter::FFTReport* Arena::CreateMaybeMessage<::splitter::FFTReport>(Arena*);
+template<> ::splitter::Status* Arena::CreateMaybeMessage<::splitter::Status>(Arena*);
 PROTOBUF_NAMESPACE_CLOSE
 namespace splitter {
 
@@ -444,6 +448,187 @@ class Command final :
 };
 // -------------------------------------------------------------------
 
+class Status final :
+    public ::PROTOBUF_NAMESPACE_ID::Message /* @@protoc_insertion_point(class_definition:splitter.Status) */ {
+ public:
+  inline Status() : Status(nullptr) {}
+  ~Status() override;
+  explicit PROTOBUF_CONSTEXPR Status(::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized);
+
+  Status(const Status& from);
+  Status(Status&& from) noexcept
+    : Status() {
+    *this = ::std::move(from);
+  }
+
+  inline Status& operator=(const Status& from) {
+    CopyFrom(from);
+    return *this;
+  }
+  inline Status& operator=(Status&& from) noexcept {
+    if (this == &from) return *this;
+    if (GetOwningArena() == from.GetOwningArena()
+  #ifdef PROTOBUF_FORCE_COPY_IN_MOVE
+        && GetOwningArena() != nullptr
+  #endif  // !PROTOBUF_FORCE_COPY_IN_MOVE
+    ) {
+      InternalSwap(&from);
+    } else {
+      CopyFrom(from);
+    }
+    return *this;
+  }
+
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* descriptor() {
+    return GetDescriptor();
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Descriptor* GetDescriptor() {
+    return default_instance().GetMetadata().descriptor;
+  }
+  static const ::PROTOBUF_NAMESPACE_ID::Reflection* GetReflection() {
+    return default_instance().GetMetadata().reflection;
+  }
+  static const Status& default_instance() {
+    return *internal_default_instance();
+  }
+  static inline const Status* internal_default_instance() {
+    return reinterpret_cast<const Status*>(
+               &_Status_default_instance_);
+  }
+  static constexpr int kIndexInFileMessages =
+    2;
+
+  friend void swap(Status& a, Status& b) {
+    a.Swap(&b);
+  }
+  inline void Swap(Status* other) {
+    if (other == this) return;
+  #ifdef PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() != nullptr &&
+        GetOwningArena() == other->GetOwningArena()) {
+   #else  // PROTOBUF_FORCE_COPY_IN_SWAP
+    if (GetOwningArena() == other->GetOwningArena()) {
+  #endif  // !PROTOBUF_FORCE_COPY_IN_SWAP
+      InternalSwap(other);
+    } else {
+      ::PROTOBUF_NAMESPACE_ID::internal::GenericSwap(this, other);
+    }
+  }
+  void UnsafeArenaSwap(Status* other) {
+    if (other == this) return;
+    GOOGLE_DCHECK(GetOwningArena() == other->GetOwningArena());
+    InternalSwap(other);
+  }
+
+  // implements Message ----------------------------------------------
+
+  Status* New(::PROTOBUF_NAMESPACE_ID::Arena* arena = nullptr) const final {
+    return CreateMaybeMessage<Status>(arena);
+  }
+  using ::PROTOBUF_NAMESPACE_ID::Message::CopyFrom;
+  void CopyFrom(const Status& from);
+  using ::PROTOBUF_NAMESPACE_ID::Message::MergeFrom;
+  void MergeFrom( const Status& from) {
+    Status::MergeImpl(*this, from);
+  }
+  private:
+  static void MergeImpl(::PROTOBUF_NAMESPACE_ID::Message& to_msg, const ::PROTOBUF_NAMESPACE_ID::Message& from_msg);
+  public:
+  PROTOBUF_ATTRIBUTE_REINITIALIZES void Clear() final;
+  bool IsInitialized() const final;
+
+  size_t ByteSizeLong() const final;
+  const char* _InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::internal::ParseContext* ctx) final;
+  uint8_t* _InternalSerialize(
+      uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const final;
+  int GetCachedSize() const final { return _impl_._cached_size_.Get(); }
+
+  private:
+  void SharedCtor(::PROTOBUF_NAMESPACE_ID::Arena* arena, bool is_message_owned);
+  void SharedDtor();
+  void SetCachedSize(int size) const final;
+  void InternalSwap(Status* other);
+
+  private:
+  friend class ::PROTOBUF_NAMESPACE_ID::internal::AnyMetadata;
+  static ::PROTOBUF_NAMESPACE_ID::StringPiece FullMessageName() {
+    return "splitter.Status";
+  }
+  protected:
+  explicit Status(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                       bool is_message_owned = false);
+  public:
+
+  static const ClassData _class_data_;
+  const ::PROTOBUF_NAMESPACE_ID::Message::ClassData*GetClassData() const final;
+
+  ::PROTOBUF_NAMESPACE_ID::Metadata GetMetadata() const final;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  enum : int {
+    kPortFieldNumber = 1,
+    kEnabledFieldNumber = 2,
+    kSignalPresentFieldNumber = 3,
+    kCenterMhzFieldNumber = 4,
+  };
+  // uint32 port = 1;
+  void clear_port();
+  uint32_t port() const;
+  void set_port(uint32_t value);
+  private:
+  uint32_t _internal_port() const;
+  void _internal_set_port(uint32_t value);
+  public:
+
+  // bool enabled = 2;
+  void clear_enabled();
+  bool enabled() const;
+  void set_enabled(bool value);
+  private:
+  bool _internal_enabled() const;
+  void _internal_set_enabled(bool value);
+  public:
+
+  // bool signal_present = 3;
+  void clear_signal_present();
+  bool signal_present() const;
+  void set_signal_present(bool value);
+  private:
+  bool _internal_signal_present() const;
+  void _internal_set_signal_present(bool value);
+  public:
+
+  // float center_mhz = 4;
+  void clear_center_mhz();
+  float center_mhz() const;
+  void set_center_mhz(float value);
+  private:
+  float _internal_center_mhz() const;
+  void _internal_set_center_mhz(float value);
+  public:
+
+  // @@protoc_insertion_point(class_scope:splitter.Status)
+ private:
+  class _Internal;
+
+  template <typename T> friend class ::PROTOBUF_NAMESPACE_ID::Arena::InternalHelper;
+  typedef void InternalArenaConstructable_;
+  typedef void DestructorSkippable_;
+  struct Impl_ {
+    uint32_t port_;
+    bool enabled_;
+    bool signal_present_;
+    float center_mhz_;
+    mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
+  };
+  union { Impl_ _impl_; };
+  friend struct ::TableStruct_splitter_2eproto;
+};
+// -------------------------------------------------------------------
+
 class Envelope final :
     public ::PROTOBUF_NAMESPACE_ID::Message /* @@protoc_insertion_point(class_definition:splitter.Envelope) */ {
  public:
@@ -490,6 +675,7 @@ class Envelope final :
   enum PayloadCase {
     kReport = 1,
     kCommand = 2,
+    kStatus = 4,
     PAYLOAD_NOT_SET = 0,
   };
 
@@ -498,7 +684,7 @@ class Envelope final :
                &_Envelope_default_instance_);
   }
   static constexpr int kIndexInFileMessages =
-    2;
+    3;
 
   friend void swap(Envelope& a, Envelope& b) {
     a.Swap(&b);
@@ -574,6 +760,7 @@ class Envelope final :
     kCrc32FieldNumber = 3,
     kReportFieldNumber = 1,
     kCommandFieldNumber = 2,
+    kStatusFieldNumber = 4,
   };
   // uint32 crc32 = 3;
   void clear_crc32();
@@ -620,6 +807,24 @@ class Envelope final :
       ::splitter::Command* command);
   ::splitter::Command* unsafe_arena_release_command();
 
+  // .splitter.Status status = 4;
+  bool has_status() const;
+  private:
+  bool _internal_has_status() const;
+  public:
+  void clear_status();
+  const ::splitter::Status& status() const;
+  PROTOBUF_NODISCARD ::splitter::Status* release_status();
+  ::splitter::Status* mutable_status();
+  void set_allocated_status(::splitter::Status* status);
+  private:
+  const ::splitter::Status& _internal_status() const;
+  ::splitter::Status* _internal_mutable_status();
+  public:
+  void unsafe_arena_set_allocated_status(
+      ::splitter::Status* status);
+  ::splitter::Status* unsafe_arena_release_status();
+
   void clear_payload();
   PayloadCase payload_case() const;
   // @@protoc_insertion_point(class_scope:splitter.Envelope)
@@ -627,6 +832,7 @@ class Envelope final :
   class _Internal;
   void set_has_report();
   void set_has_command();
+  void set_has_status();
 
   inline bool has_payload() const;
   inline void clear_has_payload();
@@ -641,6 +847,7 @@ class Envelope final :
         ::PROTOBUF_NAMESPACE_ID::internal::ConstantInitialized _constinit_;
       ::splitter::FFTReport* report_;
       ::splitter::Command* command_;
+      ::splitter::Status* status_;
     } payload_;
     mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
     uint32_t _oneof_case_[1];
@@ -742,6 +949,90 @@ inline void Command::_internal_set_enable(bool value) {
 inline void Command::set_enable(bool value) {
   _internal_set_enable(value);
   // @@protoc_insertion_point(field_set:splitter.Command.enable)
+}
+
+// -------------------------------------------------------------------
+
+// Status
+
+// uint32 port = 1;
+inline void Status::clear_port() {
+  _impl_.port_ = 0u;
+}
+inline uint32_t Status::_internal_port() const {
+  return _impl_.port_;
+}
+inline uint32_t Status::port() const {
+  // @@protoc_insertion_point(field_get:splitter.Status.port)
+  return _internal_port();
+}
+inline void Status::_internal_set_port(uint32_t value) {
+  
+  _impl_.port_ = value;
+}
+inline void Status::set_port(uint32_t value) {
+  _internal_set_port(value);
+  // @@protoc_insertion_point(field_set:splitter.Status.port)
+}
+
+// bool enabled = 2;
+inline void Status::clear_enabled() {
+  _impl_.enabled_ = false;
+}
+inline bool Status::_internal_enabled() const {
+  return _impl_.enabled_;
+}
+inline bool Status::enabled() const {
+  // @@protoc_insertion_point(field_get:splitter.Status.enabled)
+  return _internal_enabled();
+}
+inline void Status::_internal_set_enabled(bool value) {
+  
+  _impl_.enabled_ = value;
+}
+inline void Status::set_enabled(bool value) {
+  _internal_set_enabled(value);
+  // @@protoc_insertion_point(field_set:splitter.Status.enabled)
+}
+
+// bool signal_present = 3;
+inline void Status::clear_signal_present() {
+  _impl_.signal_present_ = false;
+}
+inline bool Status::_internal_signal_present() const {
+  return _impl_.signal_present_;
+}
+inline bool Status::signal_present() const {
+  // @@protoc_insertion_point(field_get:splitter.Status.signal_present)
+  return _internal_signal_present();
+}
+inline void Status::_internal_set_signal_present(bool value) {
+  
+  _impl_.signal_present_ = value;
+}
+inline void Status::set_signal_present(bool value) {
+  _internal_set_signal_present(value);
+  // @@protoc_insertion_point(field_set:splitter.Status.signal_present)
+}
+
+// float center_mhz = 4;
+inline void Status::clear_center_mhz() {
+  _impl_.center_mhz_ = 0;
+}
+inline float Status::_internal_center_mhz() const {
+  return _impl_.center_mhz_;
+}
+inline float Status::center_mhz() const {
+  // @@protoc_insertion_point(field_get:splitter.Status.center_mhz)
+  return _internal_center_mhz();
+}
+inline void Status::_internal_set_center_mhz(float value) {
+  
+  _impl_.center_mhz_ = value;
+}
+inline void Status::set_center_mhz(float value) {
+  _internal_set_center_mhz(value);
+  // @@protoc_insertion_point(field_set:splitter.Status.center_mhz)
 }
 
 // -------------------------------------------------------------------
@@ -896,6 +1187,80 @@ inline ::splitter::Command* Envelope::mutable_command() {
   return _msg;
 }
 
+// .splitter.Status status = 4;
+inline bool Envelope::_internal_has_status() const {
+  return payload_case() == kStatus;
+}
+inline bool Envelope::has_status() const {
+  return _internal_has_status();
+}
+inline void Envelope::set_has_status() {
+  _impl_._oneof_case_[0] = kStatus;
+}
+inline void Envelope::clear_status() {
+  if (_internal_has_status()) {
+    if (GetArenaForAllocation() == nullptr) {
+      delete _impl_.payload_.status_;
+    }
+    clear_has_payload();
+  }
+}
+inline ::splitter::Status* Envelope::release_status() {
+  // @@protoc_insertion_point(field_release:splitter.Envelope.status)
+  if (_internal_has_status()) {
+    clear_has_payload();
+    ::splitter::Status* temp = _impl_.payload_.status_;
+    if (GetArenaForAllocation() != nullptr) {
+      temp = ::PROTOBUF_NAMESPACE_ID::internal::DuplicateIfNonNull(temp);
+    }
+    _impl_.payload_.status_ = nullptr;
+    return temp;
+  } else {
+    return nullptr;
+  }
+}
+inline const ::splitter::Status& Envelope::_internal_status() const {
+  return _internal_has_status()
+      ? *_impl_.payload_.status_
+      : reinterpret_cast< ::splitter::Status&>(::splitter::_Status_default_instance_);
+}
+inline const ::splitter::Status& Envelope::status() const {
+  // @@protoc_insertion_point(field_get:splitter.Envelope.status)
+  return _internal_status();
+}
+inline ::splitter::Status* Envelope::unsafe_arena_release_status() {
+  // @@protoc_insertion_point(field_unsafe_arena_release:splitter.Envelope.status)
+  if (_internal_has_status()) {
+    clear_has_payload();
+    ::splitter::Status* temp = _impl_.payload_.status_;
+    _impl_.payload_.status_ = nullptr;
+    return temp;
+  } else {
+    return nullptr;
+  }
+}
+inline void Envelope::unsafe_arena_set_allocated_status(::splitter::Status* status) {
+  clear_payload();
+  if (status) {
+    set_has_status();
+    _impl_.payload_.status_ = status;
+  }
+  // @@protoc_insertion_point(field_unsafe_arena_set_allocated:splitter.Envelope.status)
+}
+inline ::splitter::Status* Envelope::_internal_mutable_status() {
+  if (!_internal_has_status()) {
+    clear_payload();
+    set_has_status();
+    _impl_.payload_.status_ = CreateMaybeMessage< ::splitter::Status >(GetArenaForAllocation());
+  }
+  return _impl_.payload_.status_;
+}
+inline ::splitter::Status* Envelope::mutable_status() {
+  ::splitter::Status* _msg = _internal_mutable_status();
+  // @@protoc_insertion_point(field_mutable:splitter.Envelope.status)
+  return _msg;
+}
+
 // uint32 crc32 = 3;
 inline void Envelope::clear_crc32() {
   _impl_.crc32_ = 0u;
@@ -928,6 +1293,8 @@ inline Envelope::PayloadCase Envelope::payload_case() const {
 #ifdef __GNUC__
   #pragma GCC diagnostic pop
 #endif  // __GNUC__
+// -------------------------------------------------------------------
+
 // -------------------------------------------------------------------
 
 // -------------------------------------------------------------------

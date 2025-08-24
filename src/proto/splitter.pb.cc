@@ -49,6 +49,22 @@ struct CommandDefaultTypeInternal {
   };
 };
 PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 CommandDefaultTypeInternal _Command_default_instance_;
+PROTOBUF_CONSTEXPR Status::Status(
+    ::_pbi::ConstantInitialized): _impl_{
+    /*decltype(_impl_.port_)*/0u
+  , /*decltype(_impl_.enabled_)*/false
+  , /*decltype(_impl_.signal_present_)*/false
+  , /*decltype(_impl_.center_mhz_)*/0
+  , /*decltype(_impl_._cached_size_)*/{}} {}
+struct StatusDefaultTypeInternal {
+  PROTOBUF_CONSTEXPR StatusDefaultTypeInternal()
+      : _instance(::_pbi::ConstantInitialized{}) {}
+  ~StatusDefaultTypeInternal() {}
+  union {
+    Status _instance;
+  };
+};
+PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 StatusDefaultTypeInternal _Status_default_instance_;
 PROTOBUF_CONSTEXPR Envelope::Envelope(
     ::_pbi::ConstantInitialized): _impl_{
     /*decltype(_impl_.crc32_)*/0u
@@ -65,7 +81,7 @@ struct EnvelopeDefaultTypeInternal {
 };
 PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT PROTOBUF_ATTRIBUTE_INIT_PRIORITY1 EnvelopeDefaultTypeInternal _Envelope_default_instance_;
 }  // namespace splitter
-static ::_pb::Metadata file_level_metadata_splitter_2eproto[3];
+static ::_pb::Metadata file_level_metadata_splitter_2eproto[4];
 static const ::_pb::EnumDescriptor* file_level_enum_descriptors_splitter_2eproto[1];
 static constexpr ::_pb::ServiceDescriptor const** file_level_service_descriptors_splitter_2eproto = nullptr;
 
@@ -87,11 +103,22 @@ const uint32_t TableStruct_splitter_2eproto::offsets[] PROTOBUF_SECTION_VARIABLE
   PROTOBUF_FIELD_OFFSET(::splitter::Command, _impl_.port_),
   PROTOBUF_FIELD_OFFSET(::splitter::Command, _impl_.enable_),
   ~0u,  // no _has_bits_
+  PROTOBUF_FIELD_OFFSET(::splitter::Status, _internal_metadata_),
+  ~0u,  // no _extensions_
+  ~0u,  // no _oneof_case_
+  ~0u,  // no _weak_field_map_
+  ~0u,  // no _inlined_string_donated_
+  PROTOBUF_FIELD_OFFSET(::splitter::Status, _impl_.port_),
+  PROTOBUF_FIELD_OFFSET(::splitter::Status, _impl_.enabled_),
+  PROTOBUF_FIELD_OFFSET(::splitter::Status, _impl_.signal_present_),
+  PROTOBUF_FIELD_OFFSET(::splitter::Status, _impl_.center_mhz_),
+  ~0u,  // no _has_bits_
   PROTOBUF_FIELD_OFFSET(::splitter::Envelope, _internal_metadata_),
   ~0u,  // no _extensions_
   PROTOBUF_FIELD_OFFSET(::splitter::Envelope, _impl_._oneof_case_[0]),
   ~0u,  // no _weak_field_map_
   ~0u,  // no _inlined_string_donated_
+  ::_pbi::kInvalidFieldOffsetTag,
   ::_pbi::kInvalidFieldOffsetTag,
   ::_pbi::kInvalidFieldOffsetTag,
   PROTOBUF_FIELD_OFFSET(::splitter::Envelope, _impl_.crc32_),
@@ -100,12 +127,14 @@ const uint32_t TableStruct_splitter_2eproto::offsets[] PROTOBUF_SECTION_VARIABLE
 static const ::_pbi::MigrationSchema schemas[] PROTOBUF_SECTION_VARIABLE(protodesc_cold) = {
   { 0, -1, -1, sizeof(::splitter::FFTReport)},
   { 7, -1, -1, sizeof(::splitter::Command)},
-  { 16, -1, -1, sizeof(::splitter::Envelope)},
+  { 16, -1, -1, sizeof(::splitter::Status)},
+  { 26, -1, -1, sizeof(::splitter::Envelope)},
 };
 
 static const ::_pb::Message* const file_default_instances[] = {
   &::splitter::_FFTReport_default_instance_._instance,
   &::splitter::_Command_default_instance_._instance,
+  &::splitter::_Status_default_instance_._instance,
   &::splitter::_Envelope_default_instance_._instance,
 };
 
@@ -115,16 +144,19 @@ const char descriptor_table_protodef_splitter_2eproto[] PROTOBUF_SECTION_VARIABL
   "\001 \001(\0162\026.splitter.Command.Type\022\014\n\004port\030\002 "
   "\001(\r\022\016\n\006enable\030\003 \001(\010\">\n\004Type\022\013\n\007UNKNOWN\020\000"
   "\022\t\n\005START\020\001\022\010\n\004STOP\020\002\022\024\n\020SET_PORT_ENABLE"
-  "D\020\003\"q\n\010Envelope\022%\n\006report\030\001 \001(\0132\023.splitt"
-  "er.FFTReportH\000\022$\n\007command\030\002 \001(\0132\021.splitt"
-  "er.CommandH\000\022\r\n\005crc32\030\003 \001(\rB\t\n\007payloadb\006"
-  "proto3"
+  "D\020\003\"S\n\006Status\022\014\n\004port\030\001 \001(\r\022\017\n\007enabled\030\002"
+  " \001(\010\022\026\n\016signal_present\030\003 \001(\010\022\022\n\ncenter_m"
+  "hz\030\004 \001(\002\"\225\001\n\010Envelope\022%\n\006report\030\001 \001(\0132\023."
+  "splitter.FFTReportH\000\022$\n\007command\030\002 \001(\0132\021."
+  "splitter.CommandH\000\022\"\n\006status\030\004 \001(\0132\020.spl"
+  "itter.StatusH\000\022\r\n\005crc32\030\003 \001(\rB\t\n\007payload"
+  "b\006proto3"
   ;
 static ::_pbi::once_flag descriptor_table_splitter_2eproto_once;
 const ::_pbi::DescriptorTable descriptor_table_splitter_2eproto = {
-    false, false, 326, descriptor_table_protodef_splitter_2eproto,
+    false, false, 448, descriptor_table_protodef_splitter_2eproto,
     "splitter.proto",
-    &descriptor_table_splitter_2eproto_once, nullptr, 0, 3,
+    &descriptor_table_splitter_2eproto_once, nullptr, 0, 4,
     schemas, file_default_instances, TableStruct_splitter_2eproto::offsets,
     file_level_metadata_splitter_2eproto, file_level_enum_descriptors_splitter_2eproto,
     file_level_service_descriptors_splitter_2eproto,
@@ -592,10 +624,282 @@ void Command::InternalSwap(Command* other) {
 
 // ===================================================================
 
+class Status::_Internal {
+ public:
+};
+
+Status::Status(::PROTOBUF_NAMESPACE_ID::Arena* arena,
+                         bool is_message_owned)
+  : ::PROTOBUF_NAMESPACE_ID::Message(arena, is_message_owned) {
+  SharedCtor(arena, is_message_owned);
+  // @@protoc_insertion_point(arena_constructor:splitter.Status)
+}
+Status::Status(const Status& from)
+  : ::PROTOBUF_NAMESPACE_ID::Message() {
+  Status* const _this = this; (void)_this;
+  new (&_impl_) Impl_{
+      decltype(_impl_.port_){}
+    , decltype(_impl_.enabled_){}
+    , decltype(_impl_.signal_present_){}
+    , decltype(_impl_.center_mhz_){}
+    , /*decltype(_impl_._cached_size_)*/{}};
+
+  _internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
+  ::memcpy(&_impl_.port_, &from._impl_.port_,
+    static_cast<size_t>(reinterpret_cast<char*>(&_impl_.center_mhz_) -
+    reinterpret_cast<char*>(&_impl_.port_)) + sizeof(_impl_.center_mhz_));
+  // @@protoc_insertion_point(copy_constructor:splitter.Status)
+}
+
+inline void Status::SharedCtor(
+    ::_pb::Arena* arena, bool is_message_owned) {
+  (void)arena;
+  (void)is_message_owned;
+  new (&_impl_) Impl_{
+      decltype(_impl_.port_){0u}
+    , decltype(_impl_.enabled_){false}
+    , decltype(_impl_.signal_present_){false}
+    , decltype(_impl_.center_mhz_){0}
+    , /*decltype(_impl_._cached_size_)*/{}
+  };
+}
+
+Status::~Status() {
+  // @@protoc_insertion_point(destructor:splitter.Status)
+  if (auto *arena = _internal_metadata_.DeleteReturnArena<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>()) {
+  (void)arena;
+    return;
+  }
+  SharedDtor();
+}
+
+inline void Status::SharedDtor() {
+  GOOGLE_DCHECK(GetArenaForAllocation() == nullptr);
+}
+
+void Status::SetCachedSize(int size) const {
+  _impl_._cached_size_.Set(size);
+}
+
+void Status::Clear() {
+// @@protoc_insertion_point(message_clear_start:splitter.Status)
+  uint32_t cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
+  ::memset(&_impl_.port_, 0, static_cast<size_t>(
+      reinterpret_cast<char*>(&_impl_.center_mhz_) -
+      reinterpret_cast<char*>(&_impl_.port_)) + sizeof(_impl_.center_mhz_));
+  _internal_metadata_.Clear<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>();
+}
+
+const char* Status::_InternalParse(const char* ptr, ::_pbi::ParseContext* ctx) {
+#define CHK_(x) if (PROTOBUF_PREDICT_FALSE(!(x))) goto failure
+  while (!ctx->Done(&ptr)) {
+    uint32_t tag;
+    ptr = ::_pbi::ReadTag(ptr, &tag);
+    switch (tag >> 3) {
+      // uint32 port = 1;
+      case 1:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 8)) {
+          _impl_.port_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
+          CHK_(ptr);
+        } else
+          goto handle_unusual;
+        continue;
+      // bool enabled = 2;
+      case 2:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 16)) {
+          _impl_.enabled_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
+          CHK_(ptr);
+        } else
+          goto handle_unusual;
+        continue;
+      // bool signal_present = 3;
+      case 3:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 24)) {
+          _impl_.signal_present_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint64(&ptr);
+          CHK_(ptr);
+        } else
+          goto handle_unusual;
+        continue;
+      // float center_mhz = 4;
+      case 4:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 37)) {
+          _impl_.center_mhz_ = ::PROTOBUF_NAMESPACE_ID::internal::UnalignedLoad<float>(ptr);
+          ptr += sizeof(float);
+        } else
+          goto handle_unusual;
+        continue;
+      default:
+        goto handle_unusual;
+    }  // switch
+  handle_unusual:
+    if ((tag == 0) || ((tag & 7) == 4)) {
+      CHK_(ptr);
+      ctx->SetLastTag(tag);
+      goto message_done;
+    }
+    ptr = UnknownFieldParse(
+        tag,
+        _internal_metadata_.mutable_unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(),
+        ptr, ctx);
+    CHK_(ptr != nullptr);
+  }  // while
+message_done:
+  return ptr;
+failure:
+  ptr = nullptr;
+  goto message_done;
+#undef CHK_
+}
+
+uint8_t* Status::_InternalSerialize(
+    uint8_t* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
+  // @@protoc_insertion_point(serialize_to_array_start:splitter.Status)
+  uint32_t cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  // uint32 port = 1;
+  if (this->_internal_port() != 0) {
+    target = stream->EnsureSpace(target);
+    target = ::_pbi::WireFormatLite::WriteUInt32ToArray(1, this->_internal_port(), target);
+  }
+
+  // bool enabled = 2;
+  if (this->_internal_enabled() != 0) {
+    target = stream->EnsureSpace(target);
+    target = ::_pbi::WireFormatLite::WriteBoolToArray(2, this->_internal_enabled(), target);
+  }
+
+  // bool signal_present = 3;
+  if (this->_internal_signal_present() != 0) {
+    target = stream->EnsureSpace(target);
+    target = ::_pbi::WireFormatLite::WriteBoolToArray(3, this->_internal_signal_present(), target);
+  }
+
+  // float center_mhz = 4;
+  static_assert(sizeof(uint32_t) == sizeof(float), "Code assumes uint32_t and float are the same size.");
+  float tmp_center_mhz = this->_internal_center_mhz();
+  uint32_t raw_center_mhz;
+  memcpy(&raw_center_mhz, &tmp_center_mhz, sizeof(tmp_center_mhz));
+  if (raw_center_mhz != 0) {
+    target = stream->EnsureSpace(target);
+    target = ::_pbi::WireFormatLite::WriteFloatToArray(4, this->_internal_center_mhz(), target);
+  }
+
+  if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
+    target = ::_pbi::WireFormat::InternalSerializeUnknownFieldsToArray(
+        _internal_metadata_.unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(::PROTOBUF_NAMESPACE_ID::UnknownFieldSet::default_instance), target, stream);
+  }
+  // @@protoc_insertion_point(serialize_to_array_end:splitter.Status)
+  return target;
+}
+
+size_t Status::ByteSizeLong() const {
+// @@protoc_insertion_point(message_byte_size_start:splitter.Status)
+  size_t total_size = 0;
+
+  uint32_t cached_has_bits = 0;
+  // Prevent compiler warnings about cached_has_bits being unused
+  (void) cached_has_bits;
+
+  // uint32 port = 1;
+  if (this->_internal_port() != 0) {
+    total_size += ::_pbi::WireFormatLite::UInt32SizePlusOne(this->_internal_port());
+  }
+
+  // bool enabled = 2;
+  if (this->_internal_enabled() != 0) {
+    total_size += 1 + 1;
+  }
+
+  // bool signal_present = 3;
+  if (this->_internal_signal_present() != 0) {
+    total_size += 1 + 1;
+  }
+
+  // float center_mhz = 4;
+  static_assert(sizeof(uint32_t) == sizeof(float), "Code assumes uint32_t and float are the same size.");
+  float tmp_center_mhz = this->_internal_center_mhz();
+  uint32_t raw_center_mhz;
+  memcpy(&raw_center_mhz, &tmp_center_mhz, sizeof(tmp_center_mhz));
+  if (raw_center_mhz != 0) {
+    total_size += 1 + 4;
+  }
+
+  return MaybeComputeUnknownFieldsSize(total_size, &_impl_._cached_size_);
+}
+
+const ::PROTOBUF_NAMESPACE_ID::Message::ClassData Status::_class_data_ = {
+    ::PROTOBUF_NAMESPACE_ID::Message::CopyWithSourceCheck,
+    Status::MergeImpl
+};
+const ::PROTOBUF_NAMESPACE_ID::Message::ClassData*Status::GetClassData() const { return &_class_data_; }
+
+
+void Status::MergeImpl(::PROTOBUF_NAMESPACE_ID::Message& to_msg, const ::PROTOBUF_NAMESPACE_ID::Message& from_msg) {
+  auto* const _this = static_cast<Status*>(&to_msg);
+  auto& from = static_cast<const Status&>(from_msg);
+  // @@protoc_insertion_point(class_specific_merge_from_start:splitter.Status)
+  GOOGLE_DCHECK_NE(&from, _this);
+  uint32_t cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  if (from._internal_port() != 0) {
+    _this->_internal_set_port(from._internal_port());
+  }
+  if (from._internal_enabled() != 0) {
+    _this->_internal_set_enabled(from._internal_enabled());
+  }
+  if (from._internal_signal_present() != 0) {
+    _this->_internal_set_signal_present(from._internal_signal_present());
+  }
+  static_assert(sizeof(uint32_t) == sizeof(float), "Code assumes uint32_t and float are the same size.");
+  float tmp_center_mhz = from._internal_center_mhz();
+  uint32_t raw_center_mhz;
+  memcpy(&raw_center_mhz, &tmp_center_mhz, sizeof(tmp_center_mhz));
+  if (raw_center_mhz != 0) {
+    _this->_internal_set_center_mhz(from._internal_center_mhz());
+  }
+  _this->_internal_metadata_.MergeFrom<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(from._internal_metadata_);
+}
+
+void Status::CopyFrom(const Status& from) {
+// @@protoc_insertion_point(class_specific_copy_from_start:splitter.Status)
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+bool Status::IsInitialized() const {
+  return true;
+}
+
+void Status::InternalSwap(Status* other) {
+  using std::swap;
+  _internal_metadata_.InternalSwap(&other->_internal_metadata_);
+  ::PROTOBUF_NAMESPACE_ID::internal::memswap<
+      PROTOBUF_FIELD_OFFSET(Status, _impl_.center_mhz_)
+      + sizeof(Status::_impl_.center_mhz_)
+      - PROTOBUF_FIELD_OFFSET(Status, _impl_.port_)>(
+          reinterpret_cast<char*>(&_impl_.port_),
+          reinterpret_cast<char*>(&other->_impl_.port_));
+}
+
+::PROTOBUF_NAMESPACE_ID::Metadata Status::GetMetadata() const {
+  return ::_pbi::AssignDescriptors(
+      &descriptor_table_splitter_2eproto_getter, &descriptor_table_splitter_2eproto_once,
+      file_level_metadata_splitter_2eproto[2]);
+}
+
+// ===================================================================
+
 class Envelope::_Internal {
  public:
   static const ::splitter::FFTReport& report(const Envelope* msg);
   static const ::splitter::Command& command(const Envelope* msg);
+  static const ::splitter::Status& status(const Envelope* msg);
 };
 
 const ::splitter::FFTReport&
@@ -605,6 +909,10 @@ Envelope::_Internal::report(const Envelope* msg) {
 const ::splitter::Command&
 Envelope::_Internal::command(const Envelope* msg) {
   return *msg->_impl_.payload_.command_;
+}
+const ::splitter::Status&
+Envelope::_Internal::status(const Envelope* msg) {
+  return *msg->_impl_.payload_.status_;
 }
 void Envelope::set_allocated_report(::splitter::FFTReport* report) {
   ::PROTOBUF_NAMESPACE_ID::Arena* message_arena = GetArenaForAllocation();
@@ -636,6 +944,21 @@ void Envelope::set_allocated_command(::splitter::Command* command) {
   }
   // @@protoc_insertion_point(field_set_allocated:splitter.Envelope.command)
 }
+void Envelope::set_allocated_status(::splitter::Status* status) {
+  ::PROTOBUF_NAMESPACE_ID::Arena* message_arena = GetArenaForAllocation();
+  clear_payload();
+  if (status) {
+    ::PROTOBUF_NAMESPACE_ID::Arena* submessage_arena =
+      ::PROTOBUF_NAMESPACE_ID::Arena::InternalGetOwningArena(status);
+    if (message_arena != submessage_arena) {
+      status = ::PROTOBUF_NAMESPACE_ID::internal::GetOwnedMessage(
+          message_arena, status, submessage_arena);
+    }
+    set_has_status();
+    _impl_.payload_.status_ = status;
+  }
+  // @@protoc_insertion_point(field_set_allocated:splitter.Envelope.status)
+}
 Envelope::Envelope(::PROTOBUF_NAMESPACE_ID::Arena* arena,
                          bool is_message_owned)
   : ::PROTOBUF_NAMESPACE_ID::Message(arena, is_message_owned) {
@@ -663,6 +986,11 @@ Envelope::Envelope(const Envelope& from)
     case kCommand: {
       _this->_internal_mutable_command()->::splitter::Command::MergeFrom(
           from._internal_command());
+      break;
+    }
+    case kStatus: {
+      _this->_internal_mutable_status()->::splitter::Status::MergeFrom(
+          from._internal_status());
       break;
     }
     case PAYLOAD_NOT_SET: {
@@ -720,6 +1048,12 @@ void Envelope::clear_payload() {
       }
       break;
     }
+    case kStatus: {
+      if (GetArenaForAllocation() == nullptr) {
+        delete _impl_.payload_.status_;
+      }
+      break;
+    }
     case PAYLOAD_NOT_SET: {
       break;
     }
@@ -765,6 +1099,14 @@ const char* Envelope::_InternalParse(const char* ptr, ::_pbi::ParseContext* ctx)
       case 3:
         if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 24)) {
           _impl_.crc32_ = ::PROTOBUF_NAMESPACE_ID::internal::ReadVarint32(&ptr);
+          CHK_(ptr);
+        } else
+          goto handle_unusual;
+        continue;
+      // .splitter.Status status = 4;
+      case 4:
+        if (PROTOBUF_PREDICT_TRUE(static_cast<uint8_t>(tag) == 34)) {
+          ptr = ctx->ParseMessage(_internal_mutable_status(), ptr);
           CHK_(ptr);
         } else
           goto handle_unusual;
@@ -818,6 +1160,13 @@ uint8_t* Envelope::_InternalSerialize(
     target = ::_pbi::WireFormatLite::WriteUInt32ToArray(3, this->_internal_crc32(), target);
   }
 
+  // .splitter.Status status = 4;
+  if (_internal_has_status()) {
+    target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::
+      InternalWriteMessage(4, _Internal::status(this),
+        _Internal::status(this).GetCachedSize(), target, stream);
+  }
+
   if (PROTOBUF_PREDICT_FALSE(_internal_metadata_.have_unknown_fields())) {
     target = ::_pbi::WireFormat::InternalSerializeUnknownFieldsToArray(
         _internal_metadata_.unknown_fields<::PROTOBUF_NAMESPACE_ID::UnknownFieldSet>(::PROTOBUF_NAMESPACE_ID::UnknownFieldSet::default_instance), target, stream);
@@ -852,6 +1201,13 @@ size_t Envelope::ByteSizeLong() const {
       total_size += 1 +
         ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(
           *_impl_.payload_.command_);
+      break;
+    }
+    // .splitter.Status status = 4;
+    case kStatus: {
+      total_size += 1 +
+        ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::MessageSize(
+          *_impl_.payload_.status_);
       break;
     }
     case PAYLOAD_NOT_SET: {
@@ -890,6 +1246,11 @@ void Envelope::MergeImpl(::PROTOBUF_NAMESPACE_ID::Message& to_msg, const ::PROTO
           from._internal_command());
       break;
     }
+    case kStatus: {
+      _this->_internal_mutable_status()->::splitter::Status::MergeFrom(
+          from._internal_status());
+      break;
+    }
     case PAYLOAD_NOT_SET: {
       break;
     }
@@ -919,7 +1280,7 @@ void Envelope::InternalSwap(Envelope* other) {
 ::PROTOBUF_NAMESPACE_ID::Metadata Envelope::GetMetadata() const {
   return ::_pbi::AssignDescriptors(
       &descriptor_table_splitter_2eproto_getter, &descriptor_table_splitter_2eproto_once,
-      file_level_metadata_splitter_2eproto[2]);
+      file_level_metadata_splitter_2eproto[3]);
 }
 
 // @@protoc_insertion_point(namespace_scope)
@@ -932,6 +1293,10 @@ Arena::CreateMaybeMessage< ::splitter::FFTReport >(Arena* arena) {
 template<> PROTOBUF_NOINLINE ::splitter::Command*
 Arena::CreateMaybeMessage< ::splitter::Command >(Arena* arena) {
   return Arena::CreateMessageInternal< ::splitter::Command >(arena);
+}
+template<> PROTOBUF_NOINLINE ::splitter::Status*
+Arena::CreateMaybeMessage< ::splitter::Status >(Arena* arena) {
+  return Arena::CreateMessageInternal< ::splitter::Status >(arena);
 }
 template<> PROTOBUF_NOINLINE ::splitter::Envelope*
 Arena::CreateMaybeMessage< ::splitter::Envelope >(Arena* arena) {

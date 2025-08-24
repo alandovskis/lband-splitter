@@ -17,10 +17,19 @@ message Command {
   bool enable = 3;
 }
 
+// Current port status
+message Status {
+  uint32 port = 1;
+  bool enabled = 2;
+  bool signal_present = 3;
+  float center_mhz = 4;
+}
+
 message Envelope {
   oneof payload {
     FFTReport report = 1;
     Command command = 2;
+    Status status = 4;
   }
   // CRC32 of the serialized payload to ensure message integrity
   uint32 crc32 = 3;
