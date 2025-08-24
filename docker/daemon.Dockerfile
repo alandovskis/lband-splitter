@@ -1,4 +1,17 @@
-FROM conanio/gcc12
+FROM ubuntu:22.04
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    cmake \
+    python3 \
+    python3-pip \
+    git \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Conan
+RUN pip3 install conan
+
 WORKDIR /app
 COPY . .
 RUN conan profile detect --force && \
