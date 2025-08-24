@@ -1,0 +1,14 @@
+:host {
+  display: block;
+  padding: 1rem;
+}
+
+.table-wrapper {
+  overflow-x: auto;
+}
+
+.loading {
+  display: flex;
+  justify-content: center;
+  padding: 2rem 0;
+}

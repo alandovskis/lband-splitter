@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Build and launch the monitor daemon and simple web server
+# Build and launch the monitor daemon and Angular development server
 set -euo pipefail
 
 # Build monitor_daemon if it does not exist
@@ -27,12 +27,12 @@ fi
 DAEMON_PID=$!
 echo "monitor_daemon running on port 9002 (PID $DAEMON_PID)"
 
-if command -v npx >/dev/null 2>&1; then
-  npx --yes http-server web -p 8080 &
+if command -v npm >/dev/null 2>&1; then
+  npm start --prefix web -- --port 8080 &
   WEB_PID=$!
   echo "Web UI available at http://localhost:8080 (PID $WEB_PID)"
 else
-  echo "npx not found. Install Node.js and npm." >&2
+  echo "npm not found. Install Node.js and npm." >&2
   kill "$DAEMON_PID"
   exit 1
 fi
