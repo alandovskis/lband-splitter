@@ -103,3 +103,63 @@ The embedded build forbids C++ exceptions. A standalone CMake project in `src/st
 ## Protobuf protocol and daemon
 
 A lightweight protocol defined in `proto/splitter.proto` allows the microcontroller to send FFT reports or receive commands such as start/stop and enabling or disabling individual ports. Each envelope includes a CRC32 checksum for basic integrity checking. A simple daemon (`monitor_daemon`) parses these protobuf messages on the Linux SBC, verifies the checksum, and prints the results. The daemon also launches a WebSocket server for communication with the Angular frontend and exposes a NETCONF interface for external control and monitoring, enabling remote clients to toggle ports and query their detected center frequencies.
+
+## Architecture
+
+### Context
+
+```mermaid
+C4Context
+    title L-Band Splitter Controller - Context
+    Person(operator, "Operator")
+    System(system, "L-Band Splitter Control System", "Manages splitter ports")
+    System_Ext(mcu, "STM32 Microcontroller", "Streams port status")
+    operator -> system : uses
+    system -> mcu : polls status
+```
+
+### Container
+
+```mermaid
+C4Container
+    title L-Band Splitter Controller - Containers
+    Person(operator, "Operator")
+    System_Boundary(system, "L-Band Splitter Control System") {
+        Container(webapp, "Web App", "Angular", "Browser UI")
+        Container(nginx, "Nginx", "Web Server", "Serves UI and proxies WebSocket")
+        Container(daemon, "Monitor Daemon", "C++", "Processes protobuf and exposes APIs")
+    }
+    System_Ext(mcu, "STM32 Microcontroller", "Status stream")
+    operator -> webapp : uses
+    webapp -> nginx : HTTP
+    nginx -> daemon : WebSocket
+    daemon -> mcu : TCP protobuf
+```
+
+### Component (Monitor Daemon)
+
+```mermaid
+C4Component
+    title Monitor Daemon Components
+    Container_Boundary(daemon, "Monitor Daemon") {
+        Component(proto, "Protobuf Handler", "Parses and validates messages")
+        Component(ws, "WebSocket Server", "Pushes updates to clients")
+        Component(netconf, "NETCONF Agent", "Configuration and telemetry")
+    }
+    proto -> ws : broadcasts status
+    proto -> netconf : exposes state
+```
+
+### Deployment
+
+```mermaid
+C4Deployment
+    title L-Band Splitter Controller - Deployment
+    Deployment_Node(host, "Docker Host", "Linux") {
+        Container(nginx, "Nginx")
+        Container(webapp, "Web App")
+        Container(daemon, "Monitor Daemon")
+        Container(stm32, "STM32 Mock")
+    }
+```
+
