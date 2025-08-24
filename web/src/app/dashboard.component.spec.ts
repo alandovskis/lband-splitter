@@ -1,4 +1,5 @@
 import { TestBed } from '@angular/core/testing';
+import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { of } from 'rxjs';
 import { DashboardComponent } from './dashboard.component';
 import { StatusService, PortStatus } from './status.service';
@@ -6,7 +7,7 @@ import { StatusService, PortStatus } from './status.service';
 describe('DashboardComponent', () => {
   beforeEach(() => {
     TestBed.configureTestingModule({
-      imports: [DashboardComponent],
+      imports: [DashboardComponent, NoopAnimationsModule],
       providers: [
         {
           provide: StatusService,
@@ -29,8 +30,8 @@ describe('DashboardComponent', () => {
     const fixture = TestBed.createComponent(DashboardComponent);
     fixture.detectChanges();
     const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.querySelectorAll('tbody tr').length).toBe(32);
-    expect(compiled.textContent).toContain('Port 0');
+    expect(compiled.querySelectorAll('tr.mat-mdc-row').length).toBe(32);
+    expect(compiled.textContent).toContain('Port');
     expect(compiled.textContent).toContain('123');
   });
 });

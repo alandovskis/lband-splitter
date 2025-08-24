@@ -2,7 +2,7 @@
 
 This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 17.3.17.
 
-It serves a simple dashboard displaying the device's enabled status and detected frequency in MHz.
+It serves a simple dashboard displaying the device's enabled status and detected frequency in MHz using Angular Material components for a professional look.
 
 ## Development server
 
