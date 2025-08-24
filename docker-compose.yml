@@ -21,9 +21,3 @@ services:
       dockerfile: docker/webapp.Dockerfile
     ports:
       - "4200:80"
-  stm32-mock:
-    build:
-      context: .
-      dockerfile: docker/stm32-mock.Dockerfile
-    ports:
-      - "50051:50051"

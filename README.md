@@ -57,34 +57,14 @@ requests to the daemon running on port 9002.
 
 ## Docker Compose
 
-A `docker-compose.yml` file orchestrates the web server, monitor daemon, frontend webapp, and an STM32 mock. Build and launch the stack with:
+A `docker-compose.yml` file orchestrates the web server, monitor daemon, and frontend webapp. Build and launch the stack with:
 
 ```
 docker compose up --build
 ```
 
-The nginx service serves the UI on port 8080 while proxying WebSocket traffic to the daemon on port 9002. The development webapp runs on port 4200, and the STM32 mock container is available for integration tests.
-It continuously prints simulated port status changes to its logs, making it easy to observe MCU behavior.
+The nginx service serves the UI on port 8080 while proxying WebSocket traffic to the daemon on port 9002. The development webapp runs on port 4200.
 
-### STM32 mock RPC
-
-The STM32 mock also exposes a simple protobuf-based RPC stream on port `50051`.
-Build the mock and a tiny client locally with CMake:
-
-```
-cmake -S src/stm32 -B build_stm32
-cmake --build build_stm32
-```
-
-Run the mock and connect with the generated client to watch status updates:
-
-```
-./build_stm32/stm32_status_mock &
-./build_stm32/stm32_client
-```
-
-Each reported status change includes the port number, whether it is enabled,
-the center frequency in MHz, and whether a signal is present.
 
 ## Dev Container
 
@@ -157,7 +137,8 @@ C4Deployment
         Container(nginx, "Nginx")
         Container(webapp, "Web App")
         Container(daemon, "Monitor Daemon")
-        Container(stm32, "STM32 Mock")
     }
+    Deployment_Node(mcu, "STM32 Microcontroller", "Hardware")
+    Rel(daemon, mcu, "TCP protobuf")
 ```
 
