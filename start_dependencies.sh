@@ -5,15 +5,16 @@ set -euo pipefail
 # Build monitor_daemon if it does not exist
 if [[ ! -x build/monitor_daemon ]]; then
   mkdir -p build
+  BUILD_TYPE=${BUILD_TYPE:-Release}
   conan profile detect --force >/dev/null 2>&1 || true
-  conan install . --output-folder build --build=missing
+  conan install . --output-folder build -s build_type="$BUILD_TYPE" --build=missing
   TOOLCHAIN_FILE=$(find build -name conan_toolchain.cmake | head -n 1)
   if [[ -z "$TOOLCHAIN_FILE" ]]; then
     echo "conan_toolchain.cmake not found; ensure 'conan install' completed successfully" >&2
     exit 1
   fi
-  cmake -S . -B build -DCMAKE_TOOLCHAIN_FILE="$TOOLCHAIN_FILE"
-  cmake --build build --target monitor_daemon
+  cmake -S . -B build -DCMAKE_TOOLCHAIN_FILE="$TOOLCHAIN_FILE" -DCMAKE_BUILD_TYPE="$BUILD_TYPE"
+  cmake --build build --config "$BUILD_TYPE" --target monitor_daemon
 fi
 
 DAEMON_BIN=$(find build -maxdepth 2 -type f -name monitor_daemon -perm -111 | head -n 1)

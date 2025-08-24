@@ -27,9 +27,9 @@ make build
 To run the individual steps manually:
 
 ```
-conan install . --output-folder build --build=missing
-cmake -S . -B build -DCMAKE_TOOLCHAIN_FILE=build/conan_toolchain.cmake
-cmake --build build
+conan install . --output-folder build -s build_type=Release --build=missing
+cmake -S . -B build -DCMAKE_TOOLCHAIN_FILE=$(find build -name conan_toolchain.cmake -print -quit) -DCMAKE_BUILD_TYPE=Release
+cmake --build build --config Release
 ```
 
 If `cmake` complains about a missing `conan_toolchain.cmake`, ensure the
