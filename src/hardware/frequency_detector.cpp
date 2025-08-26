@@ -4,10 +4,30 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <sys/ioctl.h>
-#include <linux/i2c-dev.h>
-#include <linux/spi/spidev.h>
+// #include <linux/i2c-dev.h>   // Not available on macOS
+// #include <linux/spi/spidev.h> // Not available on macOS  
 #include <cmath>
 #include <algorithm>
+
+// Mock Linux constants for macOS build
+#ifndef I2C_SLAVE
+#define I2C_SLAVE 0x0703
+#endif
+
+#ifndef SPI_IOC_MESSAGE
+#define SPI_IOC_MESSAGE(n) 0
+#define SPI_IOC_WR_MODE 0x40016B01
+#define SPI_IOC_WR_BITS_PER_WORD 0x40016B03
+#define SPI_IOC_WR_MAX_SPEED_HZ 0x40046B04
+struct spi_ioc_transfer {
+    unsigned long tx_buf;
+    unsigned long rx_buf;
+    uint32_t len;
+    uint32_t delay_usecs;
+    uint32_t speed_hz;
+    uint8_t bits_per_word;
+};
+#endif
 
 namespace splitter::hardware {
 

@@ -9,13 +9,13 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-find_package(libnetconf2 REQUIRED)
-find_package(cpprest REQUIRED)
+# find_package(libnetconf2 REQUIRED)  # Not available in ConanCenter
+# find_package(cpprest REQUIRED)       # Not available in ConanCenter
 find_package(spdlog REQUIRED)
 find_package(nlohmann_json REQUIRED)
-find_package(OpenSSL REQUIRED)
-find_package(Boost REQUIRED COMPONENTS system thread filesystem)
-find_package(PkgConfig REQUIRED)
+# find_package(OpenSSL REQUIRED)       # Build issues on macOS
+# find_package(Boost REQUIRED COMPONENTS system thread filesystem)  # Disabled
+# find_package(PkgConfig REQUIRED)     # Not needed for simplified build
 
 option(BUILD_TESTING "Build unit tests" ON)
 option(BUILD_SHARED_LIBS "Build shared libraries" ON)

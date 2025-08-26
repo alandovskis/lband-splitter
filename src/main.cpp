@@ -3,21 +3,21 @@
 #include <signal.h>
 #include <thread>
 #include <chrono>
-#include <systemd/sd-daemon.h>
+// #include <systemd/sd-daemon.h>  // Not available on macOS
 
 #include "core/splitter_manager.h"
 #include "core/config_manager.h"
-#include "netconf/netconf_server.h"
-#include "web/rest_server.h"
+// #include "netconf/netconf_server.h"  // Disabled - libnetconf2 not available
+// #include "web/rest_server.h"         // Disabled - cpprest not available
 #include "utils/logger.h"
 #include "utils/system_monitor.h"
 
 namespace {
     std::unique_ptr<splitter::core::SplitterManager> g_splitter_manager;
-    std::unique_ptr<splitter::netconf::NetconfServer> g_netconf_server;
-    std::unique_ptr<splitter::web::RestServer> g_rest_server;
+    // std::unique_ptr<splitter::netconf::NetconfServer> g_netconf_server;  // Disabled
+    // std::unique_ptr<splitter::web::RestServer> g_rest_server;            // Disabled  
     std::unique_ptr<splitter::utils::SystemMonitor> g_system_monitor;
-    volatile std::sig_atomic_t g_shutdown_requested = 0;
+    volatile sig_atomic_t g_shutdown_requested = 0;
 }
 
 void signal_handler(int signum) {
@@ -39,8 +39,8 @@ void setup_signal_handlers() {
 
 int main(int argc, char* argv[]) {
     try {
-        splitter::utils::Logger::init("/var/log/splitter/daemon.log");
-        splitter::utils::Logger::info("Starting L-band Splitter Daemon v{}", PROJECT_VERSION);
+        splitter::utils::Logger::init("/tmp/splitter_daemon.log");
+        splitter::utils::Logger::info("Starting L-band Splitter Daemon v{}", "1.0.0");
         
         setup_signal_handlers();
         
@@ -52,14 +52,14 @@ int main(int argc, char* argv[]) {
             config_manager.get()
         );
         
-        g_netconf_server = std::make_unique<splitter::netconf::NetconfServer>(
-            g_splitter_manager.get()
-        );
+        // g_netconf_server = std::make_unique<splitter::netconf::NetconfServer>(
+        //     g_splitter_manager.get()
+        // );  // Disabled - libnetconf2 not available
         
-        g_rest_server = std::make_unique<splitter::web::RestServer>(
-            g_splitter_manager.get(),
-            config_manager->get_web_port()
-        );
+        // g_rest_server = std::make_unique<splitter::web::RestServer>(
+        //     g_splitter_manager.get(),
+        //     config_manager->get_web_port()
+        // );  // Disabled - cpprest not available
         
         g_system_monitor = std::make_unique<splitter::utils::SystemMonitor>(
             g_splitter_manager.get()
@@ -70,19 +70,19 @@ int main(int argc, char* argv[]) {
             return 1;
         }
         
-        if (!g_netconf_server->start()) {
-            splitter::utils::Logger::error("Failed to start NetConf server");
-            return 1;
-        }
+        // if (!g_netconf_server->start()) {
+        //     splitter::utils::Logger::error("Failed to start NetConf server");
+        //     return 1;
+        // }  // Disabled - libnetconf2 not available
         
-        if (!g_rest_server->start()) {
-            splitter::utils::Logger::error("Failed to start REST API server");
-            return 1;
-        }
+        // if (!g_rest_server->start()) {
+        //     splitter::utils::Logger::error("Failed to start REST API server");
+        //     return 1;
+        // }  // Disabled - cpprest not available
         
         g_system_monitor->start();
         
-        sd_notify(0, "READY=1");
+        // sd_notify(0, "READY=1");  // systemd not available on macOS
         splitter::utils::Logger::info("Daemon initialized successfully, entering main loop");
         
         while (!g_shutdown_requested) {
@@ -93,8 +93,8 @@ int main(int argc, char* argv[]) {
         splitter::utils::Logger::info("Shutting down daemon gracefully");
         
         g_system_monitor->stop();
-        g_rest_server->stop();
-        g_netconf_server->stop();
+        // g_rest_server->stop();     // Disabled
+        // g_netconf_server->stop();  // Disabled
         g_splitter_manager->shutdown();
         
         splitter::utils::Logger::info("Daemon shutdown complete");

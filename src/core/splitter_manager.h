@@ -42,7 +42,7 @@ public:
     void process_events();
     
     bool get_system_health() const;
-    SystemStats get_system_stats() const;
+    struct SystemStats get_system_stats() const;
     
     static constexpr int NUM_PORTS = 32;
 
