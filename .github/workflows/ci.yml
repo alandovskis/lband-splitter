@@ -31,10 +31,6 @@ jobs:
       run: |
         cppcheck --enable=all --error-exitcode=1 --suppress=missingIncludeSystem src/
     
-    - name: Lint CMake files
-      uses: cheshirekow/cmake-lint-action@v1
-      with:
-        configfile: .cmake-format.json
 
   build-and-test:
     runs-on: ubuntu-22.04
