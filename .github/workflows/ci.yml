@@ -1,0 +1,292 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop, claude ]
+  pull_request:
+    branches: [ main, develop ]
+  release:
+    types: [ published ]
+
+env:
+  BUILD_TYPE: Release
+  CONAN_USER_HOME: /tmp/conan
+
+jobs:
+  lint-and-format:
+    runs-on: ubuntu-22.04
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y clang-format-14 cppcheck
+    
+    - name: Check code formatting
+      run: |
+        find src tests -name "*.cpp" -o -name "*.h" -o -name "*.hpp" | xargs clang-format-14 --dry-run --Werror
+    
+    - name: Run static analysis
+      run: |
+        cppcheck --enable=all --error-exitcode=1 --suppress=missingIncludeSystem src/
+    
+    - name: Lint CMake files
+      uses: cheshirekow/cmake-lint-action@v1
+      with:
+        configfile: .cmake-format.json
+
+  build-and-test:
+    runs-on: ubuntu-22.04
+    needs: lint-and-format
+    strategy:
+      matrix:
+        build_type: [Debug, Release]
+        compiler: [gcc-11, clang-14]
+        include:
+          - compiler: gcc-11
+            cc: gcc-11
+            cxx: g++-11
+          - compiler: clang-14
+            cc: clang-14
+            cxx: clang++-14
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+    
+    - name: Install system dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y \
+          build-essential \
+          cmake \
+          ninja-build \
+          ${{ matrix.cc }} \
+          ${{ matrix.cxx }} \
+          pkg-config \
+          libssl-dev \
+          libsystemd-dev \
+          libxml2-dev \
+          libssh-dev \
+          libcurl4-openssl-dev \
+          libi2c-dev \
+          libgpiod-dev
+    
+    - name: Install Conan
+      run: |
+        pip install "conan>=2.0.0,<3.0.0"
+        conan profile detect --force
+        conan profile update settings.compiler.cppstd=17 default
+    
+    - name: Cache Conan packages
+      uses: actions/cache@v3
+      with:
+        path: /tmp/conan
+        key: conan-${{ runner.os }}-${{ matrix.compiler }}-${{ matrix.build_type }}-${{ hashFiles('conanfile.txt') }}
+        restore-keys: |
+          conan-${{ runner.os }}-${{ matrix.compiler }}-${{ matrix.build_type }}-
+          conan-${{ runner.os }}-${{ matrix.compiler }}-
+          conan-${{ runner.os }}-
+    
+    - name: Install Conan dependencies
+      run: |
+        conan install . --build=missing --settings=build_type=${{ matrix.build_type }}
+      env:
+        CC: ${{ matrix.cc }}
+        CXX: ${{ matrix.cxx }}
+    
+    - name: Configure CMake
+      run: |
+        cmake --preset conan-${{ matrix.build_type == 'Release' && 'release' || 'debug' }} \
+          -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
+          -DBUILD_TESTING=ON
+      env:
+        CC: ${{ matrix.cc }}
+        CXX: ${{ matrix.cxx }}
+    
+    - name: Build
+      run: |
+        cmake --build --preset conan-${{ matrix.build_type == 'Release' && 'release' || 'debug' }} \
+          --parallel $(nproc)
+    
+    - name: Run unit tests
+      run: |
+        ctest --test-dir build/${{ matrix.build_type }} \
+          --output-on-failure \
+          --parallel $(nproc) \
+          --label-regex "unit"
+      env:
+        CTEST_OUTPUT_ON_FAILURE: 1
+    
+    - name: Run integration tests
+      run: |
+        ctest --test-dir build/${{ matrix.build_type }} \
+          --output-on-failure \
+          --parallel $(nproc) \
+          --label-regex "integration"
+      continue-on-error: true
+    
+    - name: Generate test coverage (gcc only)
+      if: matrix.compiler == 'gcc-11' && matrix.build_type == 'Debug'
+      run: |
+        sudo apt-get install -y gcovr
+        gcovr --root . --exclude tests/ --exclude build/ \
+          --html --html-details -o coverage.html \
+          --xml -o coverage.xml
+    
+    - name: Upload coverage to Codecov
+      if: matrix.compiler == 'gcc-11' && matrix.build_type == 'Debug'
+      uses: codecov/codecov-action@v3
+      with:
+        files: coverage.xml
+        fail_ci_if_error: true
+    
+    - name: Upload test results
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: test-results-${{ matrix.compiler }}-${{ matrix.build_type }}
+        path: |
+          build/${{ matrix.build_type }}/Testing/
+          coverage.html
+        retention-days: 30
+    
+    - name: Package artifacts
+      if: matrix.build_type == 'Release'
+      run: |
+        cmake --install build/Release --prefix dist/
+        tar -czf splitter-daemon-${{ runner.os }}-${{ matrix.compiler }}.tar.gz -C dist/ .
+    
+    - name: Upload build artifacts
+      if: matrix.build_type == 'Release'
+      uses: actions/upload-artifact@v3
+      with:
+        name: splitter-daemon-${{ runner.os }}-${{ matrix.compiler }}
+        path: splitter-daemon-${{ runner.os }}-${{ matrix.compiler }}.tar.gz
+        retention-days: 90
+
+  docker-build:
+    runs-on: ubuntu-22.04
+    needs: build-and-test
+    if: github.event_name != 'pull_request'
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+    
+    - name: Log in to Container Registry
+      uses: docker/login-action@v3
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: Extract metadata
+      id: meta
+      uses: docker/metadata-action@v5
+      with:
+        images: ghcr.io/${{ github.repository }}
+        tags: |
+          type=ref,event=branch
+          type=ref,event=pr
+          type=semver,pattern={{version}}
+          type=semver,pattern={{major}}.{{minor}}
+          type=semver,pattern={{major}}
+          type=sha
+    
+    - name: Build and push Docker image
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        file: ./docker/backend/Dockerfile
+        push: true
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+        platforms: linux/amd64,linux/arm64
+    
+    - name: Run Trivy vulnerability scanner
+      uses: aquasecurity/trivy-action@master
+      with:
+        image-ref: ghcr.io/${{ github.repository }}:${{ github.sha }}
+        format: 'sarif'
+        output: 'trivy-results.sarif'
+    
+    - name: Upload Trivy scan results
+      uses: github/codeql-action/upload-sarif@v2
+      with:
+        sarif_file: 'trivy-results.sarif'
+
+  release:
+    runs-on: ubuntu-22.04
+    needs: [build-and-test, docker-build]
+    if: github.event_name == 'release'
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Download build artifacts
+      uses: actions/download-artifact@v3
+      with:
+        pattern: splitter-daemon-*
+        merge-multiple: true
+    
+    - name: Upload release assets
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ github.event.release.upload_url }}
+        asset_path: ./splitter-daemon-Linux-gcc-11.tar.gz
+        asset_name: splitter-daemon-linux-x64.tar.gz
+        asset_content_type: application/gzip
+
+  security-scan:
+    runs-on: ubuntu-22.04
+    permissions:
+      security-events: write
+      contents: read
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Run CodeQL Analysis
+      uses: github/codeql-action/init@v2
+      with:
+        languages: cpp
+        config-file: ./.github/codeql/codeql-config.yml
+    
+    - name: Install system dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y \
+          build-essential cmake ninja-build gcc-11 g++-11 \
+          pkg-config libssl-dev libsystemd-dev libxml2-dev \
+          libssh-dev libcurl4-openssl-dev libi2c-dev libgpiod-dev
+    
+    - name: Setup Python and Conan
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+    
+    - name: Install and configure Conan
+      run: |
+        pip install "conan>=2.0.0,<3.0.0"
+        conan profile detect --force
+        conan install . --build=missing
+    
+    - name: Build for CodeQL
+      run: |
+        cmake --preset conan-release -DBUILD_TESTING=OFF
+        cmake --build --preset conan-release --parallel $(nproc)
+    
+    - name: Perform CodeQL Analysis
+      uses: github/codeql-action/analyze@v2
