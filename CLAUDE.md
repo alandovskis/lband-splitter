@@ -131,6 +131,23 @@ The system uses libnetconf2 for standards-compliant network management:
 - Implement graceful degradation when ports fail
 - Use CMake presets for consistent builds (conan-release, conan-debug)
 
+### Pre-Commit Requirements
+
+**CRITICAL**: Always run unit tests before committing any code changes:
+
+```bash
+# Build and run unit tests before every commit
+cmake --build --preset conan-release --parallel 4
+ctest --test-dir build/Release --output-on-failure --parallel 4 --label-regex "unit"
+```
+
+All unit tests must pass before committing. If tests fail:
+1. Fix the failing tests
+2. Re-run the test suite to verify fixes
+3. Only then proceed with the commit
+
+This ensures code quality and prevents introducing regressions into the codebase.
+
 ## Testing Strategy
 
 ### Hardware Testing
