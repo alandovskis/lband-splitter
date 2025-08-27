@@ -186,6 +186,7 @@ bool YangModel::load_splitter_model() {
 }
 
 std::string YangModel::get_default_splitter_yang() {
+  // cppcheck-suppress syntaxError
   return R"(
 module splitter {
     namespace "urn:splitter:yang:splitter";
