@@ -77,7 +77,7 @@ jobs:
       run: |
         pip install "conan>=2.0.0,<3.0.0"
         conan profile detect --force
-        conan profile update settings.compiler.cppstd=17 default
+        conan profile show default | sed 's/compiler.cppstd=gnu17/compiler.cppstd=17/' > ~/.conan2/profiles/default
     
     - name: Cache Conan packages
       uses: actions/cache@v3
@@ -277,6 +277,7 @@ jobs:
       run: |
         pip install "conan>=2.0.0,<3.0.0"
         conan profile detect --force
+        conan profile show default | sed 's/compiler.cppstd=gnu17/compiler.cppstd=17/' > ~/.conan2/profiles/default
         conan install . --build=missing
     
     - name: Build for CodeQL
