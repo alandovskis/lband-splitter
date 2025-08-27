@@ -334,7 +334,8 @@ bool ConfigManager::create_default_config() {
     }
 
     file << config.dump(2);
-    utils::Logger::info("Default configuration created at {}", config_file_path_);
+    utils::Logger::info("Default configuration created at {}",
+                        config_file_path_);
     return true;
 
   } catch (const std::exception &e) {
