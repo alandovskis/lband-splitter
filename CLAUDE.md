@@ -40,6 +40,9 @@ cmake --build --preset conan-debug
 cmake --build --preset conan-release
 ctest --test-dir build/Release --verbose
 
+# Build STM32F4 firmware (requires gcc-arm-none-eabi)
+cmake --build --preset conan-release --target stm32f4_firmware
+
 # Format C++ files
 find src tests -name "*.cpp" -o -name "*.h" -o -name "*.hpp" | xargs clang-format -i
 
@@ -85,6 +88,7 @@ sudo systemctl start netconf-server
 
 - `src/`: C++ source code
   - `hardware/`: Hardware abstraction layer (GPIO, SPI, I2C)
+  - `firmware/stm32f4/`: STM32F4 frequency detector firmware
   - `netconf/`: NetConf protocol implementation
   - `web/`: REST API server for Angular frontend
   - `core/`: Main splitter logic and port management
@@ -106,6 +110,14 @@ sudo systemctl start netconf-server
 - ADCs for L-band center frequency measurement
 - Real-time processing for frequency analysis
 - Display drivers for small screens per port
+
+### STM32F4 Firmware
+- Dedicated microcontroller firmware for frequency detection
+- L-band signal processing with FFT analysis (950-2150 MHz)
+- UART communication protocol compatible with host system
+- Real-time ADC sampling with 12-bit resolution
+- SNR calculation and signal quality assessment
+- Cross-compilation with ARM GCC toolchain
 
 ### RF Switching
 - Control signals for L-band splitter/combiner matrices

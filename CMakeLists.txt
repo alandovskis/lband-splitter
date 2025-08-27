@@ -50,3 +50,22 @@ add_custom_target(install_service
     COMMAND systemctl daemon-reload
     COMMENT "Installing and reloading systemd service"
     USES_TERMINAL)
+
+# Help target to show available build options
+add_custom_target(help
+    COMMAND ${CMAKE_COMMAND} -E echo ""
+    COMMAND ${CMAKE_COMMAND} -E echo "Splitter System Build Targets:"
+    COMMAND ${CMAKE_COMMAND} -E echo "  all                 - Build main daemon and tests"
+    COMMAND ${CMAKE_COMMAND} -E echo "  splitter_daemon     - Build C++ daemon only"
+    COMMAND ${CMAKE_COMMAND} -E echo "  stm32f4_firmware    - Build STM32F4 firmware (requires gcc-arm-none-eabi)"
+    COMMAND ${CMAKE_COMMAND} -E echo "  test                - Run unit tests"
+    COMMAND ${CMAKE_COMMAND} -E echo "  install             - Install daemon and service files"
+    COMMAND ${CMAKE_COMMAND} -E echo "  install_service     - Install systemd service and reload daemon"
+    COMMAND ${CMAKE_COMMAND} -E echo ""
+    COMMAND ${CMAKE_COMMAND} -E echo "STM32F4 Firmware:"
+    COMMAND ${CMAKE_COMMAND} -E echo "  Implements L-band frequency detection (950-2150 MHz)"
+    COMMAND ${CMAKE_COMMAND} -E echo "  Compatible with STM32F4 controller protocol"
+    COMMAND ${CMAKE_COMMAND} -E echo "  Source: src/firmware/stm32f4/"
+    COMMAND ${CMAKE_COMMAND} -E echo ""
+    COMMENT "Showing available build targets"
+)
