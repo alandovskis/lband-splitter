@@ -350,8 +350,8 @@ leaf error {
   description "Current error message, if any";
 }
 
-leaf last - update {
-  type yang : date - and-time;
+leaf last-update {
+  type yang:date-and-time;
   config false;
   description "Timestamp of last port state update";
 }
@@ -461,7 +461,7 @@ notification frequency - change {
   }
 
   leaf timestamp {
-    type yang : date - and-time;
+    type yang:date-and-time;
     description "Time of frequency change";
   }
 }

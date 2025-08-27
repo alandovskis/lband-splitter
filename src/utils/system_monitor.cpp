@@ -369,7 +369,7 @@ bool SystemMonitor::read_network_stats(uint64_t &rx_bytes, uint64_t &tx_bytes) {
       }
 
       std::istringstream iss(line.substr(colon_pos + 1));
-      uint64_t rx, tx;
+      uint64_t rx = 0, tx = 0;  // Initialize variables
       for (int i = 0; i < 8; ++i) {
         if (i == 0) {
           iss >> rx;
