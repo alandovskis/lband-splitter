@@ -289,7 +289,53 @@ bool ConfigManager::create_default_config() {
                                {"signal_detection_enabled", true}});
     }
 
-    return save_config();
+    // Create default config JSON structure
+    nlohmann::json config;
+
+    config["hardware"] = {
+        {"gpio_base_pin", hardware_config_.gpio_base_pin},
+        {"status_led_base_pin", hardware_config_.status_led_base_pin},
+        {"signal_led_base_pin", hardware_config_.signal_led_base_pin},
+        {"spi_device", hardware_config_.spi_device},
+        {"i2c_device", hardware_config_.i2c_device},
+        {"frequency_detector_address",
+         hardware_config_.frequency_detector_address}};
+
+    config["network"] = {{"netconf_host", network_config_.netconf_host},
+                         {"netconf_port", network_config_.netconf_port},
+                         {"rest_host", network_config_.rest_host},
+                         {"rest_port", network_config_.rest_port},
+                         {"enable_ssl", network_config_.enable_ssl},
+                         {"ssl_cert_path", network_config_.ssl_cert_path},
+                         {"ssl_key_path", network_config_.ssl_key_path}};
+
+    config["logging"] = {{"log_file", logging_config_.log_file},
+                         {"log_level", logging_config_.log_level},
+                         {"max_file_size_mb", logging_config_.max_file_size_mb},
+                         {"max_files", logging_config_.max_files}};
+
+    config["monitoring"] = {
+        {"enable_telegraf", monitoring_config_.enable_telegraf},
+        {"telegraf_socket", monitoring_config_.telegraf_socket},
+        {"metrics_interval_seconds",
+         monitoring_config_.metrics_interval_seconds},
+        {"enable_health_endpoint", monitoring_config_.enable_health_endpoint}};
+
+    config["ports"] = port_configs_;
+
+    std::filesystem::create_directories(
+        std::filesystem::path(config_file_path_).parent_path());
+
+    std::ofstream file(config_file_path_);
+    if (!file) {
+      utils::Logger::error("Failed to open config file for writing: {}",
+                           config_file_path_);
+      return false;
+    }
+
+    file << config.dump(2);
+    utils::Logger::info("Default configuration created at {}", config_file_path_);
+    return true;
 
   } catch (const std::exception &e) {
     utils::Logger::error("Failed to create default config: {}", e.what());
