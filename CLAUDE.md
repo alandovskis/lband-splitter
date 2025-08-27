@@ -24,17 +24,28 @@ This is a 32-port L-band splitter/combiner system running on Linux, written in C
 
 ### C++ Backend
 ```bash
-# Build the C++ daemon
-make clean && make
+# Install Conan dependencies
+conan install . --build=missing
+
+# Build the C++ daemon (Release)
+cmake --preset conan-release
+cmake --build --preset conan-release
 
 # Build with debug symbols
-make DEBUG=1
+conan install . --build=missing --settings=build_type=Debug
+cmake --preset conan-debug
+cmake --build --preset conan-debug
 
 # Run unit tests
-make test
+cmake --build --preset conan-release
+ctest --test-dir build/Release --verbose
+
+# Format C++ files
+find src tests -name "*.cpp" -o -name "*.h" -o -name "*.hpp" | xargs clang-format -i
 
 # Install system service
-sudo make install
+cmake --install build/Release --prefix /usr/local
+sudo make install_service
 ```
 
 ### Angular Frontend
@@ -106,12 +117,15 @@ The system uses libnetconf2 for standards-compliant network management:
 
 ## Development Guidelines
 
-- Follow Linux kernel coding style for C++ components
+- Follow modern C++17 standards with RAII and smart pointers
+- **All C++ files must be formatted using clang-format** - run `clang-format -i` on modified files
+- Use Conan for dependency management - update conanfile.txt for new dependencies
 - Use Angular Material for consistent UI components
 - Implement proper error handling for hardware failures
 - Log all hardware state changes for debugging
 - Use systemd for service management
 - Implement graceful degradation when ports fail
+- Use CMake presets for consistent builds (conan-release, conan-debug)
 
 ## Testing Strategy
 
