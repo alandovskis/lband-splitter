@@ -201,9 +201,9 @@ public:
 private:
   std::vector<std::unique_ptr<STM32F4Controller>> controllers_;
   mutable std::mutex controllers_mutex_;
-  
+
   std::atomic<bool> initialized_{false};
-  
+
   void health_monitor_thread();
   std::unique_ptr<std::thread> health_monitor_thread_;
   std::atomic<bool> health_monitoring_{false};

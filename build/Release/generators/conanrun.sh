@@ -1,0 +1,1 @@
+. "/Users/alex/src/splitter/build/Release/generators/conanrunenv-release-armv8.sh"

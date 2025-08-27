@@ -6,9 +6,10 @@
 
 namespace splitter::core {
 
-Port::Port(int id, hardware::GpioController *gpio, hardware::LedController *led, 
+Port::Port(int id, hardware::GpioController *gpio, hardware::LedController *led,
            hardware::STM32F4Controller *stm32f4)
-    : id_(id), gpio_controller_(gpio), led_controller_(led), stm32f4_controller_(stm32f4),
+    : id_(id), gpio_controller_(gpio), led_controller_(led),
+      stm32f4_controller_(stm32f4),
       last_health_check_(std::chrono::steady_clock::now()) {
 
   state_.id = id;

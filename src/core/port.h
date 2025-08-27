@@ -36,7 +36,7 @@ struct PortState {
 
 class Port {
 public:
-  Port(int id, hardware::GpioController *gpio, hardware::LedController *led, 
+  Port(int id, hardware::GpioController *gpio, hardware::LedController *led,
        hardware::STM32F4Controller *stm32f4 = nullptr);
   ~Port();
 

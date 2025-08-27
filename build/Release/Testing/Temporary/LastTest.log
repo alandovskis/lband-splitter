@@ -1,0 +1,851 @@
+Start testing: Aug 27 09:18 EDT
+----------------------------------------------------------
+11/28 Testing: STM32F4ControllerTest.DefaultState
+11/28 Test: STM32F4ControllerTest.DefaultState
+Command: "/Users/alex/src/splitter/build/Release/tests/splitter_tests" "--gtest_filter=STM32F4ControllerTest.DefaultState" "--gtest_also_run_disabled_tests"
+Directory: /Users/alex/src/splitter/build/Release
+"STM32F4ControllerTest.DefaultState" start time: Aug 27 09:18 EDT
+Output:
+----------------------------------------------------------
+Running main() from /Users/alex/.conan2/p/b/gtest43b2c42473d0c/b/src/googletest/src/gtest_main.cc
+Note: Google Test filter = STM32F4ControllerTest.DefaultState
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from STM32F4ControllerTest
+[ RUN      ] STM32F4ControllerTest.DefaultState
+[       OK ] STM32F4ControllerTest.DefaultState (0 ms)
+[----------] 1 test from STM32F4ControllerTest (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"STM32F4ControllerTest.DefaultState" end time: Aug 27 09:18 EDT
+"STM32F4ControllerTest.DefaultState" time elapsed: 00:00:00
+----------------------------------------------------------
+
+21/28 Testing: STM32F4ManagerTest.BulkOperations
+21/28 Test: STM32F4ManagerTest.BulkOperations
+Command: "/Users/alex/src/splitter/build/Release/tests/splitter_tests" "--gtest_filter=STM32F4ManagerTest.BulkOperations" "--gtest_also_run_disabled_tests"
+Directory: /Users/alex/src/splitter/build/Release
+"STM32F4ManagerTest.BulkOperations" start time: Aug 27 09:18 EDT
+Output:
+----------------------------------------------------------
+Running main() from /Users/alex/.conan2/p/b/gtest43b2c42473d0c/b/src/googletest/src/gtest_main.cc
+Note: Google Test filter = STM32F4ManagerTest.BulkOperations
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from STM32F4ManagerTest
+[ RUN      ] STM32F4ManagerTest.BulkOperations
+[       OK ] STM32F4ManagerTest.BulkOperations (0 ms)
+[----------] 1 test from STM32F4ManagerTest (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"STM32F4ManagerTest.BulkOperations" end time: Aug 27 09:18 EDT
+"STM32F4ManagerTest.BulkOperations" time elapsed: 00:00:00
+----------------------------------------------------------
+
+10/28 Testing: LoggerTest.SetLogLevel
+10/28 Test: LoggerTest.SetLogLevel
+Command: "/Users/alex/src/splitter/build/Release/tests/splitter_tests" "--gtest_filter=LoggerTest.SetLogLevel" "--gtest_also_run_disabled_tests"
+Directory: /Users/alex/src/splitter/build/Release
+"LoggerTest.SetLogLevel" start time: Aug 27 09:18 EDT
+Output:
+----------------------------------------------------------
+Running main() from /Users/alex/.conan2/p/b/gtest43b2c42473d0c/b/src/googletest/src/gtest_main.cc
+Note: Google Test filter = LoggerTest.SetLogLevel
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from LoggerTest
+[ RUN      ] LoggerTest.SetLogLevel
+[2025-08-27 09:18:46.935] [info] [39007197] Logger initialized - file: /tmp/test_splitter.log, level: info, max_size: 100MB, max_files: 10
+[       OK ] LoggerTest.SetLogLevel (0 ms)
+[----------] 1 test from LoggerTest (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"LoggerTest.SetLogLevel" end time: Aug 27 09:18 EDT
+"LoggerTest.SetLogLevel" time elapsed: 00:00:00
+----------------------------------------------------------
+
+9/28 Testing: LoggerTest.LogLevels
+9/28 Test: LoggerTest.LogLevels
+Command: "/Users/alex/src/splitter/build/Release/tests/splitter_tests" "--gtest_filter=LoggerTest.LogLevels" "--gtest_also_run_disabled_tests"
+Directory: /Users/alex/src/splitter/build/Release
+"LoggerTest.LogLevels" start time: Aug 27 09:18 EDT
+Output:
+----------------------------------------------------------
+Running main() from /Users/alex/.conan2/p/b/gtest43b2c42473d0c/b/src/googletest/src/gtest_main.cc
+Note: Google Test filter = LoggerTest.LogLevels
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from LoggerTest
+[ RUN      ] LoggerTest.LogLevels
+[2025-08-27 09:18:46.938] [info] [39007198] Logger initialized - file: /tmp/test_splitter.log, level: debug, max_size: 100MB, max_files: 10
+[2025-08-27 09:18:46.938] [info] [39007198] Info message
+[2025-08-27 09:18:46.938] [warning] [39007198] Warning message
+[2025-08-27 09:18:46.938] [error] [39007198] Error message
+[2025-08-27 09:18:46.938] [info] [39007198] Logger shutting down
+[       OK ] LoggerTest.LogLevels (0 ms)
+[----------] 1 test from LoggerTest (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"LoggerTest.LogLevels" end time: Aug 27 09:18 EDT
+"LoggerTest.LogLevels" time elapsed: 00:00:00
+----------------------------------------------------------
+
+28/28 Testing: splitter_unit_tests
+28/28 Test: splitter_unit_tests
+Command: "/Users/alex/src/splitter/build/Release/tests/splitter_tests"
+Directory: /Users/alex/src/splitter/build/Release/tests
+"splitter_unit_tests" start time: Aug 27 09:18 EDT
+Output:
+----------------------------------------------------------
+Running main() from /Users/alex/.conan2/p/b/gtest43b2c42473d0c/b/src/googletest/src/gtest_main.cc
+[==========] Running 27 tests from 5 test suites.
+[----------] Global test environment set-up.
+[----------] 7 tests from ConfigManagerTest
+[ RUN      ] ConfigManagerTest.LoadDefaultConfig
+[       OK ] ConfigManagerTest.LoadDefaultConfig (0 ms)
+[ RUN      ] ConfigManagerTest.NetworkConfiguration
+[       OK ] ConfigManagerTest.NetworkConfiguration (0 ms)
+[ RUN      ] ConfigManagerTest.HardwareConfiguration
+[       OK ] ConfigManagerTest.HardwareConfiguration (0 ms)
+[ RUN      ] ConfigManagerTest.LoggingConfiguration
+[       OK ] ConfigManagerTest.LoggingConfiguration (0 ms)
+[ RUN      ] ConfigManagerTest.InvalidConfiguration
+[       OK ] ConfigManagerTest.InvalidConfiguration (0 ms)
+[ RUN      ] ConfigManagerTest.SaveAndLoadConfig
+[       OK ] ConfigManagerTest.SaveAndLoadConfig (0 ms)
+[ RUN      ] ConfigManagerTest.YangModelPaths
+[       OK ] ConfigManagerTest.YangModelPaths (0 ms)
+[----------] 7 tests from ConfigManagerTest (2 ms total)
+
+[----------] 3 tests from LoggerTest
+[ RUN      ] LoggerTest.InitializeLogger
+[2025-08-27 09:18:46.937] [info] [39007196] Logger initialized - file: /tmp/test_splitter.log, level: info, max_size: 100MB, max_files: 10
+[2025-08-27 09:18:46.938] [info] [39007196] Logger shutting down
+[       OK ] LoggerTest.InitializeLogger (0 ms)
+[ RUN      ] LoggerTest.LogLevels
+[2025-08-27 09:18:46.938] [info] [39007196] Logger initialized - file: /tmp/test_splitter.log, level: debug, max_size: 100MB, max_files: 10
+[2025-08-27 09:18:46.938] [info] [39007196] Info message
+[2025-08-27 09:18:46.938] [warning] [39007196] Warning message
+[2025-08-27 09:18:46.938] [error] [39007196] Error message
+[2025-08-27 09:18:46.938] [info] [39007196] Logger shutting down
+[       OK ] LoggerTest.LogLevels (0 ms)
+[ RUN      ] LoggerTest.SetLogLevel
+[2025-08-27 09:18:46.938] [info] [39007196] Logger initialized - file: /tmp/test_splitter.log, level: info, max_size: 100MB, max_files: 10
+[       OK ] LoggerTest.SetLogLevel (0 ms)
+[----------] 3 tests from LoggerTest (0 ms total)
+
+[----------] 9 tests from STM32F4ControllerTest
+[ RUN      ] STM32F4ControllerTest.DefaultState
+[       OK ] STM32F4ControllerTest.DefaultState (0 ms)
+[ RUN      ] STM32F4ControllerTest.Constants
+[       OK ] STM32F4ControllerTest.Constants (0 ms)
+[ RUN      ] STM32F4ControllerTest.InitializationFailure
+[       OK ] STM32F4ControllerTest.InitializationFailure (0 ms)
+[ RUN      ] STM32F4ControllerTest.ReadingStructure
+[       OK ] STM32F4ControllerTest.ReadingStructure (0 ms)
+[ RUN      ] STM32F4ControllerTest.LedStateStructure
+[       OK ] STM32F4ControllerTest.LedStateStructure (0 ms)
+[ RUN      ] STM32F4ControllerTest.DisplayDataStructure
+[       OK ] STM32F4ControllerTest.DisplayDataStructure (0 ms)
+[ RUN      ] STM32F4ControllerTest.ProtocolConstants
+[       OK ] STM32F4ControllerTest.ProtocolConstants (0 ms)
+[ RUN      ] STM32F4ControllerTest.UninitializedOperations
+[       OK ] STM32F4ControllerTest.UninitializedOperations (0 ms)
+[ RUN      ] STM32F4ControllerTest.ContinuousMeasurementWhenNotInitialized
+[       OK ] STM32F4ControllerTest.ContinuousMeasurementWhenNotInitialized (0 ms)
+[----------] 9 tests from STM32F4ControllerTest (0 ms total)
+
+[----------] 5 tests from STM32F4ManagerTest
+[ RUN      ] STM32F4ManagerTest.DefaultState
+[       OK ] STM32F4ManagerTest.DefaultState (0 ms)
+[ RUN      ] STM32F4ManagerTest.BulkOperations
+[       OK ] STM32F4ManagerTest.BulkOperations (0 ms)
+[ RUN      ] STM32F4ManagerTest.HealthMonitoring
+[       OK ] STM32F4ManagerTest.HealthMonitoring (0 ms)
+[ RUN      ] STM32F4ManagerTest.ReadAllFrequencies
+[       OK ] STM32F4ManagerTest.ReadAllFrequencies (0 ms)
+[ RUN      ] STM32F4ManagerTest.InvalidPortConfiguration
+[       OK ] STM32F4ManagerTest.InvalidPortConfiguration (0 ms)
+[----------] 5 tests from STM32F4ManagerTest (0 ms total)
+
+[----------] 3 tests from STM32F4Calculations
+[ RUN      ] STM32F4Calculations.FrequencyConversion
+[       OK ] STM32F4Calculations.FrequencyConversion (0 ms)
+[ RUN      ] STM32F4Calculations.SNRConversion
+[       OK ] STM32F4Calculations.SNRConversion (0 ms)
+[ RUN      ] STM32F4Calculations.SignalLevelConversion
+[       OK ] STM32F4Calculations.SignalLevelConversion (0 ms)
+[----------] 3 tests from STM32F4Calculations (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 27 tests from 5 test suites ran. (3 ms total)
+[  PASSED  ] 27 tests.
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"splitter_unit_tests" end time: Aug 27 09:18 EDT
+"splitter_unit_tests" time elapsed: 00:00:00
+----------------------------------------------------------
+
+8/28 Testing: LoggerTest.InitializeLogger
+8/28 Test: LoggerTest.InitializeLogger
+Command: "/Users/alex/src/splitter/build/Release/tests/splitter_tests" "--gtest_filter=LoggerTest.InitializeLogger" "--gtest_also_run_disabled_tests"
+Directory: /Users/alex/src/splitter/build/Release
+"LoggerTest.InitializeLogger" start time: Aug 27 09:18 EDT
+Output:
+----------------------------------------------------------
+Running main() from /Users/alex/.conan2/p/b/gtest43b2c42473d0c/b/src/googletest/src/gtest_main.cc
+Note: Google Test filter = LoggerTest.InitializeLogger
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from LoggerTest
+[ RUN      ] LoggerTest.InitializeLogger
+[2025-08-27 09:18:46.938] [info] [39007199] Logger initialized - file: /tmp/test_splitter.log, level: info, max_size: 100MB, max_files: 10
+[2025-08-27 09:18:46.938] [info] [39007199] Logger shutting down
+[       OK ] LoggerTest.InitializeLogger (0 ms)
+[----------] 1 test from LoggerTest (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"LoggerTest.InitializeLogger" end time: Aug 27 09:18 EDT
+"LoggerTest.InitializeLogger" time elapsed: 00:00:00
+----------------------------------------------------------
+
+1/28 Testing: ConfigManagerTest.LoadDefaultConfig
+1/28 Test: ConfigManagerTest.LoadDefaultConfig
+Command: "/Users/alex/src/splitter/build/Release/tests/splitter_tests" "--gtest_filter=ConfigManagerTest.LoadDefaultConfig" "--gtest_also_run_disabled_tests"
+Directory: /Users/alex/src/splitter/build/Release
+"ConfigManagerTest.LoadDefaultConfig" start time: Aug 27 09:18 EDT
+Output:
+----------------------------------------------------------
+Running main() from /Users/alex/.conan2/p/b/gtest43b2c42473d0c/b/src/googletest/src/gtest_main.cc
+Note: Google Test filter = ConfigManagerTest.LoadDefaultConfig
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from ConfigManagerTest
+[ RUN      ] ConfigManagerTest.LoadDefaultConfig
+[       OK ] ConfigManagerTest.LoadDefaultConfig (0 ms)
+[----------] 1 test from ConfigManagerTest (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"ConfigManagerTest.LoadDefaultConfig" end time: Aug 27 09:18 EDT
+"ConfigManagerTest.LoadDefaultConfig" time elapsed: 00:00:00
+----------------------------------------------------------
+
+4/28 Testing: ConfigManagerTest.LoggingConfiguration
+4/28 Test: ConfigManagerTest.LoggingConfiguration
+Command: "/Users/alex/src/splitter/build/Release/tests/splitter_tests" "--gtest_filter=ConfigManagerTest.LoggingConfiguration" "--gtest_also_run_disabled_tests"
+Directory: /Users/alex/src/splitter/build/Release
+"ConfigManagerTest.LoggingConfiguration" start time: Aug 27 09:18 EDT
+Output:
+----------------------------------------------------------
+Running main() from /Users/alex/.conan2/p/b/gtest43b2c42473d0c/b/src/googletest/src/gtest_main.cc
+Note: Google Test filter = ConfigManagerTest.LoggingConfiguration
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from ConfigManagerTest
+[ RUN      ] ConfigManagerTest.LoggingConfiguration
+[       OK ] ConfigManagerTest.LoggingConfiguration (0 ms)
+[----------] 1 test from ConfigManagerTest (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"ConfigManagerTest.LoggingConfiguration" end time: Aug 27 09:18 EDT
+"ConfigManagerTest.LoggingConfiguration" time elapsed: 00:00:00
+----------------------------------------------------------
+
+7/28 Testing: ConfigManagerTest.YangModelPaths
+7/28 Test: ConfigManagerTest.YangModelPaths
+Command: "/Users/alex/src/splitter/build/Release/tests/splitter_tests" "--gtest_filter=ConfigManagerTest.YangModelPaths" "--gtest_also_run_disabled_tests"
+Directory: /Users/alex/src/splitter/build/Release
+"ConfigManagerTest.YangModelPaths" start time: Aug 27 09:18 EDT
+Output:
+----------------------------------------------------------
+Running main() from /Users/alex/.conan2/p/b/gtest43b2c42473d0c/b/src/googletest/src/gtest_main.cc
+Note: Google Test filter = ConfigManagerTest.YangModelPaths
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from ConfigManagerTest
+[ RUN      ] ConfigManagerTest.YangModelPaths
+[       OK ] ConfigManagerTest.YangModelPaths (0 ms)
+[----------] 1 test from ConfigManagerTest (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"ConfigManagerTest.YangModelPaths" end time: Aug 27 09:18 EDT
+"ConfigManagerTest.YangModelPaths" time elapsed: 00:00:00
+----------------------------------------------------------
+
+6/28 Testing: ConfigManagerTest.SaveAndLoadConfig
+6/28 Test: ConfigManagerTest.SaveAndLoadConfig
+Command: "/Users/alex/src/splitter/build/Release/tests/splitter_tests" "--gtest_filter=ConfigManagerTest.SaveAndLoadConfig" "--gtest_also_run_disabled_tests"
+Directory: /Users/alex/src/splitter/build/Release
+"ConfigManagerTest.SaveAndLoadConfig" start time: Aug 27 09:18 EDT
+Output:
+----------------------------------------------------------
+Running main() from /Users/alex/.conan2/p/b/gtest43b2c42473d0c/b/src/googletest/src/gtest_main.cc
+Note: Google Test filter = ConfigManagerTest.SaveAndLoadConfig
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from ConfigManagerTest
+[ RUN      ] ConfigManagerTest.SaveAndLoadConfig
+/Users/alex/src/splitter/tests/unit/test_config_manager.cpp:104: Failure
+Expected equality of these values:
+  retrieved.rest_port
+    Which is: 8080
+  8888
+
+[  FAILED  ] ConfigManagerTest.SaveAndLoadConfig (0 ms)
+[----------] 1 test from ConfigManagerTest (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 0 tests.
+[  FAILED  ] 1 test, listed below:
+[  FAILED  ] ConfigManagerTest.SaveAndLoadConfig
+
+ 1 FAILED TEST
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Failed.
+"ConfigManagerTest.SaveAndLoadConfig" end time: Aug 27 09:18 EDT
+"ConfigManagerTest.SaveAndLoadConfig" time elapsed: 00:00:00
+----------------------------------------------------------
+
+3/28 Testing: ConfigManagerTest.HardwareConfiguration
+3/28 Test: ConfigManagerTest.HardwareConfiguration
+Command: "/Users/alex/src/splitter/build/Release/tests/splitter_tests" "--gtest_filter=ConfigManagerTest.HardwareConfiguration" "--gtest_also_run_disabled_tests"
+Directory: /Users/alex/src/splitter/build/Release
+"ConfigManagerTest.HardwareConfiguration" start time: Aug 27 09:18 EDT
+Output:
+----------------------------------------------------------
+Running main() from /Users/alex/.conan2/p/b/gtest43b2c42473d0c/b/src/googletest/src/gtest_main.cc
+Note: Google Test filter = ConfigManagerTest.HardwareConfiguration
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from ConfigManagerTest
+[ RUN      ] ConfigManagerTest.HardwareConfiguration
+[       OK ] ConfigManagerTest.HardwareConfiguration (0 ms)
+[----------] 1 test from ConfigManagerTest (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"ConfigManagerTest.HardwareConfiguration" end time: Aug 27 09:18 EDT
+"ConfigManagerTest.HardwareConfiguration" time elapsed: 00:00:00
+----------------------------------------------------------
+
+12/28 Testing: STM32F4ControllerTest.Constants
+12/28 Test: STM32F4ControllerTest.Constants
+Command: "/Users/alex/src/splitter/build/Release/tests/splitter_tests" "--gtest_filter=STM32F4ControllerTest.Constants" "--gtest_also_run_disabled_tests"
+Directory: /Users/alex/src/splitter/build/Release
+"STM32F4ControllerTest.Constants" start time: Aug 27 09:18 EDT
+Output:
+----------------------------------------------------------
+Running main() from /Users/alex/.conan2/p/b/gtest43b2c42473d0c/b/src/googletest/src/gtest_main.cc
+Note: Google Test filter = STM32F4ControllerTest.Constants
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from STM32F4ControllerTest
+[ RUN      ] STM32F4ControllerTest.Constants
+[       OK ] STM32F4ControllerTest.Constants (0 ms)
+[----------] 1 test from STM32F4ControllerTest (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"STM32F4ControllerTest.Constants" end time: Aug 27 09:18 EDT
+"STM32F4ControllerTest.Constants" time elapsed: 00:00:00
+----------------------------------------------------------
+
+5/28 Testing: ConfigManagerTest.InvalidConfiguration
+5/28 Test: ConfigManagerTest.InvalidConfiguration
+Command: "/Users/alex/src/splitter/build/Release/tests/splitter_tests" "--gtest_filter=ConfigManagerTest.InvalidConfiguration" "--gtest_also_run_disabled_tests"
+Directory: /Users/alex/src/splitter/build/Release
+"ConfigManagerTest.InvalidConfiguration" start time: Aug 27 09:18 EDT
+Output:
+----------------------------------------------------------
+Running main() from /Users/alex/.conan2/p/b/gtest43b2c42473d0c/b/src/googletest/src/gtest_main.cc
+Note: Google Test filter = ConfigManagerTest.InvalidConfiguration
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from ConfigManagerTest
+[ RUN      ] ConfigManagerTest.InvalidConfiguration
+[       OK ] ConfigManagerTest.InvalidConfiguration (0 ms)
+[----------] 1 test from ConfigManagerTest (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"ConfigManagerTest.InvalidConfiguration" end time: Aug 27 09:18 EDT
+"ConfigManagerTest.InvalidConfiguration" time elapsed: 00:00:00
+----------------------------------------------------------
+
+2/28 Testing: ConfigManagerTest.NetworkConfiguration
+2/28 Test: ConfigManagerTest.NetworkConfiguration
+Command: "/Users/alex/src/splitter/build/Release/tests/splitter_tests" "--gtest_filter=ConfigManagerTest.NetworkConfiguration" "--gtest_also_run_disabled_tests"
+Directory: /Users/alex/src/splitter/build/Release
+"ConfigManagerTest.NetworkConfiguration" start time: Aug 27 09:18 EDT
+Output:
+----------------------------------------------------------
+Running main() from /Users/alex/.conan2/p/b/gtest43b2c42473d0c/b/src/googletest/src/gtest_main.cc
+Note: Google Test filter = ConfigManagerTest.NetworkConfiguration
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from ConfigManagerTest
+[ RUN      ] ConfigManagerTest.NetworkConfiguration
+[       OK ] ConfigManagerTest.NetworkConfiguration (0 ms)
+[----------] 1 test from ConfigManagerTest (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"ConfigManagerTest.NetworkConfiguration" end time: Aug 27 09:18 EDT
+"ConfigManagerTest.NetworkConfiguration" time elapsed: 00:00:00
+----------------------------------------------------------
+
+16/28 Testing: STM32F4ControllerTest.DisplayDataStructure
+16/28 Test: STM32F4ControllerTest.DisplayDataStructure
+Command: "/Users/alex/src/splitter/build/Release/tests/splitter_tests" "--gtest_filter=STM32F4ControllerTest.DisplayDataStructure" "--gtest_also_run_disabled_tests"
+Directory: /Users/alex/src/splitter/build/Release
+"STM32F4ControllerTest.DisplayDataStructure" start time: Aug 27 09:18 EDT
+Output:
+----------------------------------------------------------
+Running main() from /Users/alex/.conan2/p/b/gtest43b2c42473d0c/b/src/googletest/src/gtest_main.cc
+Note: Google Test filter = STM32F4ControllerTest.DisplayDataStructure
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from STM32F4ControllerTest
+[ RUN      ] STM32F4ControllerTest.DisplayDataStructure
+[       OK ] STM32F4ControllerTest.DisplayDataStructure (0 ms)
+[----------] 1 test from STM32F4ControllerTest (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"STM32F4ControllerTest.DisplayDataStructure" end time: Aug 27 09:18 EDT
+"STM32F4ControllerTest.DisplayDataStructure" time elapsed: 00:00:00
+----------------------------------------------------------
+
+13/28 Testing: STM32F4ControllerTest.InitializationFailure
+13/28 Test: STM32F4ControllerTest.InitializationFailure
+Command: "/Users/alex/src/splitter/build/Release/tests/splitter_tests" "--gtest_filter=STM32F4ControllerTest.InitializationFailure" "--gtest_also_run_disabled_tests"
+Directory: /Users/alex/src/splitter/build/Release
+"STM32F4ControllerTest.InitializationFailure" start time: Aug 27 09:18 EDT
+Output:
+----------------------------------------------------------
+Running main() from /Users/alex/.conan2/p/b/gtest43b2c42473d0c/b/src/googletest/src/gtest_main.cc
+Note: Google Test filter = STM32F4ControllerTest.InitializationFailure
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from STM32F4ControllerTest
+[ RUN      ] STM32F4ControllerTest.InitializationFailure
+[       OK ] STM32F4ControllerTest.InitializationFailure (0 ms)
+[----------] 1 test from STM32F4ControllerTest (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"STM32F4ControllerTest.InitializationFailure" end time: Aug 27 09:18 EDT
+"STM32F4ControllerTest.InitializationFailure" time elapsed: 00:00:00
+----------------------------------------------------------
+
+17/28 Testing: STM32F4ControllerTest.ProtocolConstants
+17/28 Test: STM32F4ControllerTest.ProtocolConstants
+Command: "/Users/alex/src/splitter/build/Release/tests/splitter_tests" "--gtest_filter=STM32F4ControllerTest.ProtocolConstants" "--gtest_also_run_disabled_tests"
+Directory: /Users/alex/src/splitter/build/Release
+"STM32F4ControllerTest.ProtocolConstants" start time: Aug 27 09:18 EDT
+Output:
+----------------------------------------------------------
+Running main() from /Users/alex/.conan2/p/b/gtest43b2c42473d0c/b/src/googletest/src/gtest_main.cc
+Note: Google Test filter = STM32F4ControllerTest.ProtocolConstants
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from STM32F4ControllerTest
+[ RUN      ] STM32F4ControllerTest.ProtocolConstants
+[       OK ] STM32F4ControllerTest.ProtocolConstants (0 ms)
+[----------] 1 test from STM32F4ControllerTest (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"STM32F4ControllerTest.ProtocolConstants" end time: Aug 27 09:18 EDT
+"STM32F4ControllerTest.ProtocolConstants" time elapsed: 00:00:00
+----------------------------------------------------------
+
+15/28 Testing: STM32F4ControllerTest.LedStateStructure
+15/28 Test: STM32F4ControllerTest.LedStateStructure
+Command: "/Users/alex/src/splitter/build/Release/tests/splitter_tests" "--gtest_filter=STM32F4ControllerTest.LedStateStructure" "--gtest_also_run_disabled_tests"
+Directory: /Users/alex/src/splitter/build/Release
+"STM32F4ControllerTest.LedStateStructure" start time: Aug 27 09:18 EDT
+Output:
+----------------------------------------------------------
+Running main() from /Users/alex/.conan2/p/b/gtest43b2c42473d0c/b/src/googletest/src/gtest_main.cc
+Note: Google Test filter = STM32F4ControllerTest.LedStateStructure
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from STM32F4ControllerTest
+[ RUN      ] STM32F4ControllerTest.LedStateStructure
+[       OK ] STM32F4ControllerTest.LedStateStructure (0 ms)
+[----------] 1 test from STM32F4ControllerTest (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"STM32F4ControllerTest.LedStateStructure" end time: Aug 27 09:18 EDT
+"STM32F4ControllerTest.LedStateStructure" time elapsed: 00:00:00
+----------------------------------------------------------
+
+19/28 Testing: STM32F4ControllerTest.ContinuousMeasurementWhenNotInitialized
+19/28 Test: STM32F4ControllerTest.ContinuousMeasurementWhenNotInitialized
+Command: "/Users/alex/src/splitter/build/Release/tests/splitter_tests" "--gtest_filter=STM32F4ControllerTest.ContinuousMeasurementWhenNotInitialized" "--gtest_also_run_disabled_tests"
+Directory: /Users/alex/src/splitter/build/Release
+"STM32F4ControllerTest.ContinuousMeasurementWhenNotInitialized" start time: Aug 27 09:18 EDT
+Output:
+----------------------------------------------------------
+Running main() from /Users/alex/.conan2/p/b/gtest43b2c42473d0c/b/src/googletest/src/gtest_main.cc
+Note: Google Test filter = STM32F4ControllerTest.ContinuousMeasurementWhenNotInitialized
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from STM32F4ControllerTest
+[ RUN      ] STM32F4ControllerTest.ContinuousMeasurementWhenNotInitialized
+[       OK ] STM32F4ControllerTest.ContinuousMeasurementWhenNotInitialized (0 ms)
+[----------] 1 test from STM32F4ControllerTest (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"STM32F4ControllerTest.ContinuousMeasurementWhenNotInitialized" end time: Aug 27 09:18 EDT
+"STM32F4ControllerTest.ContinuousMeasurementWhenNotInitialized" time elapsed: 00:00:00
+----------------------------------------------------------
+
+14/28 Testing: STM32F4ControllerTest.ReadingStructure
+14/28 Test: STM32F4ControllerTest.ReadingStructure
+Command: "/Users/alex/src/splitter/build/Release/tests/splitter_tests" "--gtest_filter=STM32F4ControllerTest.ReadingStructure" "--gtest_also_run_disabled_tests"
+Directory: /Users/alex/src/splitter/build/Release
+"STM32F4ControllerTest.ReadingStructure" start time: Aug 27 09:18 EDT
+Output:
+----------------------------------------------------------
+Running main() from /Users/alex/.conan2/p/b/gtest43b2c42473d0c/b/src/googletest/src/gtest_main.cc
+Note: Google Test filter = STM32F4ControllerTest.ReadingStructure
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from STM32F4ControllerTest
+[ RUN      ] STM32F4ControllerTest.ReadingStructure
+[       OK ] STM32F4ControllerTest.ReadingStructure (0 ms)
+[----------] 1 test from STM32F4ControllerTest (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"STM32F4ControllerTest.ReadingStructure" end time: Aug 27 09:18 EDT
+"STM32F4ControllerTest.ReadingStructure" time elapsed: 00:00:00
+----------------------------------------------------------
+
+20/28 Testing: STM32F4ManagerTest.DefaultState
+20/28 Test: STM32F4ManagerTest.DefaultState
+Command: "/Users/alex/src/splitter/build/Release/tests/splitter_tests" "--gtest_filter=STM32F4ManagerTest.DefaultState" "--gtest_also_run_disabled_tests"
+Directory: /Users/alex/src/splitter/build/Release
+"STM32F4ManagerTest.DefaultState" start time: Aug 27 09:18 EDT
+Output:
+----------------------------------------------------------
+Running main() from /Users/alex/.conan2/p/b/gtest43b2c42473d0c/b/src/googletest/src/gtest_main.cc
+Note: Google Test filter = STM32F4ManagerTest.DefaultState
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from STM32F4ManagerTest
+[ RUN      ] STM32F4ManagerTest.DefaultState
+[       OK ] STM32F4ManagerTest.DefaultState (0 ms)
+[----------] 1 test from STM32F4ManagerTest (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"STM32F4ManagerTest.DefaultState" end time: Aug 27 09:18 EDT
+"STM32F4ManagerTest.DefaultState" time elapsed: 00:00:00
+----------------------------------------------------------
+
+18/28 Testing: STM32F4ControllerTest.UninitializedOperations
+18/28 Test: STM32F4ControllerTest.UninitializedOperations
+Command: "/Users/alex/src/splitter/build/Release/tests/splitter_tests" "--gtest_filter=STM32F4ControllerTest.UninitializedOperations" "--gtest_also_run_disabled_tests"
+Directory: /Users/alex/src/splitter/build/Release
+"STM32F4ControllerTest.UninitializedOperations" start time: Aug 27 09:18 EDT
+Output:
+----------------------------------------------------------
+Running main() from /Users/alex/.conan2/p/b/gtest43b2c42473d0c/b/src/googletest/src/gtest_main.cc
+Note: Google Test filter = STM32F4ControllerTest.UninitializedOperations
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from STM32F4ControllerTest
+[ RUN      ] STM32F4ControllerTest.UninitializedOperations
+[       OK ] STM32F4ControllerTest.UninitializedOperations (0 ms)
+[----------] 1 test from STM32F4ControllerTest (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"STM32F4ControllerTest.UninitializedOperations" end time: Aug 27 09:18 EDT
+"STM32F4ControllerTest.UninitializedOperations" time elapsed: 00:00:00
+----------------------------------------------------------
+
+24/28 Testing: STM32F4ManagerTest.InvalidPortConfiguration
+24/28 Test: STM32F4ManagerTest.InvalidPortConfiguration
+Command: "/Users/alex/src/splitter/build/Release/tests/splitter_tests" "--gtest_filter=STM32F4ManagerTest.InvalidPortConfiguration" "--gtest_also_run_disabled_tests"
+Directory: /Users/alex/src/splitter/build/Release
+"STM32F4ManagerTest.InvalidPortConfiguration" start time: Aug 27 09:18 EDT
+Output:
+----------------------------------------------------------
+Running main() from /Users/alex/.conan2/p/b/gtest43b2c42473d0c/b/src/googletest/src/gtest_main.cc
+Note: Google Test filter = STM32F4ManagerTest.InvalidPortConfiguration
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from STM32F4ManagerTest
+[ RUN      ] STM32F4ManagerTest.InvalidPortConfiguration
+[       OK ] STM32F4ManagerTest.InvalidPortConfiguration (0 ms)
+[----------] 1 test from STM32F4ManagerTest (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"STM32F4ManagerTest.InvalidPortConfiguration" end time: Aug 27 09:18 EDT
+"STM32F4ManagerTest.InvalidPortConfiguration" time elapsed: 00:00:00
+----------------------------------------------------------
+
+23/28 Testing: STM32F4ManagerTest.ReadAllFrequencies
+23/28 Test: STM32F4ManagerTest.ReadAllFrequencies
+Command: "/Users/alex/src/splitter/build/Release/tests/splitter_tests" "--gtest_filter=STM32F4ManagerTest.ReadAllFrequencies" "--gtest_also_run_disabled_tests"
+Directory: /Users/alex/src/splitter/build/Release
+"STM32F4ManagerTest.ReadAllFrequencies" start time: Aug 27 09:18 EDT
+Output:
+----------------------------------------------------------
+Running main() from /Users/alex/.conan2/p/b/gtest43b2c42473d0c/b/src/googletest/src/gtest_main.cc
+Note: Google Test filter = STM32F4ManagerTest.ReadAllFrequencies
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from STM32F4ManagerTest
+[ RUN      ] STM32F4ManagerTest.ReadAllFrequencies
+[       OK ] STM32F4ManagerTest.ReadAllFrequencies (0 ms)
+[----------] 1 test from STM32F4ManagerTest (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"STM32F4ManagerTest.ReadAllFrequencies" end time: Aug 27 09:18 EDT
+"STM32F4ManagerTest.ReadAllFrequencies" time elapsed: 00:00:00
+----------------------------------------------------------
+
+26/28 Testing: STM32F4Calculations.SNRConversion
+26/28 Test: STM32F4Calculations.SNRConversion
+Command: "/Users/alex/src/splitter/build/Release/tests/splitter_tests" "--gtest_filter=STM32F4Calculations.SNRConversion" "--gtest_also_run_disabled_tests"
+Directory: /Users/alex/src/splitter/build/Release
+"STM32F4Calculations.SNRConversion" start time: Aug 27 09:18 EDT
+Output:
+----------------------------------------------------------
+Running main() from /Users/alex/.conan2/p/b/gtest43b2c42473d0c/b/src/googletest/src/gtest_main.cc
+Note: Google Test filter = STM32F4Calculations.SNRConversion
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from STM32F4Calculations
+[ RUN      ] STM32F4Calculations.SNRConversion
+[       OK ] STM32F4Calculations.SNRConversion (0 ms)
+[----------] 1 test from STM32F4Calculations (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"STM32F4Calculations.SNRConversion" end time: Aug 27 09:18 EDT
+"STM32F4Calculations.SNRConversion" time elapsed: 00:00:00
+----------------------------------------------------------
+
+25/28 Testing: STM32F4Calculations.FrequencyConversion
+25/28 Test: STM32F4Calculations.FrequencyConversion
+Command: "/Users/alex/src/splitter/build/Release/tests/splitter_tests" "--gtest_filter=STM32F4Calculations.FrequencyConversion" "--gtest_also_run_disabled_tests"
+Directory: /Users/alex/src/splitter/build/Release
+"STM32F4Calculations.FrequencyConversion" start time: Aug 27 09:18 EDT
+Output:
+----------------------------------------------------------
+Running main() from /Users/alex/.conan2/p/b/gtest43b2c42473d0c/b/src/googletest/src/gtest_main.cc
+Note: Google Test filter = STM32F4Calculations.FrequencyConversion
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from STM32F4Calculations
+[ RUN      ] STM32F4Calculations.FrequencyConversion
+[       OK ] STM32F4Calculations.FrequencyConversion (0 ms)
+[----------] 1 test from STM32F4Calculations (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"STM32F4Calculations.FrequencyConversion" end time: Aug 27 09:18 EDT
+"STM32F4Calculations.FrequencyConversion" time elapsed: 00:00:00
+----------------------------------------------------------
+
+22/28 Testing: STM32F4ManagerTest.HealthMonitoring
+22/28 Test: STM32F4ManagerTest.HealthMonitoring
+Command: "/Users/alex/src/splitter/build/Release/tests/splitter_tests" "--gtest_filter=STM32F4ManagerTest.HealthMonitoring" "--gtest_also_run_disabled_tests"
+Directory: /Users/alex/src/splitter/build/Release
+"STM32F4ManagerTest.HealthMonitoring" start time: Aug 27 09:18 EDT
+Output:
+----------------------------------------------------------
+Running main() from /Users/alex/.conan2/p/b/gtest43b2c42473d0c/b/src/googletest/src/gtest_main.cc
+Note: Google Test filter = STM32F4ManagerTest.HealthMonitoring
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from STM32F4ManagerTest
+[ RUN      ] STM32F4ManagerTest.HealthMonitoring
+[       OK ] STM32F4ManagerTest.HealthMonitoring (0 ms)
+[----------] 1 test from STM32F4ManagerTest (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"STM32F4ManagerTest.HealthMonitoring" end time: Aug 27 09:18 EDT
+"STM32F4ManagerTest.HealthMonitoring" time elapsed: 00:00:00
+----------------------------------------------------------
+
+27/28 Testing: STM32F4Calculations.SignalLevelConversion
+27/28 Test: STM32F4Calculations.SignalLevelConversion
+Command: "/Users/alex/src/splitter/build/Release/tests/splitter_tests" "--gtest_filter=STM32F4Calculations.SignalLevelConversion" "--gtest_also_run_disabled_tests"
+Directory: /Users/alex/src/splitter/build/Release
+"STM32F4Calculations.SignalLevelConversion" start time: Aug 27 09:18 EDT
+Output:
+----------------------------------------------------------
+Running main() from /Users/alex/.conan2/p/b/gtest43b2c42473d0c/b/src/googletest/src/gtest_main.cc
+Note: Google Test filter = STM32F4Calculations.SignalLevelConversion
+[==========] Running 1 test from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 1 test from STM32F4Calculations
+[ RUN      ] STM32F4Calculations.SignalLevelConversion
+[       OK ] STM32F4Calculations.SignalLevelConversion (0 ms)
+[----------] 1 test from STM32F4Calculations (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 1 test from 1 test suite ran. (0 ms total)
+[  PASSED  ] 1 test.
+<end of output>
+Test time =   0.00 sec
+----------------------------------------------------------
+Test Passed.
+"STM32F4Calculations.SignalLevelConversion" end time: Aug 27 09:18 EDT
+"STM32F4Calculations.SignalLevelConversion" time elapsed: 00:00:00
+----------------------------------------------------------
+
+End testing: Aug 27 09:18 EDT
+
+unit =   0.01 sec*proc
+
