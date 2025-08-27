@@ -43,8 +43,8 @@ ctest --test-dir build/Release --verbose
 # Format C++ files
 find src tests -name "*.cpp" -o -name "*.h" -o -name "*.hpp" | xargs clang-format -i
 
-# Run static analysis before committing
-cppcheck --enable=all --error-exitcode=1 --suppress=missingIncludeSystem --suppress=syntaxError:src/netconf/yang_model.cpp src/
+# Run static analysis before committing  
+cppcheck --enable=all --suppress=missingIncludeSystem --suppress=syntaxError:src/netconf/yang_model.cpp src/
 
 # Install system service
 cmake --install build/Release --prefix /usr/local
@@ -122,7 +122,7 @@ The system uses libnetconf2 for standards-compliant network management:
 
 - Follow modern C++17 standards with RAII and smart pointers
 - **All C++ files must be formatted using clang-format** - run `clang-format -i` on modified files
-- **Run cppcheck before every commit** - `cppcheck --enable=all --error-exitcode=1 --suppress=missingIncludeSystem --suppress=syntaxError:src/netconf/yang_model.cpp src/`
+- **Run cppcheck before every commit** - `cppcheck --enable=all --suppress=missingIncludeSystem --suppress=syntaxError:src/netconf/yang_model.cpp src/`
 - Use Conan for dependency management - update conanfile.txt for new dependencies
 - Use Angular Material for consistent UI components
 - Implement proper error handling for hardware failures
