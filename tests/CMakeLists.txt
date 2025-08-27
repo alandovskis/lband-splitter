@@ -5,6 +5,7 @@ include(GoogleTest)
 add_executable(splitter_tests
     unit/test_config_manager.cpp
     unit/test_logger.cpp
+    unit/test_stm32f4_controller.cpp
     # Disabled - need mock fixes
     # unit/test_splitter_manager.cpp
     # unit/test_gpio_controller.cpp
@@ -44,6 +45,7 @@ add_library(splitter_test_lib STATIC
     ../src/hardware/gpio_controller.cpp
     ../src/hardware/frequency_detector.cpp
     ../src/hardware/led_controller.cpp
+    ../src/hardware/stm32f4_controller.cpp
     ../src/utils/logger.cpp
     ../src/utils/system_monitor.cpp
 )

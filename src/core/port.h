@@ -7,6 +7,7 @@
 namespace splitter::hardware {
 class GpioController;
 class LedController;
+class STM32F4Controller;
 } // namespace splitter::hardware
 
 namespace splitter::core {
@@ -35,7 +36,8 @@ struct PortState {
 
 class Port {
 public:
-  Port(int id, hardware::GpioController *gpio, hardware::LedController *led);
+  Port(int id, hardware::GpioController *gpio, hardware::LedController *led, 
+       hardware::STM32F4Controller *stm32f4 = nullptr);
   ~Port();
 
   bool initialize();
@@ -61,6 +63,7 @@ private:
   int id_;
   hardware::GpioController *gpio_controller_;
   hardware::LedController *led_controller_;
+  hardware::STM32F4Controller *stm32f4_controller_;
 
   PortConfig config_;
   mutable PortState state_;

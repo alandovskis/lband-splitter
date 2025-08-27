@@ -1,12 +1,14 @@
 #include "port.h"
 #include "../hardware/gpio_controller.h"
 #include "../hardware/led_controller.h"
+#include "../hardware/stm32f4_controller.h"
 #include "../utils/logger.h"
 
 namespace splitter::core {
 
-Port::Port(int id, hardware::GpioController *gpio, hardware::LedController *led)
-    : id_(id), gpio_controller_(gpio), led_controller_(led),
+Port::Port(int id, hardware::GpioController *gpio, hardware::LedController *led, 
+           hardware::STM32F4Controller *stm32f4)
+    : id_(id), gpio_controller_(gpio), led_controller_(led), stm32f4_controller_(stm32f4),
       last_health_check_(std::chrono::steady_clock::now()) {
 
   state_.id = id;
