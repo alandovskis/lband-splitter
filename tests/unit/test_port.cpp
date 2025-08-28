@@ -16,7 +16,8 @@ protected:
   void SetUp() override {
     mock_gpio_ = std::make_unique<MockableGpioController>();
     mock_stm32f4_ = std::make_unique<MockSTM32F4Controller>();
-    port_ = std::make_unique<core::Port>(0, mock_gpio_.get(), mock_stm32f4_.get());
+    port_ =
+        std::make_unique<core::Port>(0, mock_gpio_.get(), mock_stm32f4_.get());
   }
 
   void TearDown() override {
@@ -53,7 +54,9 @@ TEST_F(PortTest, EnablePort) {
   EXPECT_CALL(*mock_gpio_, configure_output_pin(_)).WillOnce(Return(true));
   EXPECT_CALL(*mock_stm32f4_, initialize()).WillOnce(Return(true));
   EXPECT_CALL(*mock_gpio_, set_pin_low(_)).WillOnce(Return(true));
-  EXPECT_CALL(*mock_stm32f4_, set_led_state(_)).Times(2).WillRepeatedly(Return(true));
+  EXPECT_CALL(*mock_stm32f4_, set_led_state(_))
+      .Times(2)
+      .WillRepeatedly(Return(true));
   EXPECT_CALL(*mock_gpio_, set_pin_high(_)).WillOnce(Return(true));
 
   ASSERT_TRUE(port_->initialize());
@@ -67,7 +70,9 @@ TEST_F(PortTest, DisablePort) {
   EXPECT_CALL(*mock_gpio_, set_pin_low(_))
       .Times(2)
       .WillRepeatedly(Return(true));
-  EXPECT_CALL(*mock_stm32f4_, set_led_state(_)).Times(3).WillRepeatedly(Return(true));
+  EXPECT_CALL(*mock_stm32f4_, set_led_state(_))
+      .Times(3)
+      .WillRepeatedly(Return(true));
   EXPECT_CALL(*mock_gpio_, set_pin_high(_)).WillOnce(Return(true));
 
   ASSERT_TRUE(port_->initialize());

@@ -35,10 +35,12 @@ bool SplitterManager::initialize() {
     }
 
     stm32f4_controllers_.reserve(NUM_PORTS);
-    const auto& hw_config = config_->get_hardware_config();
+    const auto &hw_config = config_->get_hardware_config();
     for (int i = 0; i < NUM_PORTS; ++i) {
-      std::string uart_device = hw_config.uart_device_prefix + std::to_string(i);
-      auto controller = std::make_unique<hardware::STM32F4Controller>(i, uart_device);
+      std::string uart_device =
+          hw_config.uart_device_prefix + std::to_string(i);
+      auto controller =
+          std::make_unique<hardware::STM32F4Controller>(i, uart_device);
       stm32f4_controllers_.push_back(std::move(controller));
     }
 

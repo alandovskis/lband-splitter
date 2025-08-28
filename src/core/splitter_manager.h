@@ -58,7 +58,8 @@ private:
   std::vector<std::unique_ptr<Port>> ports_;
   std::unique_ptr<hardware::GpioController> gpio_controller_;
   std::unique_ptr<hardware::FrequencyDetector> frequency_detector_;
-  std::vector<std::unique_ptr<hardware::STM32F4Controller>> stm32f4_controllers_;
+  std::vector<std::unique_ptr<hardware::STM32F4Controller>>
+      stm32f4_controllers_;
 
   mutable std::mutex ports_mutex_;
   std::atomic<bool> initialized_{false};

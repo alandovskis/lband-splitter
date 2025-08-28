@@ -199,18 +199,19 @@ void Port::update_display() {
   // Create display data for STM32F4 controller
   hardware::STM32F4DisplayData display_data;
   display_data.frequency_mhz = state_.frequency_mhz;
-  
+
   // Calculate SNR from signal level (simplified approximation)
   if (state_.signal_level_dbm > -100.0) {
-    display_data.snr_db = state_.signal_level_dbm + 80.0; // Rough SNR approximation
+    display_data.snr_db =
+        state_.signal_level_dbm + 80.0; // Rough SNR approximation
   } else {
     display_data.snr_db = -30.0; // Minimum SNR when no signal
   }
-  
+
   display_data.signal_present = signal_detected_;
   display_data.custom_text = config_.name;
   display_data.brightness = 100; // Full brightness
-  
+
   // Send display update command to STM32F4
   stm32f4_controller_->update_display(display_data);
 }

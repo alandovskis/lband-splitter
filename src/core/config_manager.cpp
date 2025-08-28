@@ -47,7 +47,8 @@ bool ConfigManager::save_config() const {
         {"gpio_base_pin", hardware_config_.gpio_base_pin},
         {"spi_device", hardware_config_.spi_device},
         {"i2c_device", hardware_config_.i2c_device},
-        {"frequency_detector_address", hardware_config_.frequency_detector_address},
+        {"frequency_detector_address",
+         hardware_config_.frequency_detector_address},
         {"uart_device_prefix", hardware_config_.uart_device_prefix},
         {"uart_baud_rate", hardware_config_.uart_baud_rate}};
 
@@ -295,7 +296,8 @@ bool ConfigManager::create_default_config() {
         {"gpio_base_pin", hardware_config_.gpio_base_pin},
         {"spi_device", hardware_config_.spi_device},
         {"i2c_device", hardware_config_.i2c_device},
-        {"frequency_detector_address", hardware_config_.frequency_detector_address},
+        {"frequency_detector_address",
+         hardware_config_.frequency_detector_address},
         {"uart_device_prefix", hardware_config_.uart_device_prefix},
         {"uart_baud_rate", hardware_config_.uart_baud_rate}};
 

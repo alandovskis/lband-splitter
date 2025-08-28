@@ -57,7 +57,8 @@ public:
   MOCK_METHOD(bool, initialize, ());
   MOCK_METHOD(void, cleanup, ());
 
-  MOCK_METHOD(bool, read_frequency_and_snr, (hardware::STM32F4Reading & reading));
+  MOCK_METHOD(bool, read_frequency_and_snr,
+              (hardware::STM32F4Reading & reading));
   MOCK_METHOD(hardware::STM32F4Reading, get_last_reading, (), (const));
   MOCK_METHOD(bool, start_continuous_measurement, ());
   MOCK_METHOD(bool, stop_continuous_measurement, ());
