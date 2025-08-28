@@ -142,6 +142,7 @@ The system uses libnetconf2 for standards-compliant network management:
 - Use systemd for service management
 - Implement graceful degradation when ports fail
 - Use CMake presets for consistent builds (conan-release, conan-debug)
+- Always keep README up-to-date
 
 ### Pre-Commit Requirements
 
@@ -159,6 +160,7 @@ All unit tests must pass before committing. If tests fail:
 3. Only then proceed with the commit
 
 This ensures code quality and prevents introducing regressions into the codebase.
+
 
 ## Testing Strategy
 

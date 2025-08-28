@@ -7,7 +7,8 @@ A 32-port L-band RF signal splitter/combiner system with hardware control, frequ
 This system provides:
 - **32-port L-band signal control** (950-2150 MHz)
 - **GPIO-based port enable/disable** with LED status indicators
-- **Real-time frequency detection** via SPI/I2C interfaces
+- **STM32F4 frequency detection** with FFT-based signal analysis
+- **Real-time frequency detection** via UART communication to STM32F4 MCUs
 - **Web-based control interface** (Angular frontend)
 - **NetConf protocol support** for network management
 - **System monitoring** with Telegraf integration
@@ -15,10 +16,17 @@ This system provides:
 ## Build Requirements
 
 ### Dependencies
+
+#### Host System (C++ Daemon)
 - **C++17 compiler** (GCC 8+ or Clang 10+)
 - **CMake 3.15+**
 - **Conan 2.0+** package manager
 - **Node.js 18+** and npm (for web interface)
+
+#### STM32F4 Firmware (Optional)
+- **gcc-arm-none-eabi** cross-compilation toolchain
+- **STM32CubeF4** HAL library (for full firmware build)
+- **OpenOCD** or **ST-LINK** utilities (for flashing firmware)
 
 ### Supported Platforms
 - **Linux** (primary target with GPIO hardware support)
@@ -59,7 +67,34 @@ cd build/Release
 ctest --verbose
 ```
 
-### 4. Build Web Interface
+### 4. Build STM32F4 Firmware (Optional)
+
+```bash
+# Build firmware for STM32F4 microcontrollers
+cmake --build --preset conan-release --target stm32f4_firmware
+
+# Flash to STM32F4 device (requires ST-LINK or OpenOCD)
+cd build/Release/firmware/stm32f4
+make flash  # or make flash_openocd
+```
+
+**Requirements:**
+- ARM cross-compilation toolchain (`gcc-arm-none-eabi`)
+- STM32CubeF4 HAL library (set `STM32_HAL_PATH` environment variable)
+- CMSIS library (optional, set `CMSIS_PATH` environment variable)
+
+**Installation on Ubuntu/Debian:**
+```bash
+sudo apt install gcc-arm-none-eabi
+# Download STM32CubeF4 from ST website and extract to /opt/STM32CubeF4/
+```
+
+**Installation on macOS:**
+```bash
+brew install armmbed/formulae/gcc-arm-none-eabi
+```
+
+### 5. Build Web Interface
 
 ```bash
 # Install Node.js dependencies
@@ -99,7 +134,8 @@ npm run dev
 ```
 ├── src/                    # C++ source code
 │   ├── core/              # Core splitter management
-│   ├── hardware/          # Hardware abstraction (GPIO, SPI, I2C)
+│   ├── hardware/          # Hardware abstraction (GPIO, SPI, I2C, STM32F4)
+│   ├── firmware/stm32f4/  # STM32F4 frequency detector firmware
 │   ├── netconf/           # NetConf protocol implementation
 │   ├── web/               # REST/WebSocket API servers
 │   └── utils/             # Logging and system monitoring
@@ -112,15 +148,23 @@ npm run dev
 
 ## Hardware Requirements
 
-### GPIO Configuration
+### Host System
 - **64 GPIO pins** for LED control (2 per port × 32 ports)
-- **SPI bus** for ADC communication (frequency detection)
-- **I2C bus** for hardware configuration
+- **32 UART interfaces** for STM32F4 communication (one per port)
 - **Linux sysfs GPIO interface** (`/sys/class/gpio`)
+- **Serial communication** at 115200 baud
+
+### STM32F4 Microcontrollers (32 units)
+- **STM32F407VG** or compatible (168 MHz, 1MB Flash, 192KB RAM)
+- **12-bit ADC** for L-band signal sampling
+- **Timer peripherals** for periodic measurements
+- **UART interface** for host communication (115200 baud)
+- **GPIO pins** for LED control and RF switching
 
 ### RF Hardware
 - **32 L-band ports** with switching matrices
-- **Frequency detection circuits** (950-2150 MHz range)
+- **RF frontend circuits** for signal conditioning (950-2150 MHz)
+- **ADC input stages** connected to STM32F4 microcontrollers
 - **Power management** for active components
 
 ## Configuration
@@ -205,9 +249,19 @@ See project documentation for licensing information.
 
 **✅ Successfully Built and Tested**
 - Core daemon compiles and runs
+- STM32F4 frequency detector firmware implemented and tested
 - Logger system functional
-- Hardware abstraction working
-- Build system (CMake + Conan) operational
-- Basic unit tests passing
+- Hardware abstraction working (GPIO, UART, STM32F4)
+- Build system (CMake + Conan) operational with ARM cross-compilation
+- Comprehensive unit tests passing
+- CI/CD pipeline includes firmware compilation
 
-**Ready for Linux hardware deployment** with GPIO interfaces.
+**✅ STM32F4 Firmware Features**
+- L-band frequency detection (950-2150 MHz) with 1 kHz resolution
+- FFT-based signal analysis with 256-point processing
+- SNR calculation and signal quality assessment
+- UART communication protocol compatible with host system
+- Real-time ADC sampling with 12-bit resolution
+- Power management with sleep modes
+
+**Ready for Linux hardware deployment** with STM32F4 microcontrollers and RF frontend.
