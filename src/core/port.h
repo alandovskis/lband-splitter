@@ -56,6 +56,7 @@ public:
 
 private:
   void update_leds();
+  void update_display();
   void set_error(const std::string &error);
   void clear_error();
 
