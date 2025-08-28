@@ -44,7 +44,6 @@ add_library(splitter_test_lib STATIC
     ../src/core/config_manager.cpp
     ../src/hardware/gpio_controller.cpp
     ../src/hardware/frequency_detector.cpp
-    ../src/hardware/led_controller.cpp
     ../src/hardware/stm32f4_controller.cpp
     ../src/utils/logger.cpp
     ../src/utils/system_monitor.cpp

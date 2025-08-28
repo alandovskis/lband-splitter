@@ -5,7 +5,6 @@ add_executable(splitter_daemon
     core/config_manager.cpp
     hardware/gpio_controller.cpp
     hardware/frequency_detector.cpp
-    hardware/led_controller.cpp
     hardware/stm32f4_controller.cpp
     utils/logger.cpp
     utils/system_monitor.cpp

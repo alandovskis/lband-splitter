@@ -8,11 +8,12 @@
 // Protocol commands (must match stm32f4_controller.h)
 #define STM32_CMD_READ_FREQUENCY 0x01
 #define STM32_CMD_READ_SNR 0x02
-#define STM32_CMD_SET_LED 0x03
+#define STM32_CMD_ENABLE_PORT 0x03
 #define STM32_CMD_UPDATE_DISPLAY 0x04
 #define STM32_CMD_GET_STATUS 0x05
 #define STM32_CMD_CALIBRATE 0x06
 #define STM32_CMD_RESET 0x07
+#define STM32_CMD_SIGNAL_DETECTION 0x08
 
 // Protocol responses
 #define STM32_RESP_OK 0x00
@@ -66,9 +67,11 @@ void uart_protocol_send_response(uint8_t status, const uint8_t *data,
 // Command handlers (to be implemented in main.c)
 extern void handle_start_continuous_measurement(void);
 extern void handle_stop_continuous_measurement(void);
-extern void handle_single_measurement(void);
-extern void handle_set_led_state(bool status, bool signal, uint8_t brightness,
-                                 bool blinking, uint16_t period);
+extern void handle_single_measurement(uint8_t port_id);
+extern void handle_enable_port(uint8_t port_id, bool enabled);
+extern void handle_signal_detection(uint8_t port_id, bool detected);
+extern void handle_calculation_start(uint8_t port_id);
+extern void handle_calculation_complete(uint8_t port_id);
 extern void handle_update_display(double frequency_mhz, double snr_db,
                                   bool signal_present, uint8_t brightness,
                                   const char *custom_text);

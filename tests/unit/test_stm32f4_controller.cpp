@@ -73,15 +73,10 @@ TEST_F(STM32F4ControllerTest, ReadingStructure) {
   EXPECT_EQ(reading.port_id, 0);
 }
 
-TEST_F(STM32F4ControllerTest, LedStateStructure) {
-  hardware::STM32F4LedState state;
-
-  // Test default values
-  EXPECT_FALSE(state.status_led);
-  EXPECT_FALSE(state.signal_led);
-  EXPECT_EQ(state.brightness, 255);
-  EXPECT_FALSE(state.blinking);
-  EXPECT_EQ(state.blink_period_ms, 1000);
+TEST_F(STM32F4ControllerTest, PortStateControl) {
+  // Test port state control methods exist and fail when not initialized
+  EXPECT_FALSE(controller_->enable_port(true));
+  EXPECT_FALSE(controller_->set_signal_detection(true));
 }
 
 TEST_F(STM32F4ControllerTest, DisplayDataStructure) {
@@ -101,11 +96,12 @@ TEST_F(STM32F4ControllerTest, ProtocolConstants) {
   // Verify command constants are defined
   EXPECT_NE(STM32_CMD_READ_FREQUENCY, 0);
   EXPECT_NE(STM32_CMD_READ_SNR, 0);
-  EXPECT_NE(STM32_CMD_SET_LED, 0);
+  EXPECT_NE(STM32_CMD_ENABLE_PORT, 0);
   EXPECT_NE(STM32_CMD_UPDATE_DISPLAY, 0);
   EXPECT_NE(STM32_CMD_GET_STATUS, 0);
   EXPECT_NE(STM32_CMD_CALIBRATE, 0);
   EXPECT_NE(STM32_CMD_RESET, 0);
+  EXPECT_NE(STM32_CMD_SIGNAL_DETECTION, 0);
 
   // Verify response constants
   EXPECT_EQ(STM32_RESP_OK, 0x00);
@@ -120,14 +116,14 @@ TEST_F(STM32F4ControllerTest, ProtocolConstants) {
 
 TEST_F(STM32F4ControllerTest, UninitializedOperations) {
   hardware::STM32F4Reading reading;
-  hardware::STM32F4LedState led_state;
   hardware::STM32F4DisplayData display_data;
   std::string version;
 
   // All operations should fail when not initialized
   EXPECT_FALSE(controller_->read_frequency_and_snr(reading));
   EXPECT_FALSE(controller_->start_continuous_measurement());
-  EXPECT_FALSE(controller_->set_led_state(led_state));
+  EXPECT_FALSE(controller_->enable_port(true));
+  EXPECT_FALSE(controller_->set_signal_detection(true));
   EXPECT_FALSE(controller_->update_display(display_data));
   EXPECT_FALSE(controller_->calibrate_frequency_detector());
   EXPECT_FALSE(controller_->reset_mcu());
@@ -167,11 +163,9 @@ TEST_F(STM32F4ManagerTest, DefaultState) {
 }
 
 TEST_F(STM32F4ManagerTest, BulkOperations) {
-  hardware::STM32F4LedState led_state;
   hardware::STM32F4DisplayData display_data;
 
   // Operations succeed when no controllers are configured (vacuous success)
-  EXPECT_TRUE(manager_->set_all_leds(led_state));
   EXPECT_TRUE(manager_->update_all_displays(display_data));
   EXPECT_TRUE(manager_->calibrate_all_ports());
   EXPECT_TRUE(manager_->reset_all_mcus());

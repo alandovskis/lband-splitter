@@ -15,7 +15,7 @@ This system provides:
 
 ## Architecture
 
-The system follows a centralized architecture with a single STM32F4 microcontroller handling frequency detection and LED control for all 32 ports, while a Linux daemon manages overall system coordination and port configuration.
+The system follows a centralized architecture with a single STM32F4 microcontroller handling frequency detection and autonomous LED control for all 32 ports, while a Linux daemon manages overall system coordination and port configuration.
 
 ### C4 Context Diagram
 
@@ -54,7 +54,7 @@ graph TB
     end
     
     subgraph "STM32F4 Controller"
-        STM32[STM32F4 MCU<br/>All 32-port control<br/>Frequency detection<br/>LED management<br/>UART communication]
+        STM32[STM32F4 MCU<br/>All 32-port control<br/>Frequency detection<br/>Autonomous LED control<br/>UART communication]
     end
     
     subgraph "External Systems"
@@ -82,7 +82,7 @@ graph TB
     Daemon <-->|UART protocol| UART
     
     UART <-->|Binary protocol| STM32
-    STM32 <-->|LED control| RF
+    STM32 <-->|Autonomous LED control| RF
     STM32 <-->|ADC sampling| RF
     
     classDef webapp fill:#63B3ED,stroke:#2B6CB0,stroke-width:2px,color:#fff
@@ -189,9 +189,11 @@ sequenceDiagram
     GPIO->>Hardware: Write GPIO pin high
     GPIO-->>-Port: Success
     
-    Port->>+STM32: setLedState(status=true, signal=false)
-    STM32->>Hardware: UART: SET_LED command
+    Port->>+STM32: enablePort(5, true)
+    STM32->>Hardware: UART: ENABLE_PORT command
     Hardware-->>STM32: Response: OK
+    STM32->>STM32: Update autonomous LED state
+    Note over STM32,Hardware: LEDs controlled autonomously based on port state
     STM32-->>-Port: Success
     
     Port->>Port: updateState(enabled=true)
@@ -231,7 +233,7 @@ graph TB
         end
         
         subgraph "STM32F4 Hardware"
-            MCU[STM32F4 Controller<br/>- All 32-port management<br/>- Frequency detection firmware<br/>- LED control (64 LEDs)<br/>- ADC sampling<br/>- UART at 115200 baud]
+            MCU[STM32F4 Controller<br/>- All 32-port management<br/>- Frequency detection firmware<br/>- Autonomous LED control (64 LEDs)<br/>- ADC sampling<br/>- UART at 115200 baud]
         end
         
         subgraph "RF Hardware"
@@ -414,13 +416,13 @@ npm run dev
 - **1 UART interface** for STM32F4 communication
 - **Linux sysfs GPIO interface** (`/sys/class/gpio`)
 - **Serial communication** at 115200 baud
-- **Single STM32F4 controller handles all LED control** (reduces host GPIO requirements)
+- **Single STM32F4 controller handles autonomous LED control** (reduces host GPIO requirements and eliminates daemon LED management)
 
 ### STM32F4 Microcontroller (1 unit)
 - **STM32F407VG** or compatible (168 MHz, 1MB Flash, 192KB RAM)
-- **64+ GPIO pins** for LED control (2 per port × 32 ports)
+- **64+ GPIO pins** for autonomous LED control (2 per port × 32 ports)
 - **12-bit ADC channels** for L-band signal sampling (multiplexed across ports)
-- **Timer peripherals** for periodic measurements and LED control
+- **Timer peripherals** for periodic measurements and autonomous LED blinking
 - **UART interface** for host communication (115200 baud)
 - **Sufficient I/O pins** for RF switching and control signals
 

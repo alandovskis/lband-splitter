@@ -40,6 +40,9 @@ int main(void) {
   
   // Initialize display
   display_init();
+  
+  // Initialize port LED control
+  init_port_leds();
 
   // Initialize frequency detector
   frequency_detector_init(&freq_detector_state);
@@ -55,21 +58,27 @@ int main(void) {
     // Process UART commands
     uart_protocol_process();
 
-    // Handle LED blinking
-    handle_led_blinking();
+    // Handle autonomous LED control
+    handle_autonomous_leds();
 
     // Handle continuous measurement if enabled
     if (continuous_measurement && measurement_counter > 0) {
+      // Note: port_id would need to be determined from context
+      uint8_t port_id = 0; // This would be extracted from command context
+      handle_calculation_start(port_id);
       FrequencyReading reading;
       if (frequency_detector_measure(&freq_detector_state, &reading)) {
         // Send reading via UART if requested
         uart_protocol_send_reading(&reading);
+        // Update signal detection based on reading quality
+        handle_signal_detection(port_id, reading.valid && reading.frequency_mhz > 950.0);
       }
+      handle_calculation_complete(port_id);
       measurement_counter--;
     }
 
     // Power management - enter sleep mode if idle
-    if (!continuous_measurement && !led_blinking) {
+    if (!continuous_measurement && !calculation_active) {
       HAL_PWR_EnterSLEEPMode(PWR_MAINREGULATOR_ON, PWR_SLEEPENTRY_WFI);
     }
   }
@@ -386,48 +395,138 @@ void display_show_custom_text(const char* text) {
   display_print_text(0, 2, text);
 }
 
-// LED control state
-static volatile bool status_led_on = false;
-static volatile bool signal_led_on = false;
-static volatile uint8_t led_brightness = 255;
-static volatile bool led_blinking = false;
-static volatile uint16_t blink_period_ms = 1000;
-static volatile uint32_t last_blink_time = 0;
+// Individual port state for autonomous LED control
+#define MAX_PORTS 32
+
+typedef enum {
+  PORT_DISABLED = 0,
+  PORT_ENABLED_NO_SIGNAL = 1,
+  PORT_ENABLED_CALCULATING = 2,
+  PORT_ENABLED_LOCKED = 3
+} PortState;
+
+typedef struct {
+  PortState state;
+  bool enabled;
+  bool signal_detected;
+  bool calculation_active;
+  uint32_t last_blink_time;
+  uint32_t blink_counter;
+  GPIO_TypeDef* status_led_port;
+  uint16_t status_led_pin;
+  GPIO_TypeDef* signal_led_port;
+  uint16_t signal_led_pin;
+} PortControlState;
+
+static volatile PortControlState ports[MAX_PORTS];
 
 // LED control functions
-void set_status_led(bool on) {
-  if (on) {
-    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_SET);
-  } else {
-    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_RESET);
+// Initialize port GPIO mappings
+void init_port_leds(void) {
+  // Initialize GPIO pin mappings for all 32 ports
+  // This would be configured based on actual hardware layout
+  for (int i = 0; i < MAX_PORTS; i++) {
+    ports[i].state = PORT_DISABLED;
+    ports[i].enabled = false;
+    ports[i].signal_detected = false;
+    ports[i].calculation_active = false;
+    ports[i].last_blink_time = 0;
+    ports[i].blink_counter = 0;
+    
+    // Example mapping - would need to match actual hardware
+    // Status LEDs on GPIOA, Signal LEDs on GPIOB
+    if (i < 16) {
+      ports[i].status_led_port = GPIOA;
+      ports[i].status_led_pin = GPIO_PIN_0 << i;
+      ports[i].signal_led_port = GPIOB;
+      ports[i].signal_led_pin = GPIO_PIN_0 << i;
+    } else {
+      ports[i].status_led_port = GPIOC;
+      ports[i].status_led_pin = GPIO_PIN_0 << (i - 16);
+      ports[i].signal_led_port = GPIOD;
+      ports[i].signal_led_pin = GPIO_PIN_0 << (i - 16);
+    }
   }
-  status_led_on = on;
 }
 
-void set_signal_led(bool on) {
+void set_port_status_led(uint8_t port_id, bool on) {
+  if (port_id >= MAX_PORTS) return;
+  
   if (on) {
-    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_6, GPIO_PIN_SET);
+    HAL_GPIO_WritePin(ports[port_id].status_led_port, ports[port_id].status_led_pin, GPIO_PIN_SET);
   } else {
-    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_6, GPIO_PIN_RESET);
+    HAL_GPIO_WritePin(ports[port_id].status_led_port, ports[port_id].status_led_pin, GPIO_PIN_RESET);
   }
-  signal_led_on = on;
 }
 
-void handle_led_blinking(void) {
-  if (!led_blinking) {
-    return;
+void set_port_signal_led(uint8_t port_id, bool on) {
+  if (port_id >= MAX_PORTS) return;
+  
+  if (on) {
+    HAL_GPIO_WritePin(ports[port_id].signal_led_port, ports[port_id].signal_led_pin, GPIO_PIN_SET);
+  } else {
+    HAL_GPIO_WritePin(ports[port_id].signal_led_port, ports[port_id].signal_led_pin, GPIO_PIN_RESET);
   }
+}
+
+// Update individual port state based on current conditions
+void update_port_state(uint8_t port_id) {
+  if (port_id >= MAX_PORTS) return;
+  
+  if (!ports[port_id].enabled) {
+    ports[port_id].state = PORT_DISABLED;
+  } else if (ports[port_id].calculation_active) {
+    ports[port_id].state = PORT_ENABLED_CALCULATING;
+  } else if (ports[port_id].signal_detected) {
+    ports[port_id].state = PORT_ENABLED_LOCKED;
+  } else {
+    ports[port_id].state = PORT_ENABLED_NO_SIGNAL;
+  }
+}
+
+// Autonomous LED control for individual port
+void handle_port_autonomous_leds(uint8_t port_id) {
+  if (port_id >= MAX_PORTS) return;
+  
+  update_port_state(port_id);
   
   uint32_t current_time = HAL_GetTick();
-  if ((current_time - last_blink_time) >= blink_period_ms) {
-    // Toggle LEDs if blinking is enabled
-    bool new_status = !status_led_on;
-    bool new_signal = !signal_led_on;
-    
-    set_status_led(new_status);
-    set_signal_led(new_signal);
-    
-    last_blink_time = current_time;
+  
+  switch (ports[port_id].state) {
+    case PORT_DISABLED:
+      // Both LEDs off when port is disabled
+      set_port_status_led(port_id, false);
+      set_port_signal_led(port_id, false);
+      break;
+      
+    case PORT_ENABLED_NO_SIGNAL:
+      // Status LED on, signal LED off when enabled but no signal
+      set_port_status_led(port_id, true);
+      set_port_signal_led(port_id, false);
+      break;
+      
+    case PORT_ENABLED_CALCULATING:
+      // Status LED on, signal LED blinking when calculating
+      set_port_status_led(port_id, true);
+      if ((current_time - ports[port_id].last_blink_time) >= 500) { // 500ms blink period
+        ports[port_id].blink_counter++;
+        set_port_signal_led(port_id, ports[port_id].blink_counter % 2 == 0);
+        ports[port_id].last_blink_time = current_time;
+      }
+      break;
+      
+    case PORT_ENABLED_LOCKED:
+      // Both LEDs on when locked
+      set_port_status_led(port_id, true);
+      set_port_signal_led(port_id, true);
+      break;
+  }
+}
+
+// Handle autonomous LED control for all ports
+void handle_autonomous_leds(void) {
+  for (int i = 0; i < MAX_PORTS; i++) {
+    handle_port_autonomous_leds(i);
   }
 }
 
@@ -442,23 +541,36 @@ void handle_stop_continuous_measurement(void) {
   measurement_counter = 0;
 }
 
-void handle_single_measurement(void) {
+void handle_single_measurement(uint8_t port_id) {
+  handle_calculation_start(port_id);
   FrequencyReading reading;
   if (frequency_detector_measure(&freq_detector_state, &reading)) {
     uart_protocol_send_reading(&reading);
+    // Update signal detection based on reading quality
+    handle_signal_detection(port_id, reading.valid && reading.frequency_mhz > 950.0);
   }
+  handle_calculation_complete(port_id);
 }
 
-void handle_set_led_state(bool status, bool signal, uint8_t brightness, bool blinking, uint16_t period) {
-  led_brightness = brightness;
-  led_blinking = blinking;
-  blink_period_ms = period;
-  last_blink_time = HAL_GetTick();
-  
-  if (!blinking) {
-    set_status_led(status);
-    set_signal_led(signal);
-  }
+// Port control functions for daemon communication
+void handle_enable_port(uint8_t port_id, bool enabled) {
+  if (port_id >= MAX_PORTS) return;
+  ports[port_id].enabled = enabled;
+}
+
+void handle_signal_detection(uint8_t port_id, bool detected) {
+  if (port_id >= MAX_PORTS) return;
+  ports[port_id].signal_detected = detected;
+}
+
+void handle_calculation_start(uint8_t port_id) {
+  if (port_id >= MAX_PORTS) return;
+  ports[port_id].calculation_active = true;
+}
+
+void handle_calculation_complete(uint8_t port_id) {
+  if (port_id >= MAX_PORTS) return;
+  ports[port_id].calculation_active = false;
 }
 
 void handle_update_display(double frequency_mhz, double snr_db, bool signal_present, uint8_t brightness, const char* custom_text) {

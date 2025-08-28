@@ -139,25 +139,28 @@ void uart_protocol_send_response(uint8_t status, const uint8_t *data, uint8_t le
 static void process_command(const CommandPacket *cmd) {
   switch (cmd->command) {
     case STM32_CMD_READ_FREQUENCY:
-      handle_single_measurement();
+      handle_single_measurement(cmd->port_id);
       break;
       
     case STM32_CMD_READ_SNR:
       // SNR is included in frequency reading
-      handle_single_measurement();
+      handle_single_measurement(cmd->port_id);
       break;
       
-    case STM32_CMD_SET_LED:
-      if (cmd->length >= 6) {
-        // Extract LED state from command data
-        bool status_led = cmd->data[0];
-        bool signal_led = cmd->data[1];
-        uint8_t brightness = cmd->data[2];
-        bool blinking = cmd->data[3];
-        uint16_t period = cmd->data[4] | (cmd->data[5] << 8);
-        
-        // Set LED state via main.c handler
-        handle_set_led_state(status_led, signal_led, brightness, blinking, period);
+    case STM32_CMD_ENABLE_PORT:
+      if (cmd->length >= 1) {
+        bool enabled = cmd->data[0] != 0;
+        handle_enable_port(cmd->port_id, enabled);
+        uart_protocol_send_response(STM32_RESP_OK, NULL, 0);
+      } else {
+        uart_protocol_send_response(STM32_RESP_ERROR, NULL, 0);
+      }
+      break;
+      
+    case STM32_CMD_SIGNAL_DETECTION:
+      if (cmd->length >= 1) {
+        bool detected = cmd->data[0] != 0;
+        handle_signal_detection(cmd->port_id, detected);
         uart_protocol_send_response(STM32_RESP_OK, NULL, 0);
       } else {
         uart_protocol_send_response(STM32_RESP_ERROR, NULL, 0);

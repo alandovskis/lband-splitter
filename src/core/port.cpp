@@ -40,7 +40,7 @@ bool Port::initialize() {
   }
 
   gpio_controller_->set_pin_low(enable_gpio_pin_);
-  update_leds();
+  update_port_state();
 
   clear_error();
   healthy_ = true;
@@ -64,7 +64,7 @@ bool Port::enable() {
   state_.enabled = true;
   state_.last_update = std::chrono::system_clock::now();
 
-  update_leds();
+  update_port_state();
   clear_error();
 
   utils::Logger::info("Port {} enabled", id_);
@@ -90,7 +90,7 @@ bool Port::disable() {
   state_.signal_level_dbm = -100.0;
   state_.last_update = std::chrono::system_clock::now();
 
-  update_leds();
+  update_port_state();
   clear_error();
 
   utils::Logger::info("Port {} disabled", id_);
@@ -135,7 +135,7 @@ void Port::update_frequency(double frequency_mhz) {
     signal_detected_ = (frequency_mhz > 0.0) && in_range;
     state_.signal_detected = signal_detected_;
 
-    update_leds();
+    update_port_state();
     update_display();
   }
 
@@ -175,20 +175,16 @@ void Port::check_health() {
   state_.healthy = healthy_;
 }
 
-void Port::update_leds() {
+void Port::update_port_state() {
   if (!stm32f4_controller_) {
     return;
   }
 
-  // Create LED state for STM32F4 controller
-  hardware::STM32F4LedState led_state;
-  led_state.status_led = enabled_;
-  led_state.signal_led = enabled_ && signal_detected_;
-  led_state.brightness = 255; // Full brightness
-  led_state.blinking = false;
-
-  // Send LED command to STM32F4
-  stm32f4_controller_->set_led_state(led_state);
+  // Send port enable/disable state to STM32F4 for autonomous LED control
+  stm32f4_controller_->enable_port(enabled_);
+  
+  // Send current signal detection state
+  stm32f4_controller_->set_signal_detection(signal_detected_);
 }
 
 void Port::update_display() {

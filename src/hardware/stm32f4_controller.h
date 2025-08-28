@@ -21,13 +21,6 @@ struct STM32F4Reading {
   uint8_t port_id{0};
 };
 
-struct STM32F4LedState {
-  bool status_led{false};
-  bool signal_led{false};
-  uint8_t brightness{255}; // 0-255 for PWM brightness control
-  bool blinking{false};
-  uint16_t blink_period_ms{1000};
-};
 
 struct STM32F4DisplayData {
   double frequency_mhz{0.0};
@@ -41,11 +34,12 @@ struct STM32F4DisplayData {
 namespace protocol {
 constexpr uint8_t STM32_CMD_READ_FREQUENCY = 0x01;
 constexpr uint8_t STM32_CMD_READ_SNR = 0x02;
-constexpr uint8_t STM32_CMD_SET_LED = 0x03;
+constexpr uint8_t STM32_CMD_ENABLE_PORT = 0x03;
 constexpr uint8_t STM32_CMD_UPDATE_DISPLAY = 0x04;
 constexpr uint8_t STM32_CMD_GET_STATUS = 0x05;
 constexpr uint8_t STM32_CMD_CALIBRATE = 0x06;
 constexpr uint8_t STM32_CMD_RESET = 0x07;
+constexpr uint8_t STM32_CMD_SIGNAL_DETECTION = 0x08;
 
 constexpr uint8_t STM32_RESP_OK = 0x00;
 constexpr uint8_t STM32_RESP_ERROR = 0xFF;
@@ -69,13 +63,11 @@ public:
   STM32F4Reading get_last_reading() const;
   bool start_continuous_measurement();
   bool stop_continuous_measurement();
+  
+  // Port state control for autonomous LED behavior
+  bool enable_port(bool enabled);
+  bool set_signal_detection(bool detected);
 
-  // LED control
-  bool set_led_state(const STM32F4LedState &state);
-  bool set_status_led(bool on, uint8_t brightness = 255);
-  bool set_signal_led(bool on, uint8_t brightness = 255);
-  bool set_led_blinking(bool status_led, bool signal_led,
-                        uint16_t period_ms = 1000);
 
   // Display control
   bool update_display(const STM32F4DisplayData &data);
@@ -186,7 +178,6 @@ public:
 
   // Bulk operations
   std::vector<STM32F4Reading> read_all_frequencies();
-  bool set_all_leds(const STM32F4LedState &state);
   bool update_all_displays(const STM32F4DisplayData &data);
 
   // Status monitoring

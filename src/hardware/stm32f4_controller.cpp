@@ -149,45 +149,26 @@ bool STM32F4Controller::stop_continuous_measurement() {
   return true;
 }
 
-bool STM32F4Controller::set_led_state(const STM32F4LedState &state) {
+bool STM32F4Controller::enable_port(bool enabled) {
   if (!initialized_) {
     return false;
   }
-
-  uint8_t led_data[6] = {static_cast<uint8_t>(state.status_led ? 1u : 0u),
-                         static_cast<uint8_t>(state.signal_led ? 1u : 0u),
-                         state.brightness,
-                         static_cast<uint8_t>(state.blinking ? 1u : 0u),
-                         static_cast<uint8_t>(state.blink_period_ms >> 8),
-                         static_cast<uint8_t>(state.blink_period_ms & 0xFF)};
-
+  
+  uint8_t enable_data = enabled ? 1 : 0;
   ResponsePacket response;
-  return send_command_with_response(protocol::STM32_CMD_SET_LED, response,
-                                    led_data, sizeof(led_data));
+  return send_command_with_response(protocol::STM32_CMD_ENABLE_PORT, response,
+                                    &enable_data, 1);
 }
 
-bool STM32F4Controller::set_status_led(bool on, uint8_t brightness) {
-  STM32F4LedState state;
-  state.status_led = on;
-  state.brightness = brightness;
-  return set_led_state(state);
-}
-
-bool STM32F4Controller::set_signal_led(bool on, uint8_t brightness) {
-  STM32F4LedState state;
-  state.signal_led = on;
-  state.brightness = brightness;
-  return set_led_state(state);
-}
-
-bool STM32F4Controller::set_led_blinking(bool status_led, bool signal_led,
-                                         uint16_t period_ms) {
-  STM32F4LedState state;
-  state.status_led = status_led;
-  state.signal_led = signal_led;
-  state.blinking = true;
-  state.blink_period_ms = period_ms;
-  return set_led_state(state);
+bool STM32F4Controller::set_signal_detection(bool detected) {
+  if (!initialized_) {
+    return false;
+  }
+  
+  uint8_t detection_data = detected ? 1 : 0;
+  ResponsePacket response;
+  return send_command_with_response(protocol::STM32_CMD_SIGNAL_DETECTION, response,
+                                    &detection_data, 1);
 }
 
 bool STM32F4Controller::update_display(const STM32F4DisplayData &data) {
@@ -639,18 +620,6 @@ std::vector<STM32F4Reading> STM32F4Manager::read_all_frequencies() {
   return readings;
 }
 
-bool STM32F4Manager::set_all_leds(const STM32F4LedState &state) {
-  bool success = true;
-
-  std::lock_guard<std::mutex> lock(controllers_mutex_);
-  for (auto &controller : controllers_) {
-    if (controller && !controller->set_led_state(state)) {
-      success = false;
-    }
-  }
-
-  return success;
-}
 
 bool STM32F4Manager::update_all_displays(const STM32F4DisplayData &data) {
   bool success = true;
