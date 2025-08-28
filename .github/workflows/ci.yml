@@ -71,7 +71,8 @@ jobs:
           libssh-dev \
           libcurl4-openssl-dev \
           libi2c-dev \
-          libgpiod-dev
+          libgpiod-dev \
+          gcc-arm-none-eabi
     
     - name: Install Conan
       run: |
@@ -111,6 +112,12 @@ jobs:
       run: |
         cmake --build --preset conan-${{ matrix.build_type == 'Release' && 'release' || 'debug' }} \
           --parallel $(nproc)
+    
+    - name: Build STM32F4 firmware
+      if: matrix.build_type == 'Release' && matrix.compiler == 'gcc-11'
+      run: |
+        cmake --build --preset conan-release --target stm32f4_firmware
+      continue-on-error: true  # Allow failure if STM32CubeF4 not available
     
     - name: Run unit tests
       run: |
@@ -158,6 +165,13 @@ jobs:
       if: matrix.build_type == 'Release'
       run: |
         cmake --install build/Release --prefix dist/
+        # Include STM32F4 firmware if it was built
+        if [ -f build/Release/firmware/stm32f4/stm32f4_frequency_detector.hex ]; then
+          mkdir -p dist/share/splitter/firmware/
+          cp build/Release/firmware/stm32f4/stm32f4_frequency_detector.hex dist/share/splitter/firmware/
+          cp build/Release/firmware/stm32f4/stm32f4_frequency_detector.bin dist/share/splitter/firmware/
+          echo "STM32F4 firmware included in package"
+        fi
         tar -czf splitter-daemon-${{ runner.os }}-${{ matrix.compiler }}.tar.gz -C dist/ .
     
     - name: Upload build artifacts
