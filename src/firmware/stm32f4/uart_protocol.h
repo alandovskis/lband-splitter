@@ -69,6 +69,9 @@ extern void handle_stop_continuous_measurement(void);
 extern void handle_single_measurement(void);
 extern void handle_set_led_state(bool status, bool signal, uint8_t brightness,
                                  bool blinking, uint16_t period);
+extern void handle_update_display(double frequency_mhz, double snr_db, 
+                                 bool signal_present, uint8_t brightness, 
+                                 const char* custom_text);
 
 // Internal functions
 static void process_command(const CommandPacket *cmd);

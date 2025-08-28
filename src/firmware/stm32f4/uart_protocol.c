@@ -165,8 +165,28 @@ static void process_command(const CommandPacket *cmd) {
       break;
       
     case STM32_CMD_UPDATE_DISPLAY:
-      // Display update command (would control small LCD/OLED here)
-      uart_protocol_send_response(STM32_RESP_OK, NULL, 0);
+      if (cmd->length >= 9) {
+        // Extract display data from command
+        uint16_t freq_raw = cmd->data[0] | (cmd->data[1] << 8);
+        uint16_t snr_raw = cmd->data[2] | (cmd->data[3] << 8);
+        bool signal_present = cmd->data[4] != 0;
+        uint8_t brightness = cmd->data[5];
+        
+        // Convert raw values to engineering units
+        double frequency_mhz = (freq_raw * 0.5) + 950.0;  // L-band range
+        double snr_db = (snr_raw * 0.1) - 30.0;           // SNR range
+        
+        // Extract custom text if present
+        const char* custom_text = NULL;
+        if (cmd->length > 6) {
+          custom_text = (const char*)&cmd->data[6];
+        }
+        
+        handle_update_display(frequency_mhz, snr_db, signal_present, brightness, custom_text);
+        uart_protocol_send_response(STM32_RESP_OK, NULL, 0);
+      } else {
+        uart_protocol_send_response(STM32_RESP_ERROR, NULL, 0);
+      }
       break;
       
     case STM32_CMD_GET_STATUS:

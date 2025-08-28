@@ -11,11 +11,13 @@ static void MX_GPIO_Init(void);
 static void MX_USART2_UART_Init(void);
 static void MX_ADC1_Init(void);
 static void MX_TIM2_Init(void);
+static void MX_I2C1_Init(void);
 
 // Global handles
 UART_HandleTypeDef huart2;
 ADC_HandleTypeDef hadc1;
 TIM_HandleTypeDef htim2;
+I2C_HandleTypeDef hi2c1;
 
 // Frequency detection state
 static FrequencyDetectorState freq_detector_state;
@@ -34,6 +36,10 @@ int main(void) {
   MX_USART2_UART_Init();
   MX_ADC1_Init();
   MX_TIM2_Init();
+  MX_I2C1_Init();
+  
+  // Initialize display
+  display_init();
 
   // Initialize frequency detector
   frequency_detector_init(&freq_detector_state);
@@ -227,6 +233,159 @@ void Error_Handler(void) {
   }
 }
 
+// I2C1 Initialization for display communication
+static void MX_I2C1_Init(void) {
+  hi2c1.Instance = I2C1;
+  hi2c1.Init.ClockSpeed = 400000;
+  hi2c1.Init.DutyCycle = I2C_DUTYCYCLE_2;
+  hi2c1.Init.OwnAddress1 = 0;
+  hi2c1.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
+  hi2c1.Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;
+  hi2c1.Init.OwnAddress2 = 0;
+  hi2c1.Init.GeneralCallMode = I2C_GENERALCALL_DISABLE;
+  hi2c1.Init.NoStretchMode = I2C_NOSTRETCH_DISABLE;
+  if (HAL_I2C_Init(&hi2c1) != HAL_OK) {
+    Error_Handler();
+  }
+}
+
+// Display control state and functions
+#define DISPLAY_I2C_ADDRESS 0x3C  // Standard SSD1306 OLED address
+static volatile bool display_initialized = false;
+static volatile uint8_t display_brightness = 100;
+
+typedef struct {
+  double frequency_mhz;
+  double snr_db;
+  bool signal_present;
+  char custom_text[32];
+  uint8_t brightness;
+} DisplayData;
+
+static DisplayData current_display_data;
+
+void display_init(void) {
+  // Initialize SSD1306 OLED display
+  // This is a simplified initialization - real implementation would include
+  // full SSD1306 command sequence
+  uint8_t init_commands[] = {
+    0x00, 0xAE,  // Display OFF
+    0x00, 0x20, 0x00,  // Set Memory Addressing Mode
+    0x00, 0xB0,  // Set Page Start Address
+    0x00, 0xC8,  // Set COM Output Scan Direction
+    0x00, 0x00,  // Set low column address
+    0x00, 0x10,  // Set high column address
+    0x00, 0x40,  // Set start line address
+    0x00, 0x81, 0x7F,  // Set contrast control register
+    0x00, 0xA1,  // Set segment re-map
+    0x00, 0xA6,  // Set normal display
+    0x00, 0xA8, 0x3F,  // Set multiplex ratio
+    0x00, 0xA4,  // Output RAM to Display
+    0x00, 0xD3, 0x00,  // Set display offset
+    0x00, 0xD5, 0xF0,  // Set display clock divide ratio
+    0x00, 0xD9, 0x22,  // Set pre-charge period
+    0x00, 0xDA, 0x12,  // Set com pins hardware configuration
+    0x00, 0xDB, 0x20,  // Set vcomh
+    0x00, 0x8D, 0x14,  // Set DC-DC enable
+    0x00, 0xAF   // Display ON
+  };
+
+  if (HAL_I2C_Transmit(&hi2c1, DISPLAY_I2C_ADDRESS << 1, init_commands, 
+                       sizeof(init_commands), HAL_MAX_DELAY) == HAL_OK) {
+    display_initialized = true;
+    display_clear();
+    display_show_startup_message();
+  }
+}
+
+void display_clear(void) {
+  if (!display_initialized) return;
+  
+  // Clear display buffer command
+  uint8_t clear_cmd[] = {0x00, 0x21, 0x00, 0x7F, 0x22, 0x00, 0x07};
+  HAL_I2C_Transmit(&hi2c1, DISPLAY_I2C_ADDRESS << 1, clear_cmd, 
+                   sizeof(clear_cmd), HAL_MAX_DELAY);
+  
+  // Send zeros to clear all pages
+  for (int page = 0; page < 8; page++) {
+    uint8_t data[129];
+    data[0] = 0x40;  // Data mode
+    memset(&data[1], 0, 128);  // Clear 128 columns
+    HAL_I2C_Transmit(&hi2c1, DISPLAY_I2C_ADDRESS << 1, data, 
+                     sizeof(data), HAL_MAX_DELAY);
+  }
+}
+
+void display_show_startup_message(void) {
+  if (!display_initialized) return;
+  
+  // Simple text display - real implementation would use font rendering
+  display_print_text(0, 0, "L-Band Splitter");
+  display_print_text(0, 2, "STM32F4 Ready");
+  display_print_text(0, 4, "Freq: ----.-- MHz");
+  display_print_text(0, 6, "SNR:  --.- dB");
+}
+
+void display_print_text(uint8_t x, uint8_t y, const char* text) {
+  if (!display_initialized) return;
+  
+  // Simplified text rendering - real implementation would use character bitmaps
+  uint8_t cmd[] = {0x00, 0x21, x, x + strlen(text) * 6, 0x22, y, y};
+  HAL_I2C_Transmit(&hi2c1, DISPLAY_I2C_ADDRESS << 1, cmd, sizeof(cmd), HAL_MAX_DELAY);
+  
+  // Send character data (simplified - would normally render from font)
+  uint8_t data[2];
+  data[0] = 0x40;  // Data mode
+  for (const char* c = text; *c; c++) {
+    // Simple character pattern (would use proper font in real implementation)
+    data[1] = 0xFF;  // Full column for visibility
+    HAL_I2C_Transmit(&hi2c1, DISPLAY_I2C_ADDRESS << 1, data, 2, HAL_MAX_DELAY);
+  }
+}
+
+void display_update_frequency_data(double frequency_mhz, double snr_db, bool signal_present) {
+  current_display_data.frequency_mhz = frequency_mhz;
+  current_display_data.snr_db = snr_db;
+  current_display_data.signal_present = signal_present;
+  
+  if (!display_initialized) return;
+  
+  char freq_str[32];
+  char snr_str[32];
+  
+  if (signal_present && frequency_mhz > 0) {
+    snprintf(freq_str, sizeof(freq_str), "Freq: %7.2f MHz", frequency_mhz);
+    snprintf(snr_str, sizeof(snr_str), "SNR:  %5.1f dB", snr_db);
+  } else {
+    snprintf(freq_str, sizeof(freq_str), "Freq: ----.-- MHz");
+    snprintf(snr_str, sizeof(snr_str), "SNR:  --.- dB");
+  }
+  
+  display_print_text(0, 4, freq_str);
+  display_print_text(0, 6, snr_str);
+}
+
+void display_set_brightness(uint8_t brightness) {
+  display_brightness = brightness;
+  if (!display_initialized) return;
+  
+  // Set contrast (brightness) command
+  uint8_t contrast_cmd[] = {0x00, 0x81, (brightness * 255) / 100};
+  HAL_I2C_Transmit(&hi2c1, DISPLAY_I2C_ADDRESS << 1, contrast_cmd, 
+                   sizeof(contrast_cmd), HAL_MAX_DELAY);
+}
+
+void display_show_custom_text(const char* text) {
+  if (!display_initialized) return;
+  
+  strncpy(current_display_data.custom_text, text, sizeof(current_display_data.custom_text) - 1);
+  current_display_data.custom_text[sizeof(current_display_data.custom_text) - 1] = '\0';
+  
+  display_clear();
+  display_print_text(0, 0, "L-Band Splitter");
+  display_print_text(0, 2, text);
+}
+
 // LED control state
 static volatile bool status_led_on = false;
 static volatile bool signal_led_on = false;
@@ -299,6 +458,18 @@ void handle_set_led_state(bool status, bool signal, uint8_t brightness, bool bli
   if (!blinking) {
     set_status_led(status);
     set_signal_led(signal);
+  }
+}
+
+void handle_update_display(double frequency_mhz, double snr_db, bool signal_present, uint8_t brightness, const char* custom_text) {
+  if (brightness > 0 && brightness <= 100) {
+    display_set_brightness(brightness);
+  }
+  
+  if (custom_text && strlen(custom_text) > 0) {
+    display_show_custom_text(custom_text);
+  } else {
+    display_update_frequency_data(frequency_mhz, snr_db, signal_present);
   }
 }
 
