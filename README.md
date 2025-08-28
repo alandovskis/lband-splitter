@@ -15,7 +15,7 @@ This system provides:
 
 ## Architecture
 
-The system follows a distributed architecture with multiple STM32F4 microcontrollers handling frequency detection and LED control for each port, while a central Linux daemon manages overall system coordination.
+The system follows a centralized architecture with a single STM32F4 microcontroller handling frequency detection and LED control for all 32 ports, while a Linux daemon manages overall system coordination and port configuration.
 
 ### C4 Context Diagram
 
@@ -53,8 +53,8 @@ graph TB
         NetConfServer[NetConf Server<br/>Network management<br/>protocol implementation]
     end
     
-    subgraph "STM32F4 Controllers (32x)"
-        STM32[STM32F4 Controller<br/>Frequency detection<br/>LED control<br/>UART communication]
+    subgraph "STM32F4 Controller"
+        STM32[STM32F4 MCU<br/>All 32-port control<br/>Frequency detection<br/>LED management<br/>UART communication]
     end
     
     subgraph "External Systems"
@@ -230,10 +230,8 @@ graph TB
             end
         end
         
-        subgraph "STM32F4 Hardware (32 units)"
-            MCU1[STM32F4 Board #1<br/>- Frequency detector firmware<br/>- LED control<br/>- UART at 115200 baud]
-            MCU2[STM32F4 Board #2<br/>- Port-specific firmware<br/>- ADC sampling<br/>- Real-time processing]
-            MCUn[STM32F4 Board #32<br/>- Distributed processing<br/>- Local LED control<br/>- Signal analysis]
+        subgraph "STM32F4 Hardware"
+            MCU[STM32F4 Controller<br/>- All 32-port management<br/>- Frequency detection firmware<br/>- LED control (64 LEDs)<br/>- ADC sampling<br/>- UART at 115200 baud]
         end
         
         subgraph "RF Hardware"
@@ -252,20 +250,16 @@ graph TB
     
     WebClients -->|HTTPS:443| WebContainer
     NetMgmt -->|SSH:830| SystemD
-    MonitoringStack <-->|Metrics| MonitorContainersi
+    MonitoringStack <-->|Metrics| MonitorContainer
     
     WebContainer <-->|HTTP:8080| DaemonContainer
     DaemonContainer <-->|Unix socket| MonitorContainer
     DaemonContainer <-->|GPIO/UART| GPIOSysfs
     DaemonContainer <-->|UART| UARTDevices
     
-    UARTDevices <-->|RS-232/USB| MCU1
-    UARTDevices <-->|RS-232/USB| MCU2
-    UARTDevices <-->|RS-232/USB| MCUn
+    UARTDevices <-->|RS-232/USB| MCU
     
-    MCU1 <-->|Control signals| RFMatrix
-    MCU2 <-->|Control signals| RFMatrix
-    MCUn <-->|Control signals| RFMatrix
+    MCU <-->|Control signals| RFMatrix
     
     RFMatrix <-->|RF signals| Antennas
     
@@ -275,7 +269,7 @@ graph TB
     classDef service fill:#9F7AEA,stroke:#6B46C1,stroke-width:2px,color:#fff
     
     class DaemonContainer,WebContainer,MonitorContainer container
-    class MCU1,MCU2,MCUn,RFMatrix,Antennas,GPIOSysfs,UARTDevices hardware
+    class MCU,RFMatrix,Antennas,GPIOSysfs,UARTDevices hardware
     class NetMgmt,WebClients,MonitoringStack external
     class SystemD service
 ```
@@ -417,17 +411,18 @@ npm run dev
 
 ### Host System
 - **32 GPIO pins** for port enable control (1 per port × 32 ports)
-- **32 UART interfaces** for STM32F4 communication (one per port)
+- **1 UART interface** for STM32F4 communication
 - **Linux sysfs GPIO interface** (`/sys/class/gpio`)
 - **Serial communication** at 115200 baud
-- **STM32F4 controllers handle LED control directly** (reduces host GPIO requirements)
+- **Single STM32F4 controller handles all LED control** (reduces host GPIO requirements)
 
-### STM32F4 Microcontrollers (32 units)
+### STM32F4 Microcontroller (1 unit)
 - **STM32F407VG** or compatible (168 MHz, 1MB Flash, 192KB RAM)
-- **12-bit ADC** for L-band signal sampling
-- **Timer peripherals** for periodic measurements
+- **64+ GPIO pins** for LED control (2 per port × 32 ports)
+- **12-bit ADC channels** for L-band signal sampling (multiplexed across ports)
+- **Timer peripherals** for periodic measurements and LED control
 - **UART interface** for host communication (115200 baud)
-- **GPIO pins** for LED control and RF switching
+- **Sufficient I/O pins** for RF switching and control signals
 
 ### RF Hardware
 - **32 L-band ports** with switching matrices
