@@ -1,1 +1,0 @@
-. "/Users/alex/src/splitter/build/Release/generators/deactivate_conanrunenv-release-armv8.sh"

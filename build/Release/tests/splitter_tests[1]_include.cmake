@@ -1,5 +1,0 @@
-if(EXISTS "/Users/alex/src/splitter/build/Release/tests/splitter_tests[1]_tests.cmake")
-  include("/Users/alex/src/splitter/build/Release/tests/splitter_tests[1]_tests.cmake")
-else()
-  add_test(splitter_tests_NOT_BUILT splitter_tests_NOT_BUILT)
-endif()

@@ -1,0 +1,215 @@
+# Build directories
+build/
+Build/
+BUILD/
+out/
+dist/
+Debug/
+Release/
+RelWithDebInfo/
+MinSizeRel/
+
+# CMake generated files
+CMakeCache.txt
+CMakeFiles/
+CMakeScripts/
+cmake_install.cmake
+Makefile
+*.cmake
+!CMakeLists.txt
+CTestTestfile.cmake
+Testing/
+_deps/
+
+# Conan generated files
+conandata.yml
+conaninfo.txt
+conanbuildinfo.*
+conan.lock
+.conan/
+
+# C++ build artifacts
+*.o
+*.obj
+*.so
+*.so.*
+*.dylib
+*.dll
+*.lib
+*.a
+*.la
+*.lo
+*.exe
+*.out
+*.app
+
+# IDE files
+.vscode/
+.vs/
+*.vcxproj
+*.vcxproj.filters
+*.vcxproj.user
+*.sln
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# macOS files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Linux files
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+.nfs*
+
+# Windows files
+*.tmp
+*.swp
+*.log
+*.cache
+
+# Node.js (for Angular frontend)
+webapp/node_modules/
+webapp/dist/
+webapp/.angular/
+webapp/coverage/
+webapp/e2e/reports/
+*.tgz
+*.tar.gz
+
+# Package managers
+*.lock
+package-lock.json
+yarn.lock
+
+# Logs
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+
+# Runtime data
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage directory used by tools like istanbul
+coverage/
+*.lcov
+.nyc_output/
+
+# Dependency directories
+node_modules/
+
+# Optional npm cache directory
+.npm
+
+# Optional eslint cache
+.eslintcache
+
+# Environment files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# STM32 and embedded development
+*.hex
+*.bin
+*.elf
+*.map
+*.lst
+*.d
+
+# ARM cross-compilation
+*.axf
+
+# Unity testing framework
+unity/
+Unity/
+
+# Generated documentation
+doc/html/
+doc/latex/
+docs/build/
+
+# Backup files
+*.bak
+*.backup
+*~
+
+# Temporary files
+*.tmp
+*.temp
+temp/
+tmp/
+
+# System files
+.system
+
+# Project-specific ignores
+config/generated/
+firmware/generated/
+scripts/generated/
+
+# Configuration files that might contain secrets
+*.secret
+*.private
+.credentials
+
+# Test results
+test-results/
+test-reports/
+junit.xml
+
+# Profiling data
+*.prof
+gmon.out
+
+# Static analysis results
+cppcheck-results.xml
+scan-build-*
+
+# Clang format temporary files
+.clang-format-*
+
+# Editor backups and swap files
+*~
+.*.swp
+.*.swo
+*.orig
+*.rej
+
+# Tags files
+tags
+TAGS
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Archives
+*.zip
+*.tar
+*.tar.gz
+*.tar.bz2
+*.rar
+*.7z
