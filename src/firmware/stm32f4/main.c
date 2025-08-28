@@ -49,6 +49,9 @@ int main(void) {
     // Process UART commands
     uart_protocol_process();
 
+    // Handle LED blinking
+    handle_led_blinking();
+
     // Handle continuous measurement if enabled
     if (continuous_measurement && measurement_counter > 0) {
       FrequencyReading reading;
@@ -60,7 +63,7 @@ int main(void) {
     }
 
     // Power management - enter sleep mode if idle
-    if (!continuous_measurement) {
+    if (!continuous_measurement && !led_blinking) {
       HAL_PWR_EnterSLEEPMode(PWR_MAINREGULATOR_ON, PWR_SLEEPENTRY_WFI);
     }
   }
@@ -199,8 +202,15 @@ static void MX_GPIO_Init(void) {
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
+  // Configure GPIO pins for LED control (Status and Signal LEDs)
+  GPIO_InitStruct.Pin = GPIO_PIN_5 | GPIO_PIN_6;  // Status LED (PA5), Signal LED (PA6)
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
   // Configure GPIO pins for RF switching control
-  GPIO_InitStruct.Pin = GPIO_PIN_5 | GPIO_PIN_6 | GPIO_PIN_7;
+  GPIO_InitStruct.Pin = GPIO_PIN_7 | GPIO_PIN_8;  // RF control pins
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
@@ -214,6 +224,51 @@ void Error_Handler(void) {
     // Toggle LED to indicate error
     HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_13);
     HAL_Delay(100);
+  }
+}
+
+// LED control state
+static volatile bool status_led_on = false;
+static volatile bool signal_led_on = false;
+static volatile uint8_t led_brightness = 255;
+static volatile bool led_blinking = false;
+static volatile uint16_t blink_period_ms = 1000;
+static volatile uint32_t last_blink_time = 0;
+
+// LED control functions
+void set_status_led(bool on) {
+  if (on) {
+    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_SET);
+  } else {
+    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, GPIO_PIN_RESET);
+  }
+  status_led_on = on;
+}
+
+void set_signal_led(bool on) {
+  if (on) {
+    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_6, GPIO_PIN_SET);
+  } else {
+    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_6, GPIO_PIN_RESET);
+  }
+  signal_led_on = on;
+}
+
+void handle_led_blinking(void) {
+  if (!led_blinking) {
+    return;
+  }
+  
+  uint32_t current_time = HAL_GetTick();
+  if ((current_time - last_blink_time) >= blink_period_ms) {
+    // Toggle LEDs if blinking is enabled
+    bool new_status = !status_led_on;
+    bool new_signal = !signal_led_on;
+    
+    set_status_led(new_status);
+    set_signal_led(new_signal);
+    
+    last_blink_time = current_time;
   }
 }
 
@@ -232,6 +287,18 @@ void handle_single_measurement(void) {
   FrequencyReading reading;
   if (frequency_detector_measure(&freq_detector_state, &reading)) {
     uart_protocol_send_reading(&reading);
+  }
+}
+
+void handle_set_led_state(bool status, bool signal, uint8_t brightness, bool blinking, uint16_t period) {
+  led_brightness = brightness;
+  led_blinking = blinking;
+  blink_period_ms = period;
+  last_blink_time = HAL_GetTick();
+  
+  if (!blinking) {
+    set_status_led(status);
+    set_signal_led(signal);
   }
 }
 

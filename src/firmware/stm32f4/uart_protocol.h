@@ -67,6 +67,8 @@ void uart_protocol_send_response(uint8_t status, const uint8_t *data,
 extern void handle_start_continuous_measurement(void);
 extern void handle_stop_continuous_measurement(void);
 extern void handle_single_measurement(void);
+extern void handle_set_led_state(bool status, bool signal, uint8_t brightness,
+                                 bool blinking, uint16_t period);
 
 // Internal functions
 static void process_command(const CommandPacket *cmd);

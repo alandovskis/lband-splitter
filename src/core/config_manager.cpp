@@ -45,12 +45,11 @@ bool ConfigManager::save_config() const {
 
     config["hardware"] = {
         {"gpio_base_pin", hardware_config_.gpio_base_pin},
-        {"status_led_base_pin", hardware_config_.status_led_base_pin},
-        {"signal_led_base_pin", hardware_config_.signal_led_base_pin},
         {"spi_device", hardware_config_.spi_device},
         {"i2c_device", hardware_config_.i2c_device},
-        {"frequency_detector_address",
-         hardware_config_.frequency_detector_address}};
+        {"frequency_detector_address", hardware_config_.frequency_detector_address},
+        {"uart_device_prefix", hardware_config_.uart_device_prefix},
+        {"uart_baud_rate", hardware_config_.uart_baud_rate}};
 
     config["network"] = {{"netconf_host", network_config_.netconf_host},
                          {"netconf_port", network_config_.netconf_port},
@@ -207,10 +206,6 @@ bool ConfigManager::load_from_file() {
       auto hw = raw_config_["hardware"];
       hardware_config_.gpio_base_pin =
           hw.value("gpio_base_pin", hardware_config_.gpio_base_pin);
-      hardware_config_.status_led_base_pin =
-          hw.value("status_led_base_pin", hardware_config_.status_led_base_pin);
-      hardware_config_.signal_led_base_pin =
-          hw.value("signal_led_base_pin", hardware_config_.signal_led_base_pin);
       hardware_config_.spi_device =
           hw.value("spi_device", hardware_config_.spi_device);
       hardware_config_.i2c_device =
@@ -218,6 +213,10 @@ bool ConfigManager::load_from_file() {
       hardware_config_.frequency_detector_address =
           hw.value("frequency_detector_address",
                    hardware_config_.frequency_detector_address);
+      hardware_config_.uart_device_prefix =
+          hw.value("uart_device_prefix", hardware_config_.uart_device_prefix);
+      hardware_config_.uart_baud_rate =
+          hw.value("uart_baud_rate", hardware_config_.uart_baud_rate);
     }
 
     if (raw_config_.contains("network")) {
@@ -294,12 +293,11 @@ bool ConfigManager::create_default_config() {
 
     config["hardware"] = {
         {"gpio_base_pin", hardware_config_.gpio_base_pin},
-        {"status_led_base_pin", hardware_config_.status_led_base_pin},
-        {"signal_led_base_pin", hardware_config_.signal_led_base_pin},
         {"spi_device", hardware_config_.spi_device},
         {"i2c_device", hardware_config_.i2c_device},
-        {"frequency_detector_address",
-         hardware_config_.frequency_detector_address}};
+        {"frequency_detector_address", hardware_config_.frequency_detector_address},
+        {"uart_device_prefix", hardware_config_.uart_device_prefix},
+        {"uart_baud_rate", hardware_config_.uart_baud_rate}};
 
     config["network"] = {{"netconf_host", network_config_.netconf_host},
                          {"netconf_port", network_config_.netconf_port},

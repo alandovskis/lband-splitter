@@ -8,7 +8,6 @@
 
 #include "../hardware/frequency_detector.h"
 #include "../hardware/gpio_controller.h"
-#include "../hardware/led_controller.h"
 #include "../hardware/stm32f4_controller.h"
 #include "config_manager.h"
 #include "port.h"
@@ -59,8 +58,7 @@ private:
   std::vector<std::unique_ptr<Port>> ports_;
   std::unique_ptr<hardware::GpioController> gpio_controller_;
   std::unique_ptr<hardware::FrequencyDetector> frequency_detector_;
-  std::unique_ptr<hardware::LedController> led_controller_;
-  std::unique_ptr<hardware::STM32F4Manager> stm32f4_manager_;
+  std::vector<std::unique_ptr<hardware::STM32F4Controller>> stm32f4_controllers_;
 
   mutable std::mutex ports_mutex_;
   std::atomic<bool> initialized_{false};

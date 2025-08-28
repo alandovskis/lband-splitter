@@ -102,9 +102,10 @@ sudo systemctl start netconf-server
 ## Hardware Integration Notes
 
 ### GPIO Requirements
-- 64 GPIO pins for LEDs (2 per port × 32 ports)
+- 32 GPIO pins for port enable control (1 per port × 32 ports)
 - SPI/I2C buses for frequency detection circuits
 - Hardware-specific drivers in `src/hardware/`
+- STM32F4 microcontrollers handle LED control directly (2 LEDs per port)
 
 ### Frequency Detection
 - ADCs for L-band center frequency measurement

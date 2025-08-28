@@ -34,17 +34,18 @@ bool SplitterManager::initialize() {
       return false;
     }
 
-    led_controller_ =
-        std::make_unique<hardware::LedController>(gpio_controller_.get());
-    if (!led_controller_->initialize()) {
-      utils::Logger::error("Failed to initialize LED controller");
-      return false;
+    stm32f4_controllers_.reserve(NUM_PORTS);
+    const auto& hw_config = config_->get_hardware_config();
+    for (int i = 0; i < NUM_PORTS; ++i) {
+      std::string uart_device = hw_config.uart_device_prefix + std::to_string(i);
+      auto controller = std::make_unique<hardware::STM32F4Controller>(i, uart_device);
+      stm32f4_controllers_.push_back(std::move(controller));
     }
 
     ports_.reserve(NUM_PORTS);
     for (int i = 0; i < NUM_PORTS; ++i) {
       auto port = std::make_unique<Port>(i, gpio_controller_.get(),
-                                         led_controller_.get());
+                                         stm32f4_controllers_[i].get());
       if (!port->initialize()) {
         utils::Logger::error("Failed to initialize port {}", i);
         return false;
@@ -79,7 +80,7 @@ void SplitterManager::shutdown() {
   }
 
   ports_.clear();
-  led_controller_.reset();
+  stm32f4_controllers_.clear();
   frequency_detector_.reset();
   gpio_controller_.reset();
 
@@ -234,8 +235,7 @@ bool SplitterManager::get_system_health() const {
     return false;
   }
 
-  return gpio_controller_->is_healthy() && frequency_detector_->is_healthy() &&
-         led_controller_->is_healthy();
+  return gpio_controller_->is_healthy() && frequency_detector_->is_healthy();
 }
 
 SystemStats SplitterManager::get_system_stats() const {

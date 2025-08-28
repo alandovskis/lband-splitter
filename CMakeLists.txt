@@ -52,7 +52,7 @@ add_custom_target(install_service
     USES_TERMINAL)
 
 # Help target to show available build options
-add_custom_target(help
+add_custom_target(build_help
     COMMAND ${CMAKE_COMMAND} -E echo ""
     COMMAND ${CMAKE_COMMAND} -E echo "Splitter System Build Targets:"
     COMMAND ${CMAKE_COMMAND} -E echo "  all                 - Build main daemon and tests"

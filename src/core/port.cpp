@@ -1,23 +1,19 @@
 #include "port.h"
 #include "../hardware/gpio_controller.h"
-#include "../hardware/led_controller.h"
 #include "../hardware/stm32f4_controller.h"
 #include "../utils/logger.h"
 
 namespace splitter::core {
 
-Port::Port(int id, hardware::GpioController *gpio, hardware::LedController *led,
+Port::Port(int id, hardware::GpioController *gpio,
            hardware::STM32F4Controller *stm32f4)
-    : id_(id), gpio_controller_(gpio), led_controller_(led),
-      stm32f4_controller_(stm32f4),
+    : id_(id), gpio_controller_(gpio), stm32f4_controller_(stm32f4),
       last_health_check_(std::chrono::steady_clock::now()) {
 
   state_.id = id;
   config_.name = "Port " + std::to_string(id + 1);
 
   enable_gpio_pin_ = GPIO_BASE_PIN + id;
-  status_led_pin_ = STATUS_LED_BASE_PIN + id;
-  signal_led_pin_ = SIGNAL_LED_BASE_PIN + id;
 }
 
 Port::~Port() {
@@ -27,7 +23,7 @@ Port::~Port() {
 }
 
 bool Port::initialize() {
-  if (!gpio_controller_ || !led_controller_) {
+  if (!gpio_controller_ || !stm32f4_controller_) {
     set_error("Missing hardware controllers");
     return false;
   }
@@ -37,13 +33,9 @@ bool Port::initialize() {
     return false;
   }
 
-  if (!led_controller_->configure_led(status_led_pin_)) {
-    set_error("Failed to configure status LED");
-    return false;
-  }
-
-  if (!led_controller_->configure_led(signal_led_pin_)) {
-    set_error("Failed to configure signal LED");
+  // Initialize STM32F4 controller for this port
+  if (!stm32f4_controller_->initialize()) {
+    set_error("Failed to initialize STM32F4 controller");
     return false;
   }
 
@@ -165,12 +157,11 @@ void Port::check_health() {
 
   bool gpio_healthy =
       gpio_controller_ && gpio_controller_->is_pin_healthy(enable_gpio_pin_);
-  bool led_healthy = led_controller_ &&
-                     led_controller_->is_led_healthy(status_led_pin_) &&
-                     led_controller_->is_led_healthy(signal_led_pin_);
+  bool stm32f4_healthy =
+      stm32f4_controller_ && stm32f4_controller_->is_healthy();
 
   bool was_healthy = healthy_;
-  healthy_ = gpio_healthy && led_healthy;
+  healthy_ = gpio_healthy && stm32f4_healthy;
 
   if (was_healthy && !healthy_) {
     set_error("Hardware health check failed");
@@ -184,22 +175,19 @@ void Port::check_health() {
 }
 
 void Port::update_leds() {
-  if (!led_controller_) {
+  if (!stm32f4_controller_) {
     return;
   }
 
-  if (enabled_) {
-    led_controller_->set_led_on(status_led_pin_);
+  // Create LED state for STM32F4 controller
+  hardware::STM32F4LedState led_state;
+  led_state.status_led = enabled_;
+  led_state.signal_led = enabled_ && signal_detected_;
+  led_state.brightness = 255; // Full brightness
+  led_state.blinking = false;
 
-    if (signal_detected_) {
-      led_controller_->set_led_on(signal_led_pin_);
-    } else {
-      led_controller_->set_led_off(signal_led_pin_);
-    }
-  } else {
-    led_controller_->set_led_off(status_led_pin_);
-    led_controller_->set_led_off(signal_led_pin_);
-  }
+  // Send LED command to STM32F4
+  stm32f4_controller_->set_led_state(led_state);
 }
 
 void Port::set_error(const std::string &error) {

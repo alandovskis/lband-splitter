@@ -10,11 +10,11 @@ namespace splitter::core {
 
 struct HardwareConfig {
   int gpio_base_pin{100};
-  int status_led_base_pin{200};
-  int signal_led_base_pin{232};
   std::string spi_device{"/dev/spidev0.0"};
   std::string i2c_device{"/dev/i2c-1"};
   int frequency_detector_address{0x48};
+  std::string uart_device_prefix{"/dev/ttyUSB"};
+  int uart_baud_rate{115200};
 };
 
 struct NetworkConfig {

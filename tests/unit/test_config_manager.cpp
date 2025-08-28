@@ -49,14 +49,16 @@ TEST_F(ConfigManagerTest, HardwareConfiguration) {
 
   core::HardwareConfig hw_config;
   hw_config.gpio_base_pin = 150;
-  hw_config.status_led_base_pin = 250;
+  hw_config.uart_device_prefix = "/dev/ttyACM";
+  hw_config.uart_baud_rate = 9600;
   hw_config.spi_device = "/dev/spidev1.0";
 
   EXPECT_TRUE(config_manager_->set_hardware_config(hw_config));
 
   auto retrieved = config_manager_->get_hardware_config();
   EXPECT_EQ(retrieved.gpio_base_pin, 150);
-  EXPECT_EQ(retrieved.status_led_base_pin, 250);
+  EXPECT_EQ(retrieved.uart_device_prefix, "/dev/ttyACM");
+  EXPECT_EQ(retrieved.uart_baud_rate, 9600);
   EXPECT_EQ(retrieved.spi_device, "/dev/spidev1.0");
 }
 

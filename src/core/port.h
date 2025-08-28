@@ -6,7 +6,6 @@
 
 namespace splitter::hardware {
 class GpioController;
-class LedController;
 class STM32F4Controller;
 } // namespace splitter::hardware
 
@@ -36,8 +35,8 @@ struct PortState {
 
 class Port {
 public:
-  Port(int id, hardware::GpioController *gpio, hardware::LedController *led,
-       hardware::STM32F4Controller *stm32f4 = nullptr);
+  Port(int id, hardware::GpioController *gpio,
+       hardware::STM32F4Controller *stm32f4);
   ~Port();
 
   bool initialize();
@@ -62,7 +61,6 @@ private:
 
   int id_;
   hardware::GpioController *gpio_controller_;
-  hardware::LedController *led_controller_;
   hardware::STM32F4Controller *stm32f4_controller_;
 
   PortConfig config_;
@@ -73,14 +71,10 @@ private:
   std::atomic<bool> healthy_{true};
 
   int enable_gpio_pin_;
-  int status_led_pin_;
-  int signal_led_pin_;
 
   std::chrono::steady_clock::time_point last_health_check_;
 
   static constexpr int GPIO_BASE_PIN = 100;
-  static constexpr int STATUS_LED_BASE_PIN = 200;
-  static constexpr int SIGNAL_LED_BASE_PIN = 232;
 };
 
 } // namespace splitter::core

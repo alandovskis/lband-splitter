@@ -148,7 +148,7 @@ static void process_command(const CommandPacket *cmd) {
       break;
       
     case STM32_CMD_SET_LED:
-      if (cmd->length >= 5) {
+      if (cmd->length >= 6) {
         // Extract LED state from command data
         bool status_led = cmd->data[0];
         bool signal_led = cmd->data[1];
@@ -156,8 +156,8 @@ static void process_command(const CommandPacket *cmd) {
         bool blinking = cmd->data[3];
         uint16_t period = cmd->data[4] | (cmd->data[5] << 8);
         
-        // Control LEDs (GPIO control would be implemented here)
-        // For now, just acknowledge
+        // Set LED state via main.c handler
+        handle_set_led_state(status_led, signal_led, brightness, blinking, period);
         uart_protocol_send_response(STM32_RESP_OK, NULL, 0);
       } else {
         uart_protocol_send_response(STM32_RESP_ERROR, NULL, 0);
