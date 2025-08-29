@@ -136,7 +136,6 @@ void Port::update_frequency(double frequency_mhz) {
     state_.signal_detected = signal_detected_;
 
     update_port_state();
-    update_display();
   }
 
   state_.last_update = std::chrono::system_clock::now();
@@ -187,30 +186,6 @@ void Port::update_port_state() {
   stm32f4_controller_->set_signal_detection(signal_detected_);
 }
 
-void Port::update_display() {
-  if (!stm32f4_controller_) {
-    return;
-  }
-
-  // Create display data for STM32F4 controller
-  hardware::STM32F4DisplayData display_data;
-  display_data.frequency_mhz = state_.frequency_mhz;
-
-  // Calculate SNR from signal level (simplified approximation)
-  if (state_.signal_level_dbm > -100.0) {
-    display_data.snr_db =
-        state_.signal_level_dbm + 80.0; // Rough SNR approximation
-  } else {
-    display_data.snr_db = -30.0; // Minimum SNR when no signal
-  }
-
-  display_data.signal_present = signal_detected_;
-  display_data.custom_text = config_.name;
-  display_data.brightness = 100; // Full brightness
-
-  // Send display update command to STM32F4
-  stm32f4_controller_->update_display(display_data);
-}
 
 void Port::set_error(const std::string &error) {
   state_.error_message = error;

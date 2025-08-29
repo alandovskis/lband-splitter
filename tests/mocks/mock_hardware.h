@@ -41,7 +41,6 @@ public:
   MOCK_METHOD(bool, enable_port, (bool enabled));
   MOCK_METHOD(bool, set_signal_detection, (bool detected));
 
-  MOCK_METHOD(bool, update_display, (const hardware::STM32F4DisplayData &data));
   MOCK_METHOD(bool, set_display_brightness, (uint8_t brightness));
   MOCK_METHOD(bool, clear_display, ());
 

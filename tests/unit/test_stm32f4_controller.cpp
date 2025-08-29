@@ -79,16 +79,6 @@ TEST_F(STM32F4ControllerTest, PortStateControl) {
   EXPECT_FALSE(controller_->set_signal_detection(true));
 }
 
-TEST_F(STM32F4ControllerTest, DisplayDataStructure) {
-  hardware::STM32F4DisplayData data;
-
-  // Test default values
-  EXPECT_EQ(data.frequency_mhz, 0.0);
-  EXPECT_EQ(data.snr_db, 0.0);
-  EXPECT_FALSE(data.signal_present);
-  EXPECT_TRUE(data.custom_text.empty());
-  EXPECT_EQ(data.brightness, 100);
-}
 
 TEST_F(STM32F4ControllerTest, ProtocolConstants) {
   using namespace hardware::protocol;
@@ -97,7 +87,6 @@ TEST_F(STM32F4ControllerTest, ProtocolConstants) {
   EXPECT_NE(STM32_CMD_READ_FREQUENCY, 0);
   EXPECT_NE(STM32_CMD_READ_SNR, 0);
   EXPECT_NE(STM32_CMD_ENABLE_PORT, 0);
-  EXPECT_NE(STM32_CMD_UPDATE_DISPLAY, 0);
   EXPECT_NE(STM32_CMD_GET_STATUS, 0);
   EXPECT_NE(STM32_CMD_CALIBRATE, 0);
   EXPECT_NE(STM32_CMD_RESET, 0);
@@ -116,7 +105,6 @@ TEST_F(STM32F4ControllerTest, ProtocolConstants) {
 
 TEST_F(STM32F4ControllerTest, UninitializedOperations) {
   hardware::STM32F4Reading reading;
-  hardware::STM32F4DisplayData display_data;
   std::string version;
 
   // All operations should fail when not initialized
@@ -124,7 +112,6 @@ TEST_F(STM32F4ControllerTest, UninitializedOperations) {
   EXPECT_FALSE(controller_->start_continuous_measurement());
   EXPECT_FALSE(controller_->enable_port(true));
   EXPECT_FALSE(controller_->set_signal_detection(true));
-  EXPECT_FALSE(controller_->update_display(display_data));
   EXPECT_FALSE(controller_->calibrate_frequency_detector());
   EXPECT_FALSE(controller_->reset_mcu());
   EXPECT_FALSE(controller_->get_firmware_version(version));
@@ -163,10 +150,7 @@ TEST_F(STM32F4ManagerTest, DefaultState) {
 }
 
 TEST_F(STM32F4ManagerTest, BulkOperations) {
-  hardware::STM32F4DisplayData display_data;
-
   // Operations succeed when no controllers are configured (vacuous success)
-  EXPECT_TRUE(manager_->update_all_displays(display_data));
   EXPECT_TRUE(manager_->calibrate_all_ports());
   EXPECT_TRUE(manager_->reset_all_mcus());
 }

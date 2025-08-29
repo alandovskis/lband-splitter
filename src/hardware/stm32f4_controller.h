@@ -22,20 +22,12 @@ struct STM32F4Reading {
 };
 
 
-struct STM32F4DisplayData {
-  double frequency_mhz{0.0};
-  double snr_db{0.0};
-  bool signal_present{false};
-  std::string custom_text;
-  uint8_t brightness{100}; // 0-100 percent
-};
 
 // Communication protocol definitions
 namespace protocol {
 constexpr uint8_t STM32_CMD_READ_FREQUENCY = 0x01;
 constexpr uint8_t STM32_CMD_READ_SNR = 0x02;
 constexpr uint8_t STM32_CMD_ENABLE_PORT = 0x03;
-constexpr uint8_t STM32_CMD_UPDATE_DISPLAY = 0x04;
 constexpr uint8_t STM32_CMD_GET_STATUS = 0x05;
 constexpr uint8_t STM32_CMD_CALIBRATE = 0x06;
 constexpr uint8_t STM32_CMD_RESET = 0x07;
@@ -69,10 +61,6 @@ public:
   bool set_signal_detection(bool detected);
 
 
-  // Display control
-  bool update_display(const STM32F4DisplayData &data);
-  bool set_display_brightness(uint8_t brightness);
-  bool clear_display();
 
   // Calibration and maintenance
   bool calibrate_frequency_detector();
@@ -178,7 +166,6 @@ public:
 
   // Bulk operations
   std::vector<STM32F4Reading> read_all_frequencies();
-  bool update_all_displays(const STM32F4DisplayData &data);
 
   // Status monitoring
   std::vector<uint8_t> get_healthy_ports() const;

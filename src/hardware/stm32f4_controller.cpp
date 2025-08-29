@@ -171,50 +171,6 @@ bool STM32F4Controller::set_signal_detection(bool detected) {
                                     &detection_data, 1);
 }
 
-bool STM32F4Controller::update_display(const STM32F4DisplayData &data) {
-  if (!initialized_) {
-    return false;
-  }
-
-  std::stringstream freq_str;
-  freq_str << std::fixed << std::setprecision(1) << data.frequency_mhz;
-  std::string freq_text = freq_str.str();
-
-  std::stringstream snr_str;
-  snr_str << std::fixed << std::setprecision(1) << data.snr_db;
-  std::string snr_text = snr_str.str();
-
-  std::string display_text = data.custom_text.empty()
-                                 ? freq_text + "MHz " + snr_text + "dB"
-                                 : data.custom_text;
-
-  if (display_text.length() > 32) {
-    display_text = display_text.substr(0, 32);
-  }
-
-  uint8_t display_data[36];
-  display_data[0] = data.brightness;
-  display_data[1] = data.signal_present ? 1u : 0u;
-  display_data[2] = static_cast<uint8_t>(display_text.length());
-  std::memcpy(&display_data[3], display_text.c_str(), display_text.length());
-
-  ResponsePacket response;
-  return send_command_with_response(protocol::STM32_CMD_UPDATE_DISPLAY,
-                                    response, display_data,
-                                    3 + display_text.length());
-}
-
-bool STM32F4Controller::set_display_brightness(uint8_t brightness) {
-  STM32F4DisplayData data;
-  data.brightness = brightness;
-  return update_display(data);
-}
-
-bool STM32F4Controller::clear_display() {
-  STM32F4DisplayData data;
-  data.custom_text = "";
-  return update_display(data);
-}
 
 bool STM32F4Controller::calibrate_frequency_detector() {
   if (!initialized_) {
@@ -620,19 +576,6 @@ std::vector<STM32F4Reading> STM32F4Manager::read_all_frequencies() {
   return readings;
 }
 
-
-bool STM32F4Manager::update_all_displays(const STM32F4DisplayData &data) {
-  bool success = true;
-
-  std::lock_guard<std::mutex> lock(controllers_mutex_);
-  for (auto &controller : controllers_) {
-    if (controller && !controller->update_display(data)) {
-      success = false;
-    }
-  }
-
-  return success;
-}
 
 std::vector<uint8_t> STM32F4Manager::get_healthy_ports() const {
   std::vector<uint8_t> healthy_ports;

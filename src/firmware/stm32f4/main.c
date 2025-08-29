@@ -60,6 +60,9 @@ int main(void) {
 
     // Handle autonomous LED control
     handle_autonomous_leds();
+    
+    // Handle autonomous display control
+    handle_autonomous_display();
 
     // Handle continuous measurement if enabled
     if (continuous_measurement && measurement_counter > 0) {
@@ -70,6 +73,13 @@ int main(void) {
       if (frequency_detector_measure(&freq_detector_state, &reading)) {
         // Send reading via UART if requested
         uart_protocol_send_reading(&reading);
+        
+        // Store measurement data for autonomous display
+        if (port_id < MAX_PORTS) {
+          ports[port_id].last_frequency_mhz = reading.frequency_mhz;
+          ports[port_id].last_snr_db = reading.snr_db;
+        }
+        
         // Update signal detection based on reading quality
         handle_signal_detection(port_id, reading.valid && reading.frequency_mhz > 950.0);
       }
@@ -416,7 +426,15 @@ typedef struct {
   uint16_t status_led_pin;
   GPIO_TypeDef* signal_led_port;
   uint16_t signal_led_pin;
+  // Display state for autonomous control
+  double last_frequency_mhz;
+  double last_snr_db;
+  uint32_t last_display_update;
+  bool display_showing_frequency;
 } PortControlState;
+
+// Display alternation period (2 seconds per display)
+#define DISPLAY_ALTERNATION_PERIOD_MS 2000
 
 static volatile PortControlState ports[MAX_PORTS];
 
@@ -432,6 +450,10 @@ void init_port_leds(void) {
     ports[i].calculation_active = false;
     ports[i].last_blink_time = 0;
     ports[i].blink_counter = 0;
+    ports[i].last_frequency_mhz = 0.0;
+    ports[i].last_snr_db = 0.0;
+    ports[i].last_display_update = 0;
+    ports[i].display_showing_frequency = true;
     
     // Example mapping - would need to match actual hardware
     // Status LEDs on GPIOA, Signal LEDs on GPIOB
@@ -523,6 +545,51 @@ void handle_port_autonomous_leds(uint8_t port_id) {
   }
 }
 
+// Autonomous display control - shows nothing if not locked, alternates freq/SNR when locked
+void handle_autonomous_display(void) {
+  uint32_t current_time = HAL_GetTick();
+  
+  // Check if we have any locked ports that need display updates
+  bool any_port_locked = false;
+  double display_frequency = 0.0;
+  double display_snr = 0.0;
+  
+  for (int i = 0; i < MAX_PORTS; i++) {
+    if (ports[i].state == PORT_ENABLED_LOCKED && ports[i].last_frequency_mhz > 0.0) {
+      any_port_locked = true;
+      display_frequency = ports[i].last_frequency_mhz;
+      display_snr = ports[i].last_snr_db;
+      break; // Use first locked port for display
+    }
+  }
+  
+  if (!any_port_locked) {
+    // No locked ports - clear display
+    display_clear();
+    return;
+  }
+  
+  // Alternate between frequency and SNR every 2 seconds
+  static uint32_t last_alternation_time = 0;
+  static bool showing_frequency = true;
+  
+  if ((current_time - last_alternation_time) >= DISPLAY_ALTERNATION_PERIOD_MS) {
+    showing_frequency = !showing_frequency;
+    last_alternation_time = current_time;
+  }
+  
+  // Update display with current value
+  char display_text[32];
+  if (showing_frequency) {
+    snprintf(display_text, sizeof(display_text), "%.1f MHz", display_frequency);
+  } else {
+    snprintf(display_text, sizeof(display_text), "%.1f dB SNR", display_snr);
+  }
+  
+  display_print_text(0, 0, "L-Band Splitter");
+  display_print_text(0, 2, display_text);
+}
+
 // Handle autonomous LED control for all ports
 void handle_autonomous_leds(void) {
   for (int i = 0; i < MAX_PORTS; i++) {
@@ -546,6 +613,13 @@ void handle_single_measurement(uint8_t port_id) {
   FrequencyReading reading;
   if (frequency_detector_measure(&freq_detector_state, &reading)) {
     uart_protocol_send_reading(&reading);
+    
+    // Store measurement data for autonomous display
+    if (port_id < MAX_PORTS) {
+      ports[port_id].last_frequency_mhz = reading.frequency_mhz;
+      ports[port_id].last_snr_db = reading.snr_db;
+    }
+    
     // Update signal detection based on reading quality
     handle_signal_detection(port_id, reading.valid && reading.frequency_mhz > 950.0);
   }
@@ -573,17 +647,6 @@ void handle_calculation_complete(uint8_t port_id) {
   ports[port_id].calculation_active = false;
 }
 
-void handle_update_display(double frequency_mhz, double snr_db, bool signal_present, uint8_t brightness, const char* custom_text) {
-  if (brightness > 0 && brightness <= 100) {
-    display_set_brightness(brightness);
-  }
-  
-  if (custom_text && strlen(custom_text) > 0) {
-    display_show_custom_text(custom_text);
-  } else {
-    display_update_frequency_data(frequency_mhz, snr_db, signal_present);
-  }
-}
 
 #ifdef USE_FULL_ASSERT
 void assert_failed(uint8_t *file, uint32_t line) {

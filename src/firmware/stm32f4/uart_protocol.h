@@ -9,7 +9,6 @@
 #define STM32_CMD_READ_FREQUENCY 0x01
 #define STM32_CMD_READ_SNR 0x02
 #define STM32_CMD_ENABLE_PORT 0x03
-#define STM32_CMD_UPDATE_DISPLAY 0x04
 #define STM32_CMD_GET_STATUS 0x05
 #define STM32_CMD_CALIBRATE 0x06
 #define STM32_CMD_RESET 0x07
@@ -72,9 +71,6 @@ extern void handle_enable_port(uint8_t port_id, bool enabled);
 extern void handle_signal_detection(uint8_t port_id, bool detected);
 extern void handle_calculation_start(uint8_t port_id);
 extern void handle_calculation_complete(uint8_t port_id);
-extern void handle_update_display(double frequency_mhz, double snr_db,
-                                  bool signal_present, uint8_t brightness,
-                                  const char *custom_text);
 
 // Internal functions
 static void process_command(const CommandPacket *cmd);
