@@ -532,4 +532,270 @@ See project documentation for licensing information.
 - Real-time ADC sampling with 12-bit resolution
 - Power management with sleep modes
 
+## Threat Model
+
+### Overview
+
+This threat model analyzes security risks for the L-band splitter/combiner system, identifying potential attack vectors, vulnerabilities, and mitigation strategies. The system operates in critical RF infrastructure environments where security, availability, and integrity are paramount.
+
+### System Assets
+
+**Critical Assets:**
+- **RF Signal Integrity**: 32-port L-band signal routing (950-2150 MHz)
+- **Hardware Control**: STM32F4 microcontroller and GPIO interfaces
+- **System Configuration**: Port settings, frequency detection parameters
+- **Operational Data**: Real-time measurements, system health metrics
+- **Network Access**: Web interface, REST API, NetConf protocol
+
+**Supporting Assets:**
+- System logs and audit trails
+- Firmware binaries and configuration data
+- Network credentials and certificates
+- Physical hardware components
+
+### Threat Actors
+
+**External Threats:**
+- **Malicious Operators**: Unauthorized network administrators
+- **Remote Attackers**: Internet-based threat actors
+- **RF Interference Actors**: Intentional signal jamming/spoofing
+- **Supply Chain Attackers**: Compromised components or firmware
+
+**Internal Threats:**
+- **Malicious Insiders**: Authorized personnel with malicious intent
+- **Negligent Users**: Accidental misconfigurations or exposures
+- **Compromised Accounts**: Legitimate accounts under attacker control
+
+**Physical Threats:**
+- **Physical Access**: Unauthorized hardware tampering
+- **Environmental**: Power/cooling failures, EMI interference
+
+### Attack Vectors & Threat Analysis
+
+#### 1. Network-Based Attacks
+
+**Threat: Unauthorized Web Interface Access**
+- **Vector**: Direct HTTP/HTTPS access to Angular web application
+- **Impact**: Full system control, configuration changes, service disruption
+- **Likelihood**: High (if network exposed)
+- **Mitigations**: 
+  - Implement strong authentication (multi-factor preferred)
+  - Use HTTPS with proper certificate validation
+  - Network segmentation and firewall rules
+  - Rate limiting and intrusion detection
+  - Regular security updates
+
+**Threat: REST API Exploitation**
+- **Vector**: Direct API calls bypassing web interface
+- **Impact**: Unauthorized port control, configuration tampering
+- **Likelihood**: Medium
+- **Mitigations**:
+  - API authentication and authorization
+  - Input validation and sanitization
+  - API rate limiting and monitoring
+  - Secure API design (OWASP guidelines)
+
+**Threat: NetConf Protocol Attacks**
+- **Vector**: SSH-based NetConf protocol exploitation
+- **Impact**: Network management compromise, bulk configuration changes
+- **Likelihood**: Medium
+- **Mitigations**:
+  - Strong SSH key management
+  - NetConf session validation
+  - YANG model constraints
+  - Network access controls
+
+#### 2. Hardware Interface Attacks
+
+**Threat: UART Communication Interception**
+- **Vector**: Physical access to STM32F4 UART interfaces
+- **Impact**: Command injection, firmware manipulation, sensor spoofing
+- **Likelihood**: Low (requires physical access)
+- **Mitigations**:
+  - Physical enclosure security
+  - UART protocol encryption/authentication
+  - Debug interface disabling in production
+  - Hardware tamper detection
+
+**Threat: GPIO Manipulation**
+- **Vector**: Direct hardware access to GPIO pins
+- **Impact**: Unauthorized port control, LED/display manipulation
+- **Likelihood**: Low (requires physical access)
+- **Mitigations**:
+  - Secure enclosures with tamper detection
+  - GPIO pin access controls
+  - Hardware monitoring and alerting
+
+**Threat: I2C Bus Attacks**
+- **Vector**: Physical access to I2C multiplexer and display buses
+- **Impact**: Display content manipulation, sensor data corruption
+- **Likelihood**: Low (requires specialized access)
+- **Mitigations**:
+  - Physical security measures
+  - I2C bus monitoring
+  - Display content validation
+
+#### 3. Firmware and Software Attacks
+
+**Threat: STM32F4 Firmware Compromise**
+- **Vector**: Malicious firmware updates or flash memory corruption
+- **Impact**: Complete hardware control compromise, persistent backdoors
+- **Likelihood**: Medium
+- **Mitigations**:
+  - Secure boot implementation
+  - Firmware signing and verification
+  - Read-out protection (RDP) enabled
+  - Firmware integrity checking
+  - Secure firmware update process
+
+**Threat: Host Software Vulnerabilities**
+- **Vector**: Buffer overflows, injection attacks, memory corruption
+- **Impact**: System compromise, privilege escalation
+- **Likelihood**: Medium
+- **Mitigations**:
+  - Secure coding practices (RAII, smart pointers)
+  - Input validation and sanitization
+  - Memory safety tools (AddressSanitizer, Valgrind)
+  - Regular security audits and updates
+  - Compiler security features (-fstack-protector, ASLR)
+
+#### 4. RF Signal Attacks
+
+**Threat: RF Signal Injection/Jamming**
+- **Vector**: Malicious RF signals in L-band spectrum (950-2150 MHz)
+- **Impact**: Signal detection disruption, false readings, system instability
+- **Likelihood**: Low (requires RF equipment and proximity)
+- **Mitigations**:
+  - RF shielding and filtering
+  - Signal validation and anomaly detection
+  - Frequency hopping or spread spectrum techniques
+  - Physical security around RF interfaces
+
+**Threat: Side-Channel Analysis**
+- **Vector**: Power analysis, electromagnetic emissions analysis
+- **Impact**: Cryptographic key recovery, sensitive data extraction
+- **Likelihood**: Low (requires sophisticated equipment)
+- **Mitigations**:
+  - EMI shielding and filtering
+  - Power supply stabilization
+  - Cryptographic countermeasures
+  - Physical security measures
+
+#### 5. Supply Chain and Maintenance Attacks
+
+**Threat: Compromised Components**
+- **Vector**: Malicious hardware or firmware in supply chain
+- **Impact**: Persistent backdoors, data exfiltration
+- **Likelihood**: Low
+- **Mitigations**:
+  - Trusted supplier verification
+  - Component authentication
+  - Hardware security testing
+  - Supply chain security controls
+
+**Threat: Malicious Updates**
+- **Vector**: Compromised software/firmware updates
+- **Impact**: System compromise via legitimate update channels
+- **Likelihood**: Low
+- **Mitigations**:
+  - Update signing and verification
+  - Secure update channels (HTTPS, signed packages)
+  - Update integrity validation
+  - Rollback capabilities
+
+### Risk Assessment Matrix
+
+| Threat Category | Likelihood | Impact | Risk Level | Priority |
+|-----------------|------------|--------|------------|----------|
+| Web Interface Attacks | High | High | **Critical** | P1 |
+| REST API Exploitation | Medium | High | **High** | P1 |
+| Firmware Compromise | Medium | High | **High** | P1 |
+| NetConf Attacks | Medium | Medium | **Medium** | P2 |
+| Software Vulnerabilities | Medium | Medium | **Medium** | P2 |
+| UART Interception | Low | High | **Medium** | P2 |
+| RF Signal Attacks | Low | Medium | **Low** | P3 |
+| Hardware Tampering | Low | Medium | **Low** | P3 |
+| Supply Chain Attacks | Low | High | **Low** | P3 |
+
+### Security Controls and Mitigations
+
+#### Network Security
+- **Authentication**: Multi-factor authentication for web interface
+- **Encryption**: HTTPS/TLS for all network communications
+- **Network Segmentation**: Isolate system on dedicated network segments
+- **Firewall Rules**: Restrictive ingress/egress filtering
+- **Intrusion Detection**: Network traffic monitoring and alerting
+
+#### Application Security
+- **Input Validation**: Comprehensive validation of all user inputs
+- **API Security**: Authentication, rate limiting, input sanitization
+- **Session Management**: Secure session tokens and timeout policies
+- **Security Headers**: HSTS, CSP, X-Frame-Options implementation
+- **Regular Updates**: Timely security patches and dependency updates
+
+#### Hardware Security
+- **Physical Security**: Locked enclosures with tamper detection
+- **Secure Boot**: STM32F4 secure boot implementation
+- **Debug Protection**: Production firmware with debug interfaces disabled
+- **RDP Protection**: STM32F4 read-out protection enabled
+- **Hardware Monitoring**: GPIO, UART, I2C bus monitoring
+
+#### Operational Security
+- **Logging and Monitoring**: Comprehensive audit logging
+- **Incident Response**: Defined procedures for security incidents
+- **Access Controls**: Principle of least privilege
+- **Regular Audits**: Periodic security assessments
+- **Backup and Recovery**: Secure configuration backups
+
+#### Development Security
+- **Secure Coding**: RAII, memory safety, input validation
+- **Code Review**: Mandatory security-focused code reviews
+- **Static Analysis**: Automated vulnerability scanning (cppcheck)
+- **Testing**: Security test cases and fuzzing
+- **CI/CD Security**: Secure build pipeline with integrity checks
+
+### Implementation Recommendations
+
+#### Immediate (P1)
+1. **Web Interface Security**:
+   - Implement HTTPS with strong cipher suites
+   - Add multi-factor authentication
+   - Deploy Web Application Firewall (WAF)
+
+2. **API Security**:
+   - Add API authentication tokens
+   - Implement rate limiting
+   - Add comprehensive input validation
+
+3. **Firmware Security**:
+   - Enable STM32F4 read-out protection (RDP Level 1)
+   - Implement secure boot verification
+   - Disable debug interfaces in production builds
+
+#### Short-term (P2)
+1. **Network Security**:
+   - Deploy network segmentation
+   - Configure intrusion detection system
+   - Implement network access controls
+
+2. **Monitoring and Logging**:
+   - Enhanced security event logging
+   - Centralized log management
+   - Automated anomaly detection
+
+#### Long-term (P3)
+1. **Advanced Security**:
+   - Hardware Security Module (HSM) integration
+   - RF signal authentication mechanisms
+   - Advanced persistent threat (APT) detection
+
+2. **Compliance and Certification**:
+   - Security certification (Common Criteria, FIPS)
+   - Compliance with industry standards
+   - Regular penetration testing
+
+### Conclusion
+
+This threat model identifies significant security risks in network interfaces and firmware security, requiring immediate attention to web interface authentication and API security. The autonomous hardware design provides inherent security benefits by reducing attack surface through eliminated display control channels. Regular review and updates of this threat model are recommended as the system evolves and new threats emerge.
+
 **Ready for Linux hardware deployment** with STM32F4 microcontrollers and RF frontend.
