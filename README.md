@@ -249,7 +249,7 @@ graph TB
         end
         
         subgraph "STM32F4 Hardware"
-            MCU[STM32F4 Controller<br/>- Display Abstraction Layer<br/>- LED Abstraction Layer<br/>- 32-port hardware management<br/>- Frequency detection firmware<br/>- Autonomous LED patterns (64 LEDs)<br/>- Multi-display support (32 OLED)<br/>- I2C multiplexer abstraction<br/>- Port-level integration<br/>- UART communication at 115200 baud]
+            MCU[STM32F4 Controller<br/>- Display Abstraction Layer<br/>- LED Abstraction Layer<br/>- 32-port hardware management<br/>- Frequency detection firmware<br/>- Autonomous LED patterns: 64 LEDs<br/>- Multi-display support: 32 OLED<br/>- I2C multiplexer abstraction<br/>- Port-level integration<br/>- UART communication at 115200 baud]
         end
         
         subgraph "RF Hardware"
