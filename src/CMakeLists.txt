@@ -3,7 +3,6 @@ add_executable(splitter_daemon
     core/splitter_manager.cpp
     core/port.cpp
     core/config_manager.cpp
-    hardware/gpio_controller.cpp
     hardware/stm32f4_controller.cpp
     utils/logger.cpp
     utils/system_monitor.cpp
