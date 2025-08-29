@@ -233,7 +233,7 @@ graph TB
         end
         
         subgraph "STM32F4 Hardware"
-            MCU[STM32F4 Controller<br/>- All 32-port management<br/>- Frequency detection firmware<br/>- Autonomous LED control (64 LEDs)<br/>- ADC sampling<br/>- UART at 115200 baud]
+            MCU[STM32F4 Controller<br/>- All 32-port management<br/>- Frequency detection firmware<br/>- Autonomous LED control (64 LEDs)<br/>- Individual displays (32 OLED)<br/>- I2C multiplexer control<br/>- ADC sampling<br/>- UART at 115200 baud]
         end
         
         subgraph "RF Hardware"
@@ -421,9 +421,12 @@ npm run dev
 ### STM32F4 Microcontroller (1 unit)
 - **STM32F407VG** or compatible (168 MHz, 1MB Flash, 192KB RAM)
 - **64+ GPIO pins** for autonomous LED control (2 per port × 32 ports)
+- **32 individual OLED displays** (SSD1306, 128x64 pixels, I2C interface)
+- **I2C multiplexer network** (TCA9548A) for display addressing
 - **12-bit ADC channels** for L-band signal sampling (multiplexed across ports)
 - **Timer peripherals** for periodic measurements and autonomous LED blinking
 - **UART interface** for host communication (115200 baud)
+- **I2C master interface** for display and multiplexer control
 - **Sufficient I/O pins** for RF switching and control signals
 
 ### RF Hardware

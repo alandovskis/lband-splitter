@@ -38,11 +38,11 @@ int main(void) {
   MX_TIM2_Init();
   MX_I2C1_Init();
   
-  // Initialize display
+  // Initialize global display system
   display_init();
   
-  // Initialize port LED control
-  init_port_leds();
+  // Initialize individual port hardware (LEDs and displays)
+  init_port_hardware();
 
   // Initialize frequency detector
   frequency_detector_init(&freq_detector_state);
@@ -61,8 +61,8 @@ int main(void) {
     // Handle autonomous LED control
     handle_autonomous_leds();
     
-    // Handle autonomous display control
-    handle_autonomous_display();
+    // Handle autonomous display control for all individual ports
+    handle_autonomous_displays();
 
     // Handle continuous measurement if enabled
     if (continuous_measurement && measurement_counter > 0) {
@@ -426,23 +426,88 @@ typedef struct {
   uint16_t status_led_pin;
   GPIO_TypeDef* signal_led_port;
   uint16_t signal_led_pin;
-  // Display state for autonomous control
+  // Individual display state for autonomous control
+  uint8_t display_i2c_address;    // I2C address for this port's display
+  uint8_t display_mux_channel;    // I2C multiplexer channel
   double last_frequency_mhz;
   double last_snr_db;
   uint32_t last_display_update;
   bool display_showing_frequency;
+  bool display_initialized;
 } PortControlState;
 
-// Display alternation period (2 seconds per display)
+// Display configuration
 #define DISPLAY_ALTERNATION_PERIOD_MS 2000
+#define I2C_MUX_ADDRESS 0x70  // TCA9548A I2C multiplexer base address
+#define DISPLAY_BASE_ADDRESS 0x3C  // SSD1306 OLED base address
 
 static volatile PortControlState ports[MAX_PORTS];
 
 // LED control functions
-// Initialize port GPIO mappings
-void init_port_leds(void) {
-  // Initialize GPIO pin mappings for all 32 ports
-  // This would be configured based on actual hardware layout
+// I2C multiplexer control functions for individual displays
+bool select_display_mux_channel(uint8_t mux_address, uint8_t channel) {
+  if (channel > 7) return false;  // TCA9548A has 8 channels per IC
+  
+  uint8_t mux_data = (1 << channel);  // Enable specific channel
+  return HAL_I2C_Transmit(&hi2c1, mux_address << 1, &mux_data, 1, HAL_MAX_DELAY) == HAL_OK;
+}
+
+void disable_display_mux(uint8_t mux_address) {
+  uint8_t mux_data = 0x00;  // Disable all channels
+  HAL_I2C_Transmit(&hi2c1, mux_address << 1, &mux_data, 1, HAL_MAX_DELAY);
+}
+
+// Initialize individual display for a specific port
+bool init_port_display(uint8_t port_id) {
+  if (port_id >= MAX_PORTS) return false;
+  
+  // Select the correct I2C multiplexer channel for this port's display
+  if (!select_display_mux_channel(ports[port_id].display_mux_channel / 8 + I2C_MUX_ADDRESS, 
+                                   ports[port_id].display_mux_channel % 8)) {
+    return false;
+  }
+  
+  // Initialize SSD1306 display on this channel
+  uint8_t init_commands[] = {
+    0x00, 0xAE,  // Display OFF
+    0x00, 0x20, 0x00,  // Set Memory Addressing Mode
+    0x00, 0xB0,  // Set Page Start Address
+    0x00, 0xC8,  // Set COM Output Scan Direction
+    0x00, 0x00,  // Set Low Column Start Address
+    0x00, 0x10,  // Set High Column Start Address
+    0x00, 0x40,  // Set Display Start Line
+    0x00, 0x81, 0x7F,  // Set Contrast Control
+    0x00, 0xA1,  // Set Segment Re-map
+    0x00, 0xA6,  // Set Normal Display
+    0x00, 0xA8, 0x3F,  // Set Multiplex Ratio
+    0x00, 0xA4,  // Output follows RAM content
+    0x00, 0xD3, 0x00,  // Set Display Offset
+    0x00, 0xD5, 0xF0,  // Set Display Clock Divide Ratio
+    0x00, 0xD9, 0x22,  // Set Precharge Period
+    0x00, 0xDA, 0x12,  // Set COM Pins Configuration
+    0x00, 0xDB, 0x20,  // Set VCOMH Deselect Level
+    0x00, 0x8D, 0x14,  // Enable charge pump
+    0x00, 0xAF   // Display ON
+  };
+  
+  bool success = HAL_I2C_Transmit(&hi2c1, ports[port_id].display_i2c_address << 1, 
+                                  init_commands, sizeof(init_commands), HAL_MAX_DELAY) == HAL_OK;
+  
+  if (success) {
+    ports[port_id].display_initialized = true;
+    // Clear the display initially
+    clear_port_display(port_id);
+  }
+  
+  // Disable multiplexer channel when done
+  disable_display_mux(ports[port_id].display_mux_channel / 8 + I2C_MUX_ADDRESS);
+  
+  return success;
+}
+
+// Initialize port hardware (LEDs and displays)
+void init_port_hardware(void) {
+  // Initialize GPIO pin mappings and display addressing for all 32 ports
   for (int i = 0; i < MAX_PORTS; i++) {
     ports[i].state = PORT_DISABLED;
     ports[i].enabled = false;
@@ -454,9 +519,13 @@ void init_port_leds(void) {
     ports[i].last_snr_db = 0.0;
     ports[i].last_display_update = 0;
     ports[i].display_showing_frequency = true;
+    ports[i].display_initialized = false;
     
-    // Example mapping - would need to match actual hardware
-    // Status LEDs on GPIOA, Signal LEDs on GPIOB
+    // Configure I2C multiplexer and display addressing
+    ports[i].display_mux_channel = i;  // Each port has its own mux channel
+    ports[i].display_i2c_address = DISPLAY_BASE_ADDRESS;  // All displays use same address on different mux channels
+    
+    // Configure LED GPIO mappings - would need to match actual hardware layout
     if (i < 16) {
       ports[i].status_led_port = GPIOA;
       ports[i].status_led_pin = GPIO_PIN_0 << i;
@@ -468,6 +537,9 @@ void init_port_leds(void) {
       ports[i].signal_led_port = GPIOD;
       ports[i].signal_led_pin = GPIO_PIN_0 << (i - 16);
     }
+    
+    // Initialize each port's display
+    init_port_display(i);
   }
 }
 
@@ -545,49 +617,89 @@ void handle_port_autonomous_leds(uint8_t port_id) {
   }
 }
 
-// Autonomous display control - shows nothing if not locked, alternates freq/SNR when locked
-void handle_autonomous_display(void) {
-  uint32_t current_time = HAL_GetTick();
+// Clear individual port display
+void clear_port_display(uint8_t port_id) {
+  if (port_id >= MAX_PORTS || !ports[port_id].display_initialized) return;
   
-  // Check if we have any locked ports that need display updates
-  bool any_port_locked = false;
-  double display_frequency = 0.0;
-  double display_snr = 0.0;
-  
-  for (int i = 0; i < MAX_PORTS; i++) {
-    if (ports[i].state == PORT_ENABLED_LOCKED && ports[i].last_frequency_mhz > 0.0) {
-      any_port_locked = true;
-      display_frequency = ports[i].last_frequency_mhz;
-      display_snr = ports[i].last_snr_db;
-      break; // Use first locked port for display
-    }
-  }
-  
-  if (!any_port_locked) {
-    // No locked ports - clear display
-    display_clear();
+  // Select the correct I2C multiplexer channel
+  if (!select_display_mux_channel(ports[port_id].display_mux_channel / 8 + I2C_MUX_ADDRESS,
+                                   ports[port_id].display_mux_channel % 8)) {
     return;
   }
   
-  // Alternate between frequency and SNR every 2 seconds
-  static uint32_t last_alternation_time = 0;
-  static bool showing_frequency = true;
+  // Clear display command
+  uint8_t clear_cmd[] = {0x00, 0x01};  // Clear display command
+  HAL_I2C_Transmit(&hi2c1, ports[port_id].display_i2c_address << 1, clear_cmd, sizeof(clear_cmd), HAL_MAX_DELAY);
   
-  if ((current_time - last_alternation_time) >= DISPLAY_ALTERNATION_PERIOD_MS) {
-    showing_frequency = !showing_frequency;
-    last_alternation_time = current_time;
+  // Disable multiplexer channel
+  disable_display_mux(ports[port_id].display_mux_channel / 8 + I2C_MUX_ADDRESS);
+}
+
+// Update individual port display with text
+void update_port_display(uint8_t port_id, const char* line1, const char* line2) {
+  if (port_id >= MAX_PORTS || !ports[port_id].display_initialized) return;
+  
+  // Select the correct I2C multiplexer channel
+  if (!select_display_mux_channel(ports[port_id].display_mux_channel / 8 + I2C_MUX_ADDRESS,
+                                   ports[port_id].display_mux_channel % 8)) {
+    return;
   }
   
-  // Update display with current value
-  char display_text[32];
-  if (showing_frequency) {
-    snprintf(display_text, sizeof(display_text), "%.1f MHz", display_frequency);
-  } else {
-    snprintf(display_text, sizeof(display_text), "%.1f dB SNR", display_snr);
-  }
+  // This is a simplified display update - actual implementation would need
+  // proper SSD1306 text positioning and character rendering
+  char display_buffer[64];
+  snprintf(display_buffer, sizeof(display_buffer), "Port %d\n%s\n%s", port_id + 1,
+           line1 ? line1 : "", line2 ? line2 : "");
   
-  display_print_text(0, 0, "L-Band Splitter");
-  display_print_text(0, 2, display_text);
+  // Send display data (simplified - actual implementation needs proper SSD1306 protocol)
+  uint8_t display_data[2] = {0x40, 0x00};  // Data mode
+  HAL_I2C_Transmit(&hi2c1, ports[port_id].display_i2c_address << 1, display_data, 2, HAL_MAX_DELAY);
+  
+  // Disable multiplexer channel
+  disable_display_mux(ports[port_id].display_mux_channel / 8 + I2C_MUX_ADDRESS);
+}
+
+// Autonomous display control for individual ports - each shows its own measurements
+void handle_autonomous_displays(void) {
+  uint32_t current_time = HAL_GetTick();
+  
+  for (int i = 0; i < MAX_PORTS; i++) {
+    if (!ports[i].display_initialized) continue;
+    
+    switch (ports[i].state) {
+      case PORT_DISABLED:
+      case PORT_ENABLED_NO_SIGNAL:
+        // Clear display when port is disabled or has no signal
+        clear_port_display(i);
+        break;
+        
+      case PORT_ENABLED_CALCULATING:
+        // Show "Calculating..." or similar when measuring
+        update_port_display(i, "Measuring", "Please wait...");
+        break;
+        
+      case PORT_ENABLED_LOCKED:
+        if (ports[i].last_frequency_mhz > 0.0) {
+          // Alternate between frequency and SNR every 2 seconds
+          if ((current_time - ports[i].last_display_update) >= DISPLAY_ALTERNATION_PERIOD_MS) {
+            ports[i].display_showing_frequency = !ports[i].display_showing_frequency;
+            ports[i].last_display_update = current_time;
+          }
+          
+          char line1[32], line2[32];
+          if (ports[i].display_showing_frequency) {
+            snprintf(line1, sizeof(line1), "%.1f MHz", ports[i].last_frequency_mhz);
+            snprintf(line2, sizeof(line2), "Frequency");
+          } else {
+            snprintf(line1, sizeof(line1), "%.1f dB", ports[i].last_snr_db);
+            snprintf(line2, sizeof(line2), "SNR");
+          }
+          
+          update_port_display(i, line1, line2);
+        }
+        break;
+    }
+  }
 }
 
 // Handle autonomous LED control for all ports
