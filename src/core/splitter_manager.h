@@ -6,8 +6,6 @@
 #include <mutex>
 #include <vector>
 
-#include "../hardware/frequency_detector.h"
-#include "../hardware/gpio_controller.h"
 #include "../hardware/stm32f4_controller.h"
 #include "config_manager.h"
 #include "port.h"
@@ -56,8 +54,6 @@ private:
 
   ConfigManager *config_;
   std::vector<std::unique_ptr<Port>> ports_;
-  std::unique_ptr<hardware::GpioController> gpio_controller_;
-  std::unique_ptr<hardware::FrequencyDetector> frequency_detector_;
   std::vector<std::unique_ptr<hardware::STM32F4Controller>>
       stm32f4_controllers_;
 

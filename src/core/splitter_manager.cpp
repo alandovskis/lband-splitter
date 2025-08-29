@@ -22,18 +22,6 @@ bool SplitterManager::initialize() {
   }
 
   try {
-    gpio_controller_ = std::make_unique<hardware::GpioController>();
-    if (!gpio_controller_->initialize()) {
-      utils::Logger::error("Failed to initialize GPIO controller");
-      return false;
-    }
-
-    frequency_detector_ = std::make_unique<hardware::FrequencyDetector>();
-    if (!frequency_detector_->initialize()) {
-      utils::Logger::error("Failed to initialize frequency detector");
-      return false;
-    }
-
     stm32f4_controllers_.reserve(NUM_PORTS);
     const auto &hw_config = config_->get_hardware_config();
     for (int i = 0; i < NUM_PORTS; ++i) {
@@ -46,8 +34,7 @@ bool SplitterManager::initialize() {
 
     ports_.reserve(NUM_PORTS);
     for (int i = 0; i < NUM_PORTS; ++i) {
-      auto port = std::make_unique<Port>(i, gpio_controller_.get(),
-                                         stm32f4_controllers_[i].get());
+      auto port = std::make_unique<Port>(i, stm32f4_controllers_[i].get());
       if (!port->initialize()) {
         utils::Logger::error("Failed to initialize port {}", i);
         return false;
@@ -83,8 +70,6 @@ void SplitterManager::shutdown() {
 
   ports_.clear();
   stm32f4_controllers_.clear();
-  frequency_detector_.reset();
-  gpio_controller_.reset();
 
   initialized_ = false;
   utils::Logger::info("SplitterManager shutdown complete");
@@ -174,8 +159,8 @@ double SplitterManager::get_port_frequency(int port_id) const {
     return 0.0;
   }
 
-  return frequency_detector_ ? frequency_detector_->get_frequency(port_id)
-                             : 0.0;
+  std::lock_guard<std::mutex> lock(ports_mutex_);
+  return ports_[port_id] ? ports_[port_id]->get_state().frequency_mhz : 0.0;
 }
 
 bool SplitterManager::set_port_configuration(int port_id,
@@ -237,7 +222,13 @@ bool SplitterManager::get_system_health() const {
     return false;
   }
 
-  return gpio_controller_->is_healthy() && frequency_detector_->is_healthy();
+  // Check STM32F4 controllers health
+  for (const auto& controller : stm32f4_controllers_) {
+    if (!controller->is_healthy()) {
+      return false;
+    }
+  }
+  return true;
 }
 
 SystemStats SplitterManager::get_system_stats() const {
@@ -264,13 +255,11 @@ SystemStats SplitterManager::get_system_stats() const {
 }
 
 void SplitterManager::update_port_frequencies() {
-  if (!frequency_detector_) {
-    return;
-  }
-
+  std::lock_guard<std::mutex> lock(ports_mutex_);
+  
   for (int i = 0; i < NUM_PORTS; ++i) {
-    if (is_port_enabled(i)) {
-      double frequency = frequency_detector_->measure_frequency(i);
+    if (ports_[i] && ports_[i]->is_enabled()) {
+      double frequency = ports_[i]->get_state().frequency_mhz;
       notify_frequency_change(i, frequency);
     }
   }

@@ -1,19 +1,15 @@
 #include "port.h"
-#include "../hardware/gpio_controller.h"
 #include "../hardware/stm32f4_controller.h"
 #include "../utils/logger.h"
 
 namespace splitter::core {
 
-Port::Port(int id, hardware::GpioController *gpio,
-           hardware::STM32F4Controller *stm32f4)
-    : id_(id), gpio_controller_(gpio), stm32f4_controller_(stm32f4),
+Port::Port(int id, hardware::STM32F4Controller *stm32f4)
+    : id_(id), stm32f4_controller_(stm32f4),
       last_health_check_(std::chrono::steady_clock::now()) {
 
   state_.id = id;
   config_.name = "Port " + std::to_string(id + 1);
-
-  enable_gpio_pin_ = GPIO_BASE_PIN + id;
 }
 
 Port::~Port() {
@@ -23,13 +19,8 @@ Port::~Port() {
 }
 
 bool Port::initialize() {
-  if (!gpio_controller_ || !stm32f4_controller_) {
-    set_error("Missing hardware controllers");
-    return false;
-  }
-
-  if (!gpio_controller_->configure_output_pin(enable_gpio_pin_)) {
-    set_error("Failed to configure enable GPIO pin");
+  if (!stm32f4_controller_) {
+    set_error("Missing STM32F4 controller");
     return false;
   }
 
@@ -39,9 +30,6 @@ bool Port::initialize() {
     return false;
   }
 
-  gpio_controller_->set_pin_low(enable_gpio_pin_);
-  update_port_state();
-
   clear_error();
   healthy_ = true;
 
@@ -50,13 +38,14 @@ bool Port::initialize() {
 }
 
 bool Port::enable() {
-  if (!gpio_controller_) {
-    set_error("GPIO controller not available");
+  if (!stm32f4_controller_) {
+    set_error("STM32F4 controller not available");
     return false;
   }
 
-  if (!gpio_controller_->set_pin_high(enable_gpio_pin_)) {
-    set_error("Failed to enable port via GPIO");
+  // Send enable command to STM32F4 - it will handle LEDs autonomously
+  if (!stm32f4_controller_->enable_port(true)) {
+    set_error("Failed to enable port on STM32F4");
     return false;
   }
 
@@ -64,7 +53,6 @@ bool Port::enable() {
   state_.enabled = true;
   state_.last_update = std::chrono::system_clock::now();
 
-  update_port_state();
   clear_error();
 
   utils::Logger::info("Port {} enabled", id_);
@@ -72,13 +60,14 @@ bool Port::enable() {
 }
 
 bool Port::disable() {
-  if (!gpio_controller_) {
-    set_error("GPIO controller not available");
+  if (!stm32f4_controller_) {
+    set_error("STM32F4 controller not available");
     return false;
   }
 
-  if (!gpio_controller_->set_pin_low(enable_gpio_pin_)) {
-    set_error("Failed to disable port via GPIO");
+  // Send disable command to STM32F4 - it will handle LEDs autonomously
+  if (!stm32f4_controller_->enable_port(false)) {
+    set_error("Failed to disable port on STM32F4");
     return false;
   }
 
@@ -90,7 +79,6 @@ bool Port::disable() {
   state_.signal_level_dbm = -100.0;
   state_.last_update = std::chrono::system_clock::now();
 
-  update_port_state();
   clear_error();
 
   utils::Logger::info("Port {} disabled", id_);
@@ -100,6 +88,14 @@ bool Port::disable() {
 bool Port::is_enabled() const { return enabled_; }
 
 PortState Port::get_state() const {
+  // Get the latest state from STM32F4 controller
+  if (stm32f4_controller_) {
+    auto reading = stm32f4_controller_->get_last_reading();
+    state_.frequency_mhz = reading.frequency_mhz;
+    state_.signal_level_dbm = reading.signal_level_dbm;
+    state_.last_update = std::chrono::system_clock::now();
+  }
+
   state_.enabled = enabled_;
   state_.signal_detected = signal_detected_;
   state_.healthy = healthy_;
@@ -132,10 +128,17 @@ void Port::update_frequency(double frequency_mhz) {
   if (config_.signal_detection_enabled && enabled_) {
     bool in_range = (frequency_mhz >= config_.min_frequency_mhz &&
                      frequency_mhz <= config_.max_frequency_mhz);
-    signal_detected_ = (frequency_mhz > 0.0) && in_range;
-    state_.signal_detected = signal_detected_;
-
-    update_port_state();
+    bool new_signal_detected = (frequency_mhz > 0.0) && in_range;
+    
+    if (signal_detected_ != new_signal_detected) {
+      signal_detected_ = new_signal_detected;
+      state_.signal_detected = signal_detected_;
+      
+      // Notify STM32F4 of signal detection change
+      if (stm32f4_controller_) {
+        stm32f4_controller_->set_signal_detection(signal_detected_);
+      }
+    }
   }
 
   state_.last_update = std::chrono::system_clock::now();
@@ -155,16 +158,14 @@ void Port::check_health() {
 
   last_health_check_ = now;
 
-  bool gpio_healthy =
-      gpio_controller_ && gpio_controller_->is_pin_healthy(enable_gpio_pin_);
   bool stm32f4_healthy =
       stm32f4_controller_ && stm32f4_controller_->is_healthy();
 
   bool was_healthy = healthy_;
-  healthy_ = gpio_healthy && stm32f4_healthy;
+  healthy_ = stm32f4_healthy;
 
   if (was_healthy && !healthy_) {
-    set_error("Hardware health check failed");
+    set_error("STM32F4 controller health check failed");
     utils::Logger::warning("Port {} health check failed", id_);
   } else if (!was_healthy && healthy_) {
     clear_error();
@@ -174,25 +175,14 @@ void Port::check_health() {
   state_.healthy = healthy_;
 }
 
-void Port::update_port_state() {
-  if (!stm32f4_controller_) {
-    return;
-  }
-
-  // Send port enable/disable state to STM32F4 for autonomous LED control
-  stm32f4_controller_->enable_port(enabled_);
-  
-  // Send current signal detection state
-  stm32f4_controller_->set_signal_detection(signal_detected_);
-}
-
-
 void Port::set_error(const std::string &error) {
   state_.error_message = error;
   healthy_ = false;
   utils::Logger::error("Port {} error: {}", id_, error);
 }
 
-void Port::clear_error() { state_.error_message.clear(); }
+void Port::clear_error() { 
+  state_.error_message.clear(); 
+}
 
 } // namespace splitter::core
