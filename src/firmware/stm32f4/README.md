@@ -9,6 +9,12 @@ This directory contains the firmware for the STM32F4 microcontroller that implem
 - **FFT-based frequency analysis with 256-point FFT**
 - **UART communication protocol compatible with host controller**
 - **SNR calculation and signal quality assessment**
+- **Hardware Abstraction Layers**:
+  - **Display Abstraction**: Multi-type display support (SSD1306 OLED, HD44780 LCD, 7-segment)
+  - **LED Abstraction**: Advanced pattern generation with GPIO and PWM support
+- **Port Management**: Integrated port control using hardware abstractions
+- **I2C Multiplexer Support**: TCA9548A multiplexer abstraction for display addressing
+- **Autonomous LED Control**: Pattern-based LED management (blink, pulse, flash)
 - **Automatic frequency calibration support**
 - **Low-power operation with sleep modes**
 
@@ -19,7 +25,13 @@ This directory contains the firmware for the STM32F4 microcontroller that implem
 - **RF frontend for L-band signal conditioning**
 - **ADC input connected to RF detector**
 - **UART interface for host communication**
-- **Status LEDs and optional display**
+- **Hardware Abstraction Support**:
+  - **Display Hardware**: I2C displays (SSD1306 OLED recommended), I2C multiplexers (TCA9548A)
+  - **LED Hardware**: GPIO pins for LED control, optional PWM timers for brightness control
+  - **Port Integration**: Each port supports display + LED pair via abstractions
+- **GPIO Requirements**: 64+ pins for LED control (2 per port × 32 ports)
+- **I2C Master**: For display and multiplexer communication
+- **Timer Peripherals**: For LED pattern timing and ADC sampling
 
 ## Compilation
 
@@ -112,6 +124,29 @@ arm-none-eabi-gdb stm32f4_frequency_detector.elf
 (gdb) continue
 ```
 
+## Hardware Abstraction Architecture
+
+### Display Abstraction (`display_abstraction.h/c`)
+- **Multi-display Support**: SSD1306 OLED, HD44780 LCD, 7-segment displays
+- **I2C Multiplexer Integration**: TCA9548A multiplexer support for 32+ displays
+- **Content Management**: Text formatting, frequency display, two-line output
+- **Hardware-Agnostic Interface**: Easy to add new display types
+- **Power Management**: Enable/disable and ready status checking
+
+### LED Abstraction (`led_abstraction.h/c`)
+- **Advanced Patterns**: On/Off, Slow/Fast blink, Pulse breathing, Flash sequences
+- **Multiple LED Types**: Status, Signal, Error, Activity LEDs per port
+- **RGB LED Support**: Multi-color LED control with GPIO or PWM
+- **Port LED Groups**: High-level port-specific LED management
+- **Custom Timing**: Configurable blink rates and pattern parameters
+- **Non-blocking Updates**: Pattern generation via regular `led_update()` calls
+
+### Port Integration (`port.h/c`)
+- **Hardware Abstraction Integration**: Each port uses display and LED abstractions
+- **State-driven Updates**: Automatic display/LED updates based on port state
+- **Clean Initialization**: `port_init_hardware()` sets up all abstractions
+- **Resource Management**: Proper cleanup with `port_cleanup_hardware()`
+
 ## Protocol Interface
 
 The firmware implements the same UART protocol as defined in the host `stm32f4_controller.h`:
@@ -121,11 +156,12 @@ The firmware implements the same UART protocol as defined in the host `stm32f4_c
 - `0x02` - Read SNR measurement  
 - `0x06` - Perform calibration
 - `0x07` - Reset detector
+- **New**: Port control commands for display/LED management via abstractions
 
 ### Response Format
 - Status byte (0x00=OK, 0xFF=Error)
 - Data length
-- Data payload (frequency, SNR, timestamp)
+- Data payload (frequency, SNR, timestamp, display/LED status)
 
 ## Configuration
 
@@ -162,6 +198,76 @@ The firmware implements the same UART protocol as defined in the host `stm32f4_c
 - **SNR range**: -30 to +40 dB
 - **Signal level**: -100 to -40 dBm
 
+## Using Hardware Abstractions
+
+### Display Abstraction Example
+```c
+// Initialize display system
+display_abstraction_init();
+
+// Create display with I2C multiplexer
+DisplayAbstraction* display = display_create_multiplexed(
+    0,                          // port_id
+    DISPLAY_TYPE_OLED_SSD1306,  // display type
+    0x3C,                       // display I2C address
+    0x70,                       // multiplexer address
+    0,                          // multiplexer channel
+    &hi2c1                      // I2C handle
+);
+
+if (display) {
+    display_initialize(display);
+    display_show_frequency(display, 1575.42);  // Show GPS L1
+    display_show_two_lines(display, "Port 1", "1575.42 MHz");
+}
+```
+
+### LED Abstraction Example
+```c
+// Initialize LED system
+led_abstraction_init();
+
+// Create status LED
+LedAbstraction* status_led = led_create_simple(
+    0,              // led_id
+    0,              // port_id
+    LED_TYPE_STATUS,// LED type
+    GPIOA,          // GPIO port
+    GPIO_PIN_0,     // GPIO pin
+    true            // active high
+);
+
+if (status_led) {
+    led_initialize(status_led);
+    led_set_state(status_led, LED_STATE_BLINK_SLOW);
+    
+    // In main loop:
+    led_update(status_led);  // Updates patterns
+}
+```
+
+### Port Integration Example
+```c
+// Initialize port with abstractions
+Port port;
+port_init(&port, 0);
+port_init_hardware(&port, &hi2c1);
+
+// Enable port (automatically updates display and LEDs)
+port_set_enabled(&port, true);
+port_set_signal_detection(&port, true);
+port_update_measurements(&port, 1575.42, 45.2);
+
+// Regular updates
+port_update(&port);  // Updates display content and LED patterns
+```
+
+### See Also
+- `abstraction_example.c` - Complete usage examples
+- `display_abstraction.h` - Display API documentation  
+- `led_abstraction.h` - LED API documentation
+- `port.h` - Port integration interface
+
 ## Troubleshooting
 
 ### Build Issues
@@ -174,6 +280,12 @@ The firmware implements the same UART protocol as defined in the host `stm32f4_c
 - Check UART connections (115200 baud)
 - Confirm ADC input signal levels
 - Review power supply stability (3.3V ±5%)
+
+### Hardware Abstraction Issues
+- **Display Problems**: Check I2C connections, verify multiplexer addressing
+- **LED Issues**: Confirm GPIO pin assignments, check active high/low configuration
+- **Pattern Problems**: Ensure `led_update()` called regularly in main loop
+- **I2C Multiplexer**: Verify TCA9548A addressing and channel selection
 
 ### Communication Problems
 - Test UART loopback

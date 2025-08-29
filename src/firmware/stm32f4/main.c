@@ -2,7 +2,8 @@
 #include "frequency_detector.h"
 #include "uart_protocol.h"
 #include "port.h"
-#include "display.h"
+#include "display_abstraction.h"
+#include "led_abstraction.h"
 #include <stdbool.h>
 #include <stdint.h>
 #include <string.h>
@@ -44,12 +45,14 @@ int main(void) {
   MX_TIM2_Init();
   MX_I2C1_Init();
   
-  // Initialize global display system
-  display_init();
+  // Initialize abstraction systems
+  display_abstraction_init();
+  led_abstraction_init();
   
   // Initialize all ports
   for (int i = 0; i < MAX_PORTS; i++) {
     port_init(&ports[i], i);
+    port_init_hardware(&ports[i], &hi2c1);
   }
 
   // Initialize frequency detector

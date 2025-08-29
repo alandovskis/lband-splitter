@@ -139,6 +139,9 @@ set(SOURCES
     main.c
     frequency_detector.c
     uart_protocol.c
+    port.c
+    display_abstraction.c
+    led_abstraction.c
     stm32f4xx_it.c
     ${STM32_HAL_SOURCES}
     ${CMSIS_SOURCES}

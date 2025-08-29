@@ -110,9 +110,9 @@ graph TB
         end
         
         subgraph "Hardware Abstraction"
-            GPIOController[GPIO Controller<br/>Port enable/disable]
-            STM32Controller[STM32F4 Controller<br/>UART communication]
-            FreqDetector[Frequency Detector<br/>Signal measurement coordination]
+            STM32Controller[STM32F4 Controller<br/>UART communication<br/>Hardware coordination]
+            DisplayAbstraction[Display Abstraction<br/>I2C multiplexer control<br/>OLED display management]
+            LEDAbstraction[LED Abstraction<br/>Pattern generation<br/>GPIO LED control]
         end
         
         subgraph "Network Interfaces"
@@ -141,9 +141,11 @@ graph TB
     
     SplitterManager --> PortController
     SplitterManager --> ConfigManager
-    PortController --> GPIOController
     PortController --> STM32Controller
-    STM32Controller --> FreqDetector
+    PortController --> DisplayAbstraction
+    PortController --> LEDAbstraction
+    STM32Controller --> DisplayAbstraction
+    STM32Controller --> LEDAbstraction
     
     RESTServer --> SplitterManager
     WebSocketServer --> SplitterManager
@@ -152,8 +154,9 @@ graph TB
     Monitor --> Logger
     EventLoop --> SplitterManager
     
-    GPIOController <-->|sysfs| Hardware
     STM32Controller <-->|UART| Hardware
+    DisplayAbstraction <-->|I2C/Multiplexer| Hardware
+    LEDAbstraction <-->|GPIO| Hardware
     ConfigManager <-->|File I/O| ConfigFiles
     
     classDef core fill:#4299E1,stroke:#2B6CB0,stroke-width:2px,color:#fff
@@ -163,7 +166,7 @@ graph TB
     classDef external fill:#A0AEC0,stroke:#4A5568,stroke-width:2px,color:#fff
     
     class SplitterManager,PortController,ConfigManager core
-    class GPIOController,STM32Controller,FreqDetector hardware
+    class STM32Controller,DisplayAbstraction,LEDAbstraction hardware
     class RESTServer,WebSocketServer,NetConfHandler network
     class Logger,Monitor,EventLoop system
     class WebApp,NetConfClient,Hardware,ConfigFiles external
@@ -177,35 +180,48 @@ sequenceDiagram
     participant REST as REST Server
     participant Manager as Splitter Manager
     participant Port as Port Controller
-    participant GPIO as GPIO Controller
     participant STM32 as STM32F4 Controller
+    participant LED as LED Abstraction
+    participant Display as Display Abstraction
     participant Hardware as STM32F4 MCU
     
     WebApp->>+REST: POST /api/ports/5/enable
-    REST->>+Manager: enablePort(5)
-    Manager->>+Port: enable()
+    REST->>+Manager: enablePort for port 5
+    Manager->>+Port: enable
     
-    Port->>+GPIO: setPortHigh(5)
-    GPIO->>Hardware: Write GPIO pin high
-    GPIO-->>-Port: Success
-    
-    Port->>+STM32: enablePort(5, true)
+    Note over Port: Port uses hardware abstractions
+    Port->>+STM32: enablePort
     STM32->>Hardware: UART: ENABLE_PORT command
     Hardware-->>STM32: Response: OK
-    STM32->>STM32: Update autonomous LED state
-    Note over STM32,Hardware: LEDs controlled autonomously based on port state
     STM32-->>-Port: Success
     
-    Port->>Port: updateState(enabled=true)
+    Port->>+LED: set status LED enabled
+    LED->>LED: Update LED pattern solid on
+    LED->>Hardware: GPIO: Set status LED
+    LED-->>-Port: Success
+    
+    Port->>+Display: show port status
+    Display->>Hardware: I2C: Select mux channel 5
+    Display->>Hardware: I2C: Update OLED display
+    Display-->>-Port: Success
+    
+    Port->>Port: updateState
+    Note over Port,Hardware: All hardware updates via abstractions
     Port-->>-Manager: Port enabled
     
-    Manager->>Manager: notifyStateChange(5, newState)
+    Manager->>Manager: notifyStateChange
     Manager-->>-REST: Port 5 enabled
     
-    REST-->>-WebApp: 200 OK {port: 5, enabled: true}
+    REST-->>-WebApp: 200 OK port enabled
     
     Note over WebApp,Hardware: WebSocket notification sent to all connected clients
-    Manager->>WebApp: WebSocket: portStateChanged event
+    Manager->>WebApp: WebSocket portStateChanged event
+    
+    Note over LED,Hardware: LED patterns updated autonomously
+    loop Continuous Updates
+        LED->>LED: Update blink patterns
+        Display->>Display: Toggle freq/SNR display
+    end
 ```
 
 ### C4 Deployment Diagram
@@ -233,7 +249,7 @@ graph TB
         end
         
         subgraph "STM32F4 Hardware"
-            MCU[STM32F4 Controller<br/>- All 32-port management<br/>- Frequency detection firmware<br/>- Autonomous LED control (64 LEDs)<br/>- Individual displays (32 OLED)<br/>- I2C multiplexer control<br/>- ADC sampling<br/>- UART at 115200 baud]
+            MCU[STM32F4 Controller<br/>- Display Abstraction Layer<br/>- LED Abstraction Layer<br/>- 32-port hardware management<br/>- Frequency detection firmware<br/>- Autonomous LED patterns (64 LEDs)<br/>- Multi-display support (32 OLED)<br/>- I2C multiplexer abstraction<br/>- Port-level integration<br/>- UART communication at 115200 baud]
         end
         
         subgraph "RF Hardware"
@@ -397,8 +413,12 @@ npm run dev
 ```
 ├── src/                    # C++ source code
 │   ├── core/              # Core splitter management
-│   ├── hardware/          # Hardware abstraction (GPIO, SPI, I2C, STM32F4)
+│   ├── hardware/          # Hardware abstraction (STM32F4 communication only)
 │   ├── firmware/stm32f4/  # STM32F4 frequency detector firmware
+│   │   ├── display_abstraction.c/h  # Display hardware abstraction layer
+│   │   ├── led_abstraction.c/h      # LED hardware abstraction layer
+│   │   ├── port.c/h                 # Port management using abstractions
+│   │   └── abstraction_example.c    # Usage examples
 │   ├── netconf/           # NetConf protocol implementation
 │   ├── web/               # REST/WebSocket API servers
 │   └── utils/             # Logging and system monitoring
@@ -420,14 +440,17 @@ npm run dev
 
 ### STM32F4 Microcontroller (1 unit)
 - **STM32F407VG** or compatible (168 MHz, 1MB Flash, 192KB RAM)
-- **64+ GPIO pins** for autonomous LED control (2 per port × 32 ports)
+- **Hardware Abstraction Layers**: Display and LED abstractions for clean hardware management
+- **Display Abstraction**: Supports multiple display types (SSD1306 OLED, HD44780 LCD, 7-segment)
+- **LED Abstraction**: Advanced pattern generation (blink, pulse, flash) with GPIO and PWM support
+- **64+ GPIO pins** for autonomous LED control via abstraction layer (2 per port × 32 ports)
 - **32 individual OLED displays** (SSD1306, 128x64 pixels, I2C interface)
-- **I2C multiplexer network** (TCA9548A) for display addressing
+- **I2C multiplexer network** (TCA9548A) for display addressing via display abstraction
 - **12-bit ADC channels** for L-band signal sampling (multiplexed across ports)
-- **Timer peripherals** for periodic measurements and autonomous LED blinking
+- **Timer peripherals** for LED pattern timing and measurement intervals
 - **UART interface** for host communication (115200 baud)
-- **I2C master interface** for display and multiplexer control
-- **Sufficient I/O pins** for RF switching and control signals
+- **I2C master interface** managed by display abstraction
+- **Port-level hardware integration** via Port abstraction using display and LED layers
 
 ### RF Hardware
 - **32 L-band ports** with switching matrices
