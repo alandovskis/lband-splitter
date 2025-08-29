@@ -126,18 +126,29 @@ if(UNITY_FOUND)
     )
     target_link_libraries(test_uart_protocol ${UNITY_LIBRARIES})
     
+    # Port abstraction test executable
+    add_executable(test_port
+        test_port.c
+        mock_stm32f4xx_hal.c
+        mock_display.c
+        ../../src/firmware/stm32f4/port.c
+    )
+    target_link_libraries(test_port ${UNITY_LIBRARIES})
+    
     # Add tests to CTest
     enable_testing()
     
     add_test(NAME stm32f4_display_tests COMMAND test_stm32f4_display)
     add_test(NAME stm32f4_led_tests COMMAND test_stm32f4_led)  
     add_test(NAME uart_protocol_tests COMMAND test_uart_protocol)
+    add_test(NAME port_tests COMMAND test_port)
     
     # Set test properties
     set_tests_properties(
         stm32f4_display_tests
         stm32f4_led_tests
         uart_protocol_tests
+        port_tests
         PROPERTIES 
             LABELS "firmware"
             TIMEOUT 30
@@ -153,7 +164,7 @@ endif()
 if(UNITY_FOUND)
     add_custom_target(test_firmware
         COMMAND ${CMAKE_CTEST_COMMAND} --label-regex firmware --output-on-failure
-        DEPENDS test_stm32f4_display test_stm32f4_led test_uart_protocol
+        DEPENDS test_stm32f4_display test_stm32f4_led test_uart_protocol test_port
         COMMENT "Running STM32F4 firmware unit tests"
     )
 endif()
