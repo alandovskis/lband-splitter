@@ -134,8 +134,8 @@ else()
     endif()
 endif()
 
-# Project source files
-set(SOURCES
+# Project source files for main firmware
+set(FIRMWARE_SOURCES
     main.c
     frequency_detector.c
     uart_protocol.c
@@ -147,8 +147,27 @@ set(SOURCES
     ${CMSIS_SOURCES}
 )
 
-# Create the executable
-add_executable(${PROJECT_NAME} ${SOURCES})
+# Secure bootloader source files
+set(BOOTLOADER_SOURCES
+    bootloader_main.c
+    secure_boot.c
+    stm32f4xx_it.c
+    ${STM32_HAL_SOURCES}
+    ${CMSIS_SOURCES}
+)
+
+# Create the main firmware executable
+add_executable(${PROJECT_NAME} ${FIRMWARE_SOURCES})
+
+# Create the secure bootloader executable
+add_executable(${PROJECT_NAME}_bootloader ${BOOTLOADER_SOURCES})
+
+# Add secure boot definitions for bootloader
+target_compile_definitions(${PROJECT_NAME}_bootloader PRIVATE
+    SECURE_BOOT_ENABLE_DEBUG=1
+    SECURE_BOOT_ENABLE_DEVELOPMENT_MODE=0
+    SECURE_BOOT_ENABLE_ROLLBACK_PROTECTION=1
+)
 
 # Linker script (if available)
 find_file(LINKER_SCRIPT
@@ -160,22 +179,65 @@ find_file(LINKER_SCRIPT
     DOC "STM32F4 linker script"
 )
 
+# Look for bootloader-specific linker script
+find_file(BOOTLOADER_LINKER_SCRIPT
+    NAMES STM32F407VGTx_BOOTLOADER.ld STM32F407xx_BOOTLOADER.ld
+    PATHS
+        ${CMAKE_CURRENT_SOURCE_DIR}
+        $ENV{STM32_LINKER_SCRIPTS}
+    DOC "STM32F4 bootloader linker script"
+)
+
 if(LINKER_SCRIPT)
     message(STATUS "Found linker script: ${LINKER_SCRIPT}")
     set_target_properties(${PROJECT_NAME} PROPERTIES
         LINK_DEPENDS ${LINKER_SCRIPT}
     )
     target_link_options(${PROJECT_NAME} PRIVATE -T${LINKER_SCRIPT})
+    
+    # Use bootloader linker script if available, otherwise use main script
+    if(BOOTLOADER_LINKER_SCRIPT)
+        message(STATUS "Found bootloader linker script: ${BOOTLOADER_LINKER_SCRIPT}")
+        set_target_properties(${PROJECT_NAME}_bootloader PROPERTIES
+            LINK_DEPENDS ${BOOTLOADER_LINKER_SCRIPT}
+        )
+        target_link_options(${PROJECT_NAME}_bootloader PRIVATE -T${BOOTLOADER_LINKER_SCRIPT})
+    else()
+        message(STATUS "Using main linker script for bootloader")
+        set_target_properties(${PROJECT_NAME}_bootloader PROPERTIES
+            LINK_DEPENDS ${LINKER_SCRIPT}
+        )
+        target_link_options(${PROJECT_NAME}_bootloader PRIVATE -T${LINKER_SCRIPT})
+    endif()
 else()
     message(WARNING "Linker script not found. Using default linker behavior.")
 endif()
 
-# Generate additional build outputs
+# Secure boot configuration variables
+set(FIRMWARE_VERSION "1" CACHE STRING "Firmware version number")
+set(ROLLBACK_COUNTER "1" CACHE STRING "Rollback protection counter")
+set(SIGNING_KEY_PATH "" CACHE FILEPATH "Path to firmware signing private key")
+set(PUBLIC_KEY_PATH "" CACHE FILEPATH "Path to firmware signing public key")
+
+# Find Python and firmware signing script
+find_package(Python3 COMPONENTS Interpreter)
+set(FIRMWARE_SIGN_SCRIPT "${CMAKE_SOURCE_DIR}/scripts/firmware_sign.py")
+set(FIRMWARE_VERIFY_SCRIPT "${CMAKE_SOURCE_DIR}/scripts/firmware_verify.py")
+
+# Generate additional build outputs for main firmware
 add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
     COMMAND ${CMAKE_OBJCOPY} -O ihex $<TARGET_FILE:${PROJECT_NAME}> ${PROJECT_NAME}.hex
     COMMAND ${CMAKE_OBJCOPY} -O binary $<TARGET_FILE:${PROJECT_NAME}> ${PROJECT_NAME}.bin
     COMMAND ${SIZE} $<TARGET_FILE:${PROJECT_NAME}>
-    COMMENT "Generating HEX and BIN files, showing size information"
+    COMMENT "Generating HEX and BIN files for main firmware, showing size information"
+)
+
+# Generate build outputs for bootloader
+add_custom_command(TARGET ${PROJECT_NAME}_bootloader POST_BUILD
+    COMMAND ${CMAKE_OBJCOPY} -O ihex $<TARGET_FILE:${PROJECT_NAME}_bootloader> ${PROJECT_NAME}_bootloader.hex
+    COMMAND ${CMAKE_OBJCOPY} -O binary $<TARGET_FILE:${PROJECT_NAME}_bootloader> ${PROJECT_NAME}_bootloader.bin
+    COMMAND ${SIZE} $<TARGET_FILE:${PROJECT_NAME}_bootloader>
+    COMMENT "Generating HEX and BIN files for bootloader, showing size information"
 )
 
 # Print build information
@@ -199,4 +261,145 @@ add_custom_target(flash_openocd
             -c "program ${PROJECT_NAME}.hex verify reset exit"
     DEPENDS ${PROJECT_NAME}
     COMMENT "Flashing firmware using OpenOCD"
+)
+
+# =============================================================================
+# Secure Boot Targets
+# =============================================================================
+
+# Generate signing keypair (only if Python is available)
+if(Python3_FOUND AND EXISTS ${FIRMWARE_SIGN_SCRIPT})
+    add_custom_target(generate_keys
+        COMMAND ${Python3_EXECUTABLE} ${FIRMWARE_SIGN_SCRIPT} keygen
+                --private-key firmware_signing_key.pem
+                --public-key firmware_public_key.pem
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+        COMMENT "Generating Ed25519 signing keypair for secure boot"
+    )
+
+    # Sign firmware (only if signing key is provided)
+    if(EXISTS "${SIGNING_KEY_PATH}")
+        message(STATUS "Firmware signing enabled with key: ${SIGNING_KEY_PATH}")
+        
+        add_custom_target(sign_firmware
+            COMMAND ${Python3_EXECUTABLE} ${FIRMWARE_SIGN_SCRIPT} sign
+                    --firmware ${PROJECT_NAME}.bin
+                    --private-key ${SIGNING_KEY_PATH}
+                    --output ${PROJECT_NAME}_signed.bin
+                    --version ${FIRMWARE_VERSION}
+                    --rollback-counter ${ROLLBACK_COUNTER}
+            DEPENDS ${PROJECT_NAME}
+            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+            COMMENT "Signing firmware with secure boot header"
+        )
+        
+        # Verify signed firmware (if public key is provided)
+        if(EXISTS "${PUBLIC_KEY_PATH}")
+            add_custom_target(verify_firmware
+                COMMAND ${Python3_EXECUTABLE} ${FIRMWARE_VERIFY_SCRIPT} verify
+                        --firmware ${PROJECT_NAME}_signed.bin
+                        --public-key ${PUBLIC_KEY_PATH}
+                DEPENDS sign_firmware
+                WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+                COMMENT "Verifying signed firmware"
+            )
+        endif()
+        
+        # Flash signed firmware to Bank A
+        add_custom_target(flash_signed_a
+            COMMAND st-flash write ${PROJECT_NAME}_signed.bin 0x8008000
+            DEPENDS sign_firmware
+            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+            COMMENT "Flashing signed firmware to Bank A (0x8008000)"
+        )
+        
+        # Flash signed firmware to Bank B  
+        add_custom_target(flash_signed_b
+            COMMAND st-flash write ${PROJECT_NAME}_signed.bin 0x807C000
+            DEPENDS sign_firmware
+            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+            COMMENT "Flashing signed firmware to Bank B (0x807C000)"
+        )
+        
+    else()
+        message(STATUS "Firmware signing disabled - no signing key provided")
+        message(STATUS "Set SIGNING_KEY_PATH to enable firmware signing")
+        message(STATUS "Generate keys with: make generate_keys")
+    endif()
+    
+    # Development workflow targets
+    add_custom_target(dev_setup
+        DEPENDS generate_keys
+        COMMENT "Setting up development environment for secure boot"
+    )
+    
+    # Show firmware information
+    add_custom_target(firmware_info
+        COMMAND ${Python3_EXECUTABLE} ${FIRMWARE_VERIFY_SCRIPT} info
+                --firmware ${PROJECT_NAME}_signed.bin
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+        COMMENT "Showing signed firmware information"
+    )
+    
+else()
+    message(STATUS "Python3 not found or signing script missing - secure boot targets disabled")
+    message(STATUS "Install Python3 and cryptography package to enable secure boot features")
+endif()
+
+# Flash bootloader to beginning of flash
+add_custom_target(flash_bootloader
+    COMMAND st-flash write ${PROJECT_NAME}_bootloader.bin 0x8000000
+    DEPENDS ${PROJECT_NAME}_bootloader
+    COMMENT "Flashing secure bootloader to STM32F4 (0x8000000)"
+)
+
+# Flash bootloader using openocd
+add_custom_target(flash_bootloader_openocd  
+    COMMAND openocd -f interface/stlink-v2.cfg -f target/stm32f4x.cfg
+            -c "program ${PROJECT_NAME}_bootloader.hex verify reset exit"
+    DEPENDS ${PROJECT_NAME}_bootloader
+    COMMENT "Flashing secure bootloader using OpenOCD"
+)
+
+# Complete secure boot system flash (bootloader + signed firmware)
+if(EXISTS "${SIGNING_KEY_PATH}")
+    add_custom_target(flash_complete_system
+        DEPENDS flash_bootloader sign_firmware
+        COMMAND st-flash write ${PROJECT_NAME}_signed.bin 0x8008000
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+        COMMENT "Flashing complete secure boot system (bootloader + signed firmware)"
+    )
+endif()
+
+# Help target to show available build options
+add_custom_target(help_secure_boot
+    COMMAND ${CMAKE_COMMAND} -E echo ""
+    COMMAND ${CMAKE_COMMAND} -E echo "=== Secure Boot Build Targets ==="
+    COMMAND ${CMAKE_COMMAND} -E echo ""
+    COMMAND ${CMAKE_COMMAND} -E echo "Setup:"
+    COMMAND ${CMAKE_COMMAND} -E echo "  generate_keys     - Generate Ed25519 signing keypair"
+    COMMAND ${CMAKE_COMMAND} -E echo "  dev_setup        - Setup development environment"
+    COMMAND ${CMAKE_COMMAND} -E echo ""
+    COMMAND ${CMAKE_COMMAND} -E echo "Build:"
+    COMMAND ${CMAKE_COMMAND} -E echo "  ${PROJECT_NAME}            - Build main firmware"
+    COMMAND ${CMAKE_COMMAND} -E echo "  ${PROJECT_NAME}_bootloader - Build secure bootloader"
+    COMMAND ${CMAKE_COMMAND} -E echo "  sign_firmware    - Sign firmware (requires SIGNING_KEY_PATH)"
+    COMMAND ${CMAKE_COMMAND} -E echo "  verify_firmware  - Verify signed firmware"
+    COMMAND ${CMAKE_COMMAND} -E echo ""
+    COMMAND ${CMAKE_COMMAND} -E echo "Flash:"
+    COMMAND ${CMAKE_COMMAND} -E echo "  flash_bootloader - Flash bootloader to 0x8000000"
+    COMMAND ${CMAKE_COMMAND} -E echo "  flash_signed_a   - Flash signed firmware to Bank A"
+    COMMAND ${CMAKE_COMMAND} -E echo "  flash_signed_b   - Flash signed firmware to Bank B"
+    COMMAND ${CMAKE_COMMAND} -E echo "  flash_complete_system - Flash bootloader + firmware"
+    COMMAND ${CMAKE_COMMAND} -E echo ""
+    COMMAND ${CMAKE_COMMAND} -E echo "Debug:"
+    COMMAND ${CMAKE_COMMAND} -E echo "  firmware_info    - Show signed firmware information"
+    COMMAND ${CMAKE_COMMAND} -E echo "  info            - Show build information"
+    COMMAND ${CMAKE_COMMAND} -E echo ""
+    COMMAND ${CMAKE_COMMAND} -E echo "Configuration:"
+    COMMAND ${CMAKE_COMMAND} -E echo "  FIRMWARE_VERSION=${FIRMWARE_VERSION}"
+    COMMAND ${CMAKE_COMMAND} -E echo "  ROLLBACK_COUNTER=${ROLLBACK_COUNTER}"
+    COMMAND ${CMAKE_COMMAND} -E echo "  SIGNING_KEY_PATH=${SIGNING_KEY_PATH}"
+    COMMAND ${CMAKE_COMMAND} -E echo "  PUBLIC_KEY_PATH=${PUBLIC_KEY_PATH}"
+    COMMENT "Showing available secure boot build targets"
 )
