@@ -2,36 +2,108 @@
 Language: Cpp
 BasedOnStyle: LLVM
 
-# Basic formatting
+# Indentation
 IndentWidth: 2
 TabWidth: 2
 UseTab: Never
 AccessModifierOffset: -2
+ConstructorInitializerIndentWidth: 4
+ContinuationIndentWidth: 4
+
+# Line length
 ColumnLimit: 80
 
+# Alignment
+AlignAfterOpenBracket: Align
+AlignConsecutiveAssignments:
+  Enabled: false
+AlignConsecutiveDeclarations:
+  Enabled: false
+AlignConsecutiveMacros:
+  Enabled: false
+AlignEscapedNewlines: Right
+AlignOperands: Align
+AlignTrailingComments:
+  Kind: Always
+  OverEmptyLines: 0
+
 # Braces
+BraceWrapping:
+  AfterClass: false
+  AfterControlStatement: Never
+  AfterEnum: false
+  AfterFunction: false
+  AfterNamespace: false
+  AfterStruct: false
+  AfterUnion: false
+  BeforeCatch: false
+  BeforeElse: false
+  IndentBraces: false
+  SplitEmptyFunction: true
+  SplitEmptyRecord: true
+  SplitEmptyNamespace: true
 BreakBeforeBraces: Attach
 
-# Alignment
-AlignAfterOpenBracket: true
-AlignTrailingComments: true
+# Breaking
+AllowAllArgumentsOnNextLine: true
+AllowAllParametersOfDeclarationOnNextLine: true
+AllowShortBlocksOnASingleLine: Never
+AllowShortCaseLabelsOnASingleLine: false
+AllowShortFunctionsOnASingleLine: All
+AllowShortIfStatementsOnASingleLine: Never
+AllowShortLambdasOnASingleLine: All
+AllowShortLoopsOnASingleLine: false
+AlwaysBreakBeforeMultilineStrings: false
+BinPackArguments: true
+BinPackParameters: true
+BreakBeforeBinaryOperators: None
+BreakBeforeTernaryOperators: true
+BreakConstructorInitializers: BeforeColon
+BreakInheritanceList: BeforeColon
+BreakStringLiterals: true
 
 # Spacing
 SpaceAfterCStyleCast: false
+SpaceAfterTemplateKeyword: true
+SpaceBeforeAssignmentOperators: true
 SpaceBeforeParens: ControlStatements
+SpaceInEmptyBlock: false
 SpacesBeforeTrailingComments: 1
+SpacesInAngles: Never
+SpacesInContainerLiterals: true
+SpacesInParens: Never
+SpacesInSquareBrackets: false
 
-# Breaking
-AllowShortFunctionsOnASingleLine: true
-AllowShortIfStatementsOnASingleLine: false
-AllowShortLoopsOnASingleLine: false
-BinPackArguments: true
-BinPackParameters: true
-
-# Pointers
+# Pointers and references
 PointerAlignment: Right
+ReferenceAlignment: Pointer
+
+# Comments
+ReflowComments: true
+
+# Includes
+SortIncludes: CaseSensitive
+IncludeCategories:
+  # Project headers (quoted)
+  - Regex: '^"'
+    Priority: 1
+    SortPriority: 0
+  # System headers (angle brackets)
+  - Regex: '^<'
+    Priority: 2
+    SortPriority: 0
+
+# Namespaces
+CompactNamespaces: false
+FixNamespaceComments: true
+NamespaceIndentation: None
 
 # Misc
 Cpp11BracedListStyle: true
 DerivePointerAlignment: false
+KeepEmptyLines:
+  AtEndOfFile: false
+  AtStartOfBlock: true
+  AtStartOfFile: true
 MaxEmptyLinesToKeep: 1
+Standard: Latest
