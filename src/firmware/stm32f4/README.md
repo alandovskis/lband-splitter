@@ -9,6 +9,12 @@ This directory contains the firmware for the STM32F4 microcontroller that implem
 - **FFT-based frequency analysis with 256-point FFT**
 - **UART communication protocol compatible with host controller**
 - **SNR calculation and signal quality assessment**
+- **Secure Boot System**:
+  - **A/B Firmware Banks**: Dual ~496KB firmware banks for atomic updates
+  - **Ed25519 Signature Verification**: Cryptographic firmware authentication
+  - **Rollback Protection**: Anti-rollback counters prevent firmware downgrades
+  - **Automatic Fallback**: Intelligent bank selection with failure tracking
+  - **Hardware Security**: Flash protection, JTAG disable, Memory Protection Unit
 - **Hardware Abstraction Layers**:
   - **Display Abstraction**: Multi-type display support (SSD1306 OLED, HD44780 LCD, 7-segment)
   - **LED Abstraction**: Advanced pattern generation with GPIO and PWM support
@@ -267,6 +273,212 @@ port_update(&port);  // Updates display content and LED patterns
 - `display_abstraction.h` - Display API documentation  
 - `led_abstraction.h` - LED API documentation
 - `port.h` - Port integration interface
+
+## Secure Boot System
+
+The STM32F4 firmware includes a comprehensive secure boot system with A/B firmware banks, cryptographic verification, and rollback protection.
+
+### Architecture Overview
+
+**Memory Layout:**
+- **Bootloader**: 0x08000000 - 0x08008000 (32KB)
+- **Firmware Bank A**: 0x08008000 - 0x0807C000 (~496KB) 
+- **Firmware Bank B**: 0x0807C000 - 0x080F0000 (~496KB)
+- **Boot Configuration**: Stored in dedicated flash sector with CRC protection
+
+**Key Features:**
+- **Ed25519 Signature Verification**: Cryptographic firmware authentication
+- **SHA-256 Integrity Checking**: Firmware hash validation
+- **CRC32 Protection**: Header and payload integrity verification
+- **Rollback Protection**: Anti-rollback counters prevent firmware downgrades
+- **A/B Bank System**: Atomic firmware updates with automatic fallback
+- **Failure Tracking**: Intelligent boot selection with failure counters
+- **Hardware Security**: Flash protection, JTAG disable, MPU configuration
+
+### Secure Boot Build Targets
+
+The CMake build system provides comprehensive targets for secure boot development:
+
+#### Setup and Key Management
+```bash
+# Generate Ed25519 signing keypair (development)
+make generate_keys
+
+# Setup complete development environment  
+make dev_setup
+
+# Configure signing keys for builds
+cmake -DSIGNING_KEY_PATH=/path/to/private_key.pem -DPUBLIC_KEY_PATH=/path/to/public_key.pem .
+```
+
+#### Building Firmware Components
+```bash
+# Build main application firmware
+make stm32f4_frequency_detector
+
+# Build secure bootloader
+make stm32f4_frequency_detector_bootloader
+
+# Sign firmware with secure headers
+make sign_firmware
+
+# Verify signed firmware before deployment
+make verify_firmware
+```
+
+#### Flashing Operations
+```bash
+# Flash bootloader to beginning of flash (0x8000000)
+make flash_bootloader
+
+# Flash signed firmware to Bank A (0x8008000)
+make flash_signed_a
+
+# Flash signed firmware to Bank B (0x807C000) 
+make flash_signed_b
+
+# Complete system deployment (bootloader + firmware)
+make flash_complete_system
+```
+
+#### Development and Debug
+```bash
+# Show signed firmware information
+make firmware_info
+
+# Display all available secure boot targets
+make help_secure_boot
+```
+
+### Configuration Options
+
+**CMake Variables:**
+- `FIRMWARE_VERSION`: Version number for rollback protection (default: 1)
+- `ROLLBACK_COUNTER`: Anti-rollback counter value (default: 1)
+- `SIGNING_KEY_PATH`: Path to Ed25519 private key for signing
+- `PUBLIC_KEY_PATH`: Path to Ed25519 public key for verification
+
+**Build-time Security Settings:**
+- `SECURE_BOOT_ENABLE_DEBUG`: Enable debug output (default: 1 for development)
+- `SECURE_BOOT_ENABLE_ROLLBACK_PROTECTION`: Enable version checking (default: 1)
+- `SECURE_BOOT_ENABLE_DEVELOPMENT_MODE`: Development features (default: 0)
+
+### Production Deployment Workflow
+
+1. **Initial Setup** (Once)
+   ```bash
+   # Generate production signing keys (keep private key secure!)
+   ../../scripts/firmware_sign.py keygen --private-key production_key.pem --public-key production_pub.pem
+   
+   # Configure build system
+   cmake -DCMAKE_BUILD_TYPE=Release -DSIGNING_KEY_PATH=production_key.pem .
+   ```
+
+2. **Build and Deploy Bootloader** (Initial deployment)
+   ```bash
+   # Build and flash secure bootloader
+   make stm32f4_frequency_detector_bootloader
+   make flash_bootloader
+   ```
+
+3. **Deploy Initial Firmware** (Bank A)
+   ```bash
+   # Build, sign, and verify firmware
+   make stm32f4_frequency_detector
+   make sign_firmware
+   make verify_firmware
+   
+   # Flash to Bank A
+   make flash_signed_a
+   ```
+
+4. **Over-the-Air Updates** (Production)
+   ```bash
+   # Update firmware version
+   cmake -DFIRMWARE_VERSION=2 -DROLLBACK_COUNTER=2 .
+   
+   # Build and sign new firmware
+   make sign_firmware
+   make verify_firmware
+   
+   # Deploy to inactive bank (B)
+   make flash_signed_b
+   
+   # System automatically switches to Bank B on next boot
+   # Falls back to Bank A if Bank B fails to boot
+   ```
+
+### A/B Firmware Update Process
+
+**Atomic Updates:**
+1. **Preparation**: New firmware written to inactive bank
+2. **Verification**: Bootloader verifies signature and integrity
+3. **Activation**: Boot configuration updated atomically
+4. **Fallback**: Automatic rollback on boot failures (3 attempts)
+
+**Bank Selection Logic:**
+1. Check for pending update (use pending bank)
+2. Try active bank if failure count < 3
+3. Try fallback bank if primary bank failed
+4. Enter recovery mode if both banks failed
+
+### Security Features
+
+**Cryptographic Protection:**
+- **Ed25519 Signatures**: 256-bit elliptic curve signatures for firmware authentication
+- **SHA-256 Hashing**: 256-bit cryptographic hash for integrity verification  
+- **CRC32 Checksums**: Fast integrity checking for headers and configuration
+
+**Hardware Security:**
+- **Flash Write Protection**: Prevent unauthorized firmware modification
+- **JTAG Debug Disable**: Block debug access in production builds
+- **Memory Protection Unit**: Isolate bootloader and application memory regions
+- **Secure Boot Configuration**: Protected boot parameters with CRC validation
+
+**Anti-Tampering:**
+- **Rollback Protection**: Prevent firmware downgrade attacks
+- **Boot Failure Tracking**: Detect and respond to repeated boot failures
+- **Configuration Integrity**: CRC-protected boot configuration storage
+- **Emergency Recovery**: Safe mode for firmware recovery operations
+
+### LED Status Indicators
+
+The bootloader provides LED status indicators for different boot states:
+
+- **3 fast blinks**: Secure boot initialization error
+- **5 very fast blinks**: Recovery mode active
+- **8 medium blinks**: Bank selection failed
+- **9 blinks**: Invalid bank address
+- **10 slow blinks**: Firmware verification failed
+- **20 rapid blinks**: Jump to application failed
+- **Solid on**: Firmware verification in progress
+- **Off**: Normal operation, jumping to application
+
+### Troubleshooting Secure Boot
+
+**Common Issues:**
+- **Signature Verification Failed**: Check public/private key pair matches
+- **Invalid Firmware Header**: Ensure firmware was properly signed
+- **Bank Selection Failed**: Verify firmware banks contain valid signed firmware
+- **Rollback Protection**: Increase version/rollback counter for updates
+
+**Recovery Procedures:**
+- **Button Recovery**: Hold PC13 button during boot to enter recovery mode
+- **Emergency Recovery**: Bootloader enters recovery after 3 consecutive failures
+- **Manual Recovery**: Flash new signed firmware to working bank
+- **Complete Recovery**: Re-flash bootloader and signed firmware
+
+**Debug Information:**
+```bash
+# Show detailed firmware information
+make firmware_info
+
+# Verify firmware without flashing
+../../scripts/firmware_verify.py verify --firmware signed_firmware.bin --public-key public_key.pem
+
+# Extract firmware for analysis  
+../../scripts/firmware_verify.py extract --signed-firmware signed_firmware.bin --output raw_firmware.bin
+```
 
 ## Troubleshooting
 

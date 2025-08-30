@@ -15,7 +15,7 @@ STM32F4Controller::STM32F4Controller(const std::string &uart_device)
     : uart_device_(uart_device) {
   // Initialize storage for all 32 ports
   last_readings_.resize(NUM_PORTS);
-  for (auto& reading : last_readings_) {
+  for (auto &reading : last_readings_) {
     reading.valid = false;
     reading.port_id = 0;
   }
@@ -36,7 +36,8 @@ bool STM32F4Controller::initialize() {
     }
 
     ResponsePacket response;
-    if (!send_command_with_response(protocol::STM32_CMD_GET_STATUS, response, 0)) {
+    if (!send_command_with_response(protocol::STM32_CMD_GET_STATUS, response,
+                                    0)) {
       last_error_ = "Failed to communicate with STM32F4 controller";
       return false;
     }
@@ -50,7 +51,8 @@ bool STM32F4Controller::initialize() {
 
   } catch (const std::exception &e) {
     last_error_ = "Exception during initialization: " + std::string(e.what());
-    utils::Logger::error("STM32F4Controller initialization failed: {}", e.what());
+    utils::Logger::error("STM32F4Controller initialization failed: {}",
+                         e.what());
     return false;
   }
 }
@@ -67,7 +69,8 @@ void STM32F4Controller::cleanup() {
   utils::Logger::info("STM32F4Controller cleanup complete");
 }
 
-bool STM32F4Controller::read_frequency_and_snr(uint8_t port_id, STM32F4Reading &reading) {
+bool STM32F4Controller::read_frequency_and_snr(uint8_t port_id,
+                                               STM32F4Reading &reading) {
   if (port_id >= NUM_PORTS) {
     last_error_ = "Invalid port ID: " + std::to_string(port_id);
     return false;
@@ -80,7 +83,8 @@ bool STM32F4Controller::read_frequency_and_snr(uint8_t port_id, STM32F4Reading &
 
   if (!send_command_with_response(protocol::STM32_CMD_READ_FREQUENCY,
                                   freq_response, port_id) ||
-      !send_command_with_response(protocol::STM32_CMD_READ_SNR, snr_response, port_id)) {
+      !send_command_with_response(protocol::STM32_CMD_READ_SNR, snr_response,
+                                  port_id)) {
     hardware_healthy_ = false;
     return false;
   }
@@ -130,11 +134,10 @@ STM32F4Reading STM32F4Controller::get_last_reading(uint8_t port_id) const {
     invalid_reading.valid = false;
     return invalid_reading;
   }
-  
+
   std::lock_guard<std::mutex> lock(readings_mutex_);
   return last_readings_[port_id];
 }
-
 
 bool STM32F4Controller::start_continuous_measurement() {
   if (!initialized_ || continuous_measurement_) {
@@ -169,12 +172,12 @@ bool STM32F4Controller::enable_port(uint8_t port_id, bool enabled) {
   if (!initialized_) {
     return false;
   }
-  
+
   if (port_id >= NUM_PORTS) {
     last_error_ = "Invalid port ID: " + std::to_string(port_id);
     return false;
   }
-  
+
   uint8_t enable_data = enabled ? 1 : 0;
   ResponsePacket response;
   return send_command_with_response(protocol::STM32_CMD_ENABLE_PORT, response,
@@ -185,18 +188,17 @@ bool STM32F4Controller::set_signal_detection(uint8_t port_id, bool detected) {
   if (!initialized_) {
     return false;
   }
-  
+
   if (port_id >= NUM_PORTS) {
     last_error_ = "Invalid port ID: " + std::to_string(port_id);
     return false;
   }
-  
+
   uint8_t detection_data = detected ? 1 : 0;
   ResponsePacket response;
-  return send_command_with_response(protocol::STM32_CMD_SIGNAL_DETECTION, response,
-                                    port_id, &detection_data, 1);
+  return send_command_with_response(protocol::STM32_CMD_SIGNAL_DETECTION,
+                                    response, port_id, &detection_data, 1);
 }
-
 
 bool STM32F4Controller::calibrate_frequency_detector() {
   if (!initialized_) {
@@ -258,8 +260,8 @@ bool STM32F4Controller::is_connected() const {
 
 std::string STM32F4Controller::get_last_error() const { return last_error_; }
 
-bool STM32F4Controller::send_command(uint8_t cmd, uint8_t port_id, const uint8_t *data,
-                                     size_t data_len) {
+bool STM32F4Controller::send_command(uint8_t cmd, uint8_t port_id,
+                                     const uint8_t *data, size_t data_len) {
   if (!uart_interface_ || data_len > protocol::STM32_MAX_PACKET_SIZE - 3) {
     return false;
   }
@@ -572,8 +574,7 @@ bool STM32F4Manager::configure_port(uint8_t port_id,
 
   std::lock_guard<std::mutex> lock(controllers_mutex_);
 
-  controllers_[port_id] =
-      std::make_unique<STM32F4Controller>(uart_device);
+  controllers_[port_id] = std::make_unique<STM32F4Controller>(uart_device);
   return controllers_[port_id]->initialize();
 }
 
@@ -594,7 +595,8 @@ std::vector<STM32F4Reading> STM32F4Manager::read_all_frequencies() {
   for (int port_id = 0; port_id < STM32F4Controller::NUM_PORTS; ++port_id) {
     if (controllers_[port_id]) {
       STM32F4Reading reading;
-      if (controllers_[port_id]->read_frequency_and_snr(static_cast<uint8_t>(port_id), reading)) {
+      if (controllers_[port_id]->read_frequency_and_snr(
+              static_cast<uint8_t>(port_id), reading)) {
         readings.push_back(reading);
       }
     }
@@ -602,7 +604,6 @@ std::vector<STM32F4Reading> STM32F4Manager::read_all_frequencies() {
 
   return readings;
 }
-
 
 std::vector<uint8_t> STM32F4Manager::get_healthy_ports() const {
   std::vector<uint8_t> healthy_ports;

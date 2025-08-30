@@ -21,8 +21,6 @@ struct STM32F4Reading {
   uint8_t port_id{0};
 };
 
-
-
 // Communication protocol definitions
 namespace protocol {
 constexpr uint8_t STM32_CMD_READ_FREQUENCY = 0x01;
@@ -54,13 +52,11 @@ public:
   STM32F4Reading get_last_reading(uint8_t port_id) const;
   bool start_continuous_measurement();
   bool stop_continuous_measurement();
-  
+
   // Port state control for autonomous LED behavior
   bool enable_port(uint8_t port_id, bool enabled);
   bool set_signal_detection(uint8_t port_id, bool detected);
   bool read_frequency_and_snr(uint8_t port_id, STM32F4Reading &reading);
-
-
 
   // Calibration and maintenance
   bool calibrate_frequency_detector();
@@ -101,7 +97,8 @@ private:
                     size_t data_len = 0);
   bool receive_response(ResponsePacket &response);
   bool send_command_with_response(uint8_t cmd, ResponsePacket &response,
-                                  uint8_t port_id, const uint8_t *data = nullptr,
+                                  uint8_t port_id,
+                                  const uint8_t *data = nullptr,
                                   size_t data_len = 0);
 
   void measurement_thread();
@@ -113,7 +110,7 @@ private:
 
   std::vector<STM32F4Reading> last_readings_;
   mutable std::mutex readings_mutex_;
-  
+
   // Legacy single reading support
   STM32F4Reading last_reading_;
   mutable std::mutex reading_mutex_;

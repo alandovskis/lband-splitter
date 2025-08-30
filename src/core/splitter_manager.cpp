@@ -23,9 +23,10 @@ bool SplitterManager::initialize() {
 
   try {
     // Initialize single STM32F4 controller for all 32 ports
-    std::string uart_device = "/dev/ttyUSB0";  // Single UART for the MCU
-    stm32f4_controller_ = std::make_unique<hardware::STM32F4Controller>(uart_device);
-    
+    std::string uart_device = "/dev/ttyUSB0"; // Single UART for the MCU
+    stm32f4_controller_ =
+        std::make_unique<hardware::STM32F4Controller>(uart_device);
+
     if (!stm32f4_controller_->initialize()) {
       utils::Logger::error("Failed to initialize STM32F4 controller");
       return false;
@@ -33,8 +34,9 @@ bool SplitterManager::initialize() {
 
     // Load port configurations from config file
     auto port_configs = config_->get_port_configs();
-    utils::Logger::info("Loading configuration for {} ports", port_configs.size());
-    
+    utils::Logger::info("Loading configuration for {} ports",
+                        port_configs.size());
+
     ports_.reserve(NUM_PORTS);
     for (int i = 0; i < NUM_PORTS; ++i) {
       auto port = std::make_unique<Port>(i, stm32f4_controller_.get());
@@ -42,25 +44,29 @@ bool SplitterManager::initialize() {
         utils::Logger::error("Failed to initialize port {}", i);
         return false;
       }
-      
+
       // Apply configuration from config file if available
-      if (i < static_cast<int>(port_configs.size()) && port_configs[i].is_object()) {
+      if (i < static_cast<int>(port_configs.size()) &&
+          port_configs[i].is_object()) {
         auto config_json = port_configs[i];
-        
+
         PortConfig port_config;
-        port_config.name = config_json.value("name", "Port " + std::to_string(i + 1));
-        port_config.signal_detection_enabled = config_json.value("signal_detection_enabled", true);
-        
+        port_config.name =
+            config_json.value("name", "Port " + std::to_string(i + 1));
+        port_config.signal_detection_enabled =
+            config_json.value("signal_detection_enabled", true);
+
         bool enabled = config_json.value("enabled", false);
-        
+
         if (!port->apply_startup_configuration(port_config, enabled)) {
-          utils::Logger::error("Failed to apply startup configuration for port {}", i);
+          utils::Logger::error(
+              "Failed to apply startup configuration for port {}", i);
           return false;
         }
       } else {
         utils::Logger::debug("Using default configuration for port {}", i);
       }
-      
+
       ports_.push_back(std::move(port));
     }
 
@@ -276,7 +282,7 @@ SystemStats SplitterManager::get_system_stats() const {
 
 void SplitterManager::update_port_frequencies() {
   std::lock_guard<std::mutex> lock(ports_mutex_);
-  
+
   for (int i = 0; i < NUM_PORTS; ++i) {
     if (ports_[i] && ports_[i]->is_enabled()) {
       double frequency = ports_[i]->get_state().frequency_mhz;

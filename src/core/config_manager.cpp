@@ -65,7 +65,8 @@ bool ConfigManager::save_config() const {
 
 bool ConfigManager::validate_config() const {
   // Network validation
-  if (network_config_.netconf_port <= 0 || network_config_.netconf_port > 65535) {
+  if (network_config_.netconf_port <= 0 ||
+      network_config_.netconf_port > 65535) {
     utils::Logger::error("Invalid NetConf port: {} (must be 1-65535)",
                          network_config_.netconf_port);
     return false;
@@ -85,7 +86,8 @@ bool ConfigManager::validate_config() const {
 
   // SSL validation
   if (network_config_.enable_ssl) {
-    if (network_config_.ssl_cert_path.empty() || network_config_.ssl_key_path.empty()) {
+    if (network_config_.ssl_cert_path.empty() ||
+        network_config_.ssl_key_path.empty()) {
       utils::Logger::error("SSL enabled but certificate paths not specified");
       return false;
     }
@@ -296,8 +298,7 @@ nlohmann::json ConfigManager::build_config_json() const {
                        {"max_files", logging_config_.max_files}};
 
   config["monitoring"] = {
-      {"metrics_interval_seconds",
-       monitoring_config_.metrics_interval_seconds},
+      {"metrics_interval_seconds", monitoring_config_.metrics_interval_seconds},
       {"enable_health_endpoint", monitoring_config_.enable_health_endpoint}};
 
   config["ports"] = port_configs_;

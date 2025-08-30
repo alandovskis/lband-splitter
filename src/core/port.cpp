@@ -41,10 +41,11 @@ bool Port::initialize() {
 bool Port::apply_startup_configuration(const PortConfig &config, bool enabled) {
   // Apply configuration from config file
   config_ = config;
-  
-  utils::Logger::info("Applying startup configuration for port {}: name='{}', enabled={}", 
-                      id_, config.name, enabled);
-  
+
+  utils::Logger::info(
+      "Applying startup configuration for port {}: name='{}', enabled={}", id_,
+      config.name, enabled);
+
   // Sync port state with STM32 MCU
   if (enabled) {
     if (!enable()) {
@@ -57,14 +58,15 @@ bool Port::apply_startup_configuration(const PortConfig &config, bool enabled) {
       return false;
     }
   }
-  
+
   // Configure signal detection if needed
   if (stm32f4_controller_ && config.signal_detection_enabled) {
     if (!stm32f4_controller_->set_signal_detection(id_, false)) {
-      utils::Logger::warning("Failed to configure signal detection for port {}", id_);
+      utils::Logger::warning("Failed to configure signal detection for port {}",
+                             id_);
     }
   }
-  
+
   utils::Logger::debug("Startup configuration applied for port {}", id_);
   return true;
 }
@@ -161,11 +163,11 @@ void Port::update_frequency(double frequency_mhz) {
     bool in_range = (frequency_mhz >= config_.min_frequency_mhz &&
                      frequency_mhz <= config_.max_frequency_mhz);
     bool new_signal_detected = (frequency_mhz > 0.0) && in_range;
-    
+
     if (signal_detected_ != new_signal_detected) {
       signal_detected_ = new_signal_detected;
       state_.signal_detected = signal_detected_;
-      
+
       // Notify STM32F4 of signal detection change
       if (stm32f4_controller_) {
         stm32f4_controller_->set_signal_detection(id_, signal_detected_);
@@ -213,8 +215,6 @@ void Port::set_error(const std::string &error) {
   utils::Logger::error("Port {} error: {}", id_, error);
 }
 
-void Port::clear_error() { 
-  state_.error_message.clear(); 
-}
+void Port::clear_error() { state_.error_message.clear(); }
 
 } // namespace splitter::core

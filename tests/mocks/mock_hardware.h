@@ -26,7 +26,6 @@ public:
   MOCK_METHOD(std::string, get_last_error, (), (const));
 };
 
-
 class MockSTM32F4Controller {
 public:
   MOCK_METHOD(bool, initialize, ());

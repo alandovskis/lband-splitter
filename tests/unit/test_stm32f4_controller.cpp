@@ -79,7 +79,6 @@ TEST_F(STM32F4ControllerTest, PortStateControl) {
   EXPECT_FALSE(controller_->set_signal_detection(0, true));
 }
 
-
 TEST_F(STM32F4ControllerTest, ProtocolConstants) {
   using namespace hardware::protocol;
 
