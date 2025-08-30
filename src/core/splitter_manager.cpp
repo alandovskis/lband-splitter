@@ -22,19 +22,18 @@ bool SplitterManager::initialize() {
   }
 
   try {
-    stm32f4_controllers_.reserve(NUM_PORTS);
-    const auto &hw_config = config_->get_hardware_config();
-    for (int i = 0; i < NUM_PORTS; ++i) {
-      std::string uart_device =
-          hw_config.uart_device_prefix + std::to_string(i);
-      auto controller =
-          std::make_unique<hardware::STM32F4Controller>(i, uart_device);
-      stm32f4_controllers_.push_back(std::move(controller));
+    // Initialize single STM32F4 controller for all 32 ports
+    std::string uart_device = "/dev/ttyUSB0";  // Single UART for the MCU
+    stm32f4_controller_ = std::make_unique<hardware::STM32F4Controller>(uart_device);
+    
+    if (!stm32f4_controller_->initialize()) {
+      utils::Logger::error("Failed to initialize STM32F4 controller");
+      return false;
     }
 
     ports_.reserve(NUM_PORTS);
     for (int i = 0; i < NUM_PORTS; ++i) {
-      auto port = std::make_unique<Port>(i, stm32f4_controllers_[i].get());
+      auto port = std::make_unique<Port>(i, stm32f4_controller_.get());
       if (!port->initialize()) {
         utils::Logger::error("Failed to initialize port {}", i);
         return false;

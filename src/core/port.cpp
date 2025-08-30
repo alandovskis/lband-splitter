@@ -24,9 +24,10 @@ bool Port::initialize() {
     return false;
   }
 
-  // Initialize STM32F4 controller for this port
-  if (!stm32f4_controller_->initialize()) {
-    set_error("Failed to initialize STM32F4 controller");
+  // Controller is already initialized by SplitterManager
+  // Just verify it's working
+  if (!stm32f4_controller_->is_connected()) {
+    set_error("STM32F4 controller not connected");
     return false;
   }
 
@@ -44,7 +45,7 @@ bool Port::enable() {
   }
 
   // Send enable command to STM32F4 - it will handle LEDs autonomously
-  if (!stm32f4_controller_->enable_port(true)) {
+  if (!stm32f4_controller_->enable_port(id_, true)) {
     set_error("Failed to enable port on STM32F4");
     return false;
   }
@@ -66,7 +67,7 @@ bool Port::disable() {
   }
 
   // Send disable command to STM32F4 - it will handle LEDs autonomously
-  if (!stm32f4_controller_->enable_port(false)) {
+  if (!stm32f4_controller_->enable_port(id_, false)) {
     set_error("Failed to disable port on STM32F4");
     return false;
   }
@@ -90,7 +91,7 @@ bool Port::is_enabled() const { return enabled_; }
 PortState Port::get_state() const {
   // Get the latest state from STM32F4 controller
   if (stm32f4_controller_) {
-    auto reading = stm32f4_controller_->get_last_reading();
+    auto reading = stm32f4_controller_->get_last_reading(id_);
     state_.frequency_mhz = reading.frequency_mhz;
     state_.signal_level_dbm = reading.signal_level_dbm;
     state_.last_update = std::chrono::system_clock::now();
@@ -136,7 +137,7 @@ void Port::update_frequency(double frequency_mhz) {
       
       // Notify STM32F4 of signal detection change
       if (stm32f4_controller_) {
-        stm32f4_controller_->set_signal_detection(signal_detected_);
+        stm32f4_controller_->set_signal_detection(id_, signal_detected_);
       }
     }
   }

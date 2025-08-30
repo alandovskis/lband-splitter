@@ -11,9 +11,15 @@
 
 namespace splitter::hardware {
 
-STM32F4Controller::STM32F4Controller(int port_id,
-                                     const std::string &uart_device)
-    : port_id_(static_cast<uint8_t>(port_id)), uart_device_(uart_device) {}
+STM32F4Controller::STM32F4Controller(const std::string &uart_device)
+    : uart_device_(uart_device) {
+  // Initialize storage for all 32 ports
+  last_readings_.resize(NUM_PORTS);
+  for (auto& reading : last_readings_) {
+    reading.valid = false;
+    reading.port_id = 0;
+  }
+}
 
 STM32F4Controller::~STM32F4Controller() { cleanup(); }
 
@@ -63,7 +69,11 @@ void STM32F4Controller::cleanup() {
   utils::Logger::info("STM32F4Controller port {} cleanup complete", port_id_);
 }
 
-bool STM32F4Controller::read_frequency_and_snr(STM32F4Reading &reading) {
+bool STM32F4Controller::read_frequency_and_snr(uint8_t port_id, STM32F4Reading &reading) {
+  if (port_id >= NUM_PORTS) {
+    last_error_ = "Invalid port ID: " + std::to_string(port_id);
+    return false;
+  }
   if (!initialized_) {
     return false;
   }
@@ -113,7 +123,18 @@ bool STM32F4Controller::read_frequency_and_snr(STM32F4Reading &reading) {
   return false;
 }
 
-STM32F4Reading STM32F4Controller::get_last_reading() const {
+STM32F4Reading STM32F4Controller::get_last_reading(uint8_t port_id) const {
+  if (port_id >= NUM_PORTS) {
+    STM32F4Reading invalid_reading;
+    invalid_reading.valid = false;
+    return invalid_reading;
+  }
+  
+  std::lock_guard<std::mutex> lock(readings_mutex_);
+  return last_readings_[port_id];
+}
+
+STM32F4Reading STM32F4Controller::get_last_reading_legacy() const {
   std::lock_guard<std::mutex> lock(reading_mutex_);
   return last_reading_;
 }
@@ -149,19 +170,29 @@ bool STM32F4Controller::stop_continuous_measurement() {
   return true;
 }
 
-bool STM32F4Controller::enable_port(bool enabled) {
+bool STM32F4Controller::enable_port(uint8_t port_id, bool enabled) {
   if (!initialized_) {
+    return false;
+  }
+  
+  if (port_id >= NUM_PORTS) {
+    last_error_ = "Invalid port ID: " + std::to_string(port_id);
     return false;
   }
   
   uint8_t enable_data = enabled ? 1 : 0;
   ResponsePacket response;
   return send_command_with_response(protocol::STM32_CMD_ENABLE_PORT, response,
-                                    &enable_data, 1);
+                                    port_id, &enable_data, 1);
 }
 
-bool STM32F4Controller::set_signal_detection(bool detected) {
+bool STM32F4Controller::set_signal_detection(uint8_t port_id, bool detected) {
   if (!initialized_) {
+    return false;
+  }
+  
+  if (port_id >= NUM_PORTS) {
+    last_error_ = "Invalid port ID: " + std::to_string(port_id);
     return false;
   }
   

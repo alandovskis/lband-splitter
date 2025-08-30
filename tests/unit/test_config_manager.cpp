@@ -44,23 +44,8 @@ TEST_F(ConfigManagerTest, NetworkConfiguration) {
   EXPECT_EQ(retrieved.netconf_port, 831);
 }
 
-TEST_F(ConfigManagerTest, HardwareConfiguration) {
-  ASSERT_TRUE(config_manager_->load_config());
-
-  core::HardwareConfig hw_config;
-  hw_config.gpio_base_pin = 150;
-  hw_config.uart_device_prefix = "/dev/ttyACM";
-  hw_config.uart_baud_rate = 9600;
-  hw_config.spi_device = "/dev/spidev1.0";
-
-  EXPECT_TRUE(config_manager_->set_hardware_config(hw_config));
-
-  auto retrieved = config_manager_->get_hardware_config();
-  EXPECT_EQ(retrieved.gpio_base_pin, 150);
-  EXPECT_EQ(retrieved.uart_device_prefix, "/dev/ttyACM");
-  EXPECT_EQ(retrieved.uart_baud_rate, 9600);
-  EXPECT_EQ(retrieved.spi_device, "/dev/spidev1.0");
-}
+// Hardware configuration test removed - STM32 handles all hardware
+// TEST_F(ConfigManagerTest, HardwareConfiguration) { ... }
 
 TEST_F(ConfigManagerTest, LoggingConfiguration) {
   ASSERT_TRUE(config_manager_->load_config());
@@ -78,6 +63,20 @@ TEST_F(ConfigManagerTest, LoggingConfiguration) {
   EXPECT_EQ(retrieved.log_level, "debug");
   EXPECT_EQ(retrieved.max_file_size_mb, 50);
   EXPECT_EQ(retrieved.max_files, 5);
+}
+
+TEST_F(ConfigManagerTest, MonitoringConfiguration) {
+  ASSERT_TRUE(config_manager_->load_config());
+
+  core::MonitoringConfig mon_config;
+  mon_config.metrics_interval_seconds = 60;
+  mon_config.enable_health_endpoint = false;
+
+  EXPECT_TRUE(config_manager_->set_monitoring_config(mon_config));
+
+  auto retrieved = config_manager_->get_monitoring_config();
+  EXPECT_EQ(retrieved.metrics_interval_seconds, 60);
+  EXPECT_EQ(retrieved.enable_health_endpoint, false);
 }
 
 TEST_F(ConfigManagerTest, InvalidConfiguration) {

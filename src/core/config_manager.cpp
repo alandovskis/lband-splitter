@@ -41,38 +41,7 @@ bool ConfigManager::save_config() const {
   }
 
   try {
-    nlohmann::json config;
-
-    config["hardware"] = {
-        {"gpio_base_pin", hardware_config_.gpio_base_pin},
-        {"spi_device", hardware_config_.spi_device},
-        {"i2c_device", hardware_config_.i2c_device},
-        {"frequency_detector_address",
-         hardware_config_.frequency_detector_address},
-        {"uart_device_prefix", hardware_config_.uart_device_prefix},
-        {"uart_baud_rate", hardware_config_.uart_baud_rate}};
-
-    config["network"] = {{"netconf_host", network_config_.netconf_host},
-                         {"netconf_port", network_config_.netconf_port},
-                         {"rest_host", network_config_.rest_host},
-                         {"rest_port", network_config_.rest_port},
-                         {"enable_ssl", network_config_.enable_ssl},
-                         {"ssl_cert_path", network_config_.ssl_cert_path},
-                         {"ssl_key_path", network_config_.ssl_key_path}};
-
-    config["logging"] = {{"log_file", logging_config_.log_file},
-                         {"log_level", logging_config_.log_level},
-                         {"max_file_size_mb", logging_config_.max_file_size_mb},
-                         {"max_files", logging_config_.max_files}};
-
-    config["monitoring"] = {
-        {"enable_telegraf", monitoring_config_.enable_telegraf},
-        {"telegraf_socket", monitoring_config_.telegraf_socket},
-        {"metrics_interval_seconds",
-         monitoring_config_.metrics_interval_seconds},
-        {"enable_health_endpoint", monitoring_config_.enable_health_endpoint}};
-
-    config["ports"] = port_configs_;
+    nlohmann::json config = build_config_json();
 
     std::filesystem::create_directories(
         std::filesystem::path(config_file_path_).parent_path());
@@ -95,52 +64,69 @@ bool ConfigManager::save_config() const {
 }
 
 bool ConfigManager::validate_config() const {
-  if (hardware_config_.gpio_base_pin < 0 ||
-      hardware_config_.gpio_base_pin > 500) {
-    utils::Logger::error("Invalid GPIO base pin: {}",
-                         hardware_config_.gpio_base_pin);
-    return false;
-  }
-
-  if (network_config_.netconf_port <= 0 ||
-      network_config_.netconf_port > 65535) {
-    utils::Logger::error("Invalid NetConf port: {}",
+  // Network validation
+  if (network_config_.netconf_port <= 0 || network_config_.netconf_port > 65535) {
+    utils::Logger::error("Invalid NetConf port: {} (must be 1-65535)",
                          network_config_.netconf_port);
     return false;
   }
 
   if (network_config_.rest_port <= 0 || network_config_.rest_port > 65535) {
-    utils::Logger::error("Invalid REST port: {}", network_config_.rest_port);
+    utils::Logger::error("Invalid REST port: {} (must be 1-65535)",
+                         network_config_.rest_port);
     return false;
   }
 
+  if (network_config_.netconf_port == network_config_.rest_port) {
+    utils::Logger::error("NetConf and REST ports cannot be the same: {}",
+                         network_config_.netconf_port);
+    return false;
+  }
+
+  // SSL validation
   if (network_config_.enable_ssl) {
-    if (network_config_.ssl_cert_path.empty() ||
-        network_config_.ssl_key_path.empty()) {
+    if (network_config_.ssl_cert_path.empty() || network_config_.ssl_key_path.empty()) {
       utils::Logger::error("SSL enabled but certificate paths not specified");
       return false;
     }
 
-    if (!std::filesystem::exists(network_config_.ssl_cert_path) ||
-        !std::filesystem::exists(network_config_.ssl_key_path)) {
-      utils::Logger::error("SSL certificate files not found");
+    if (!std::filesystem::exists(network_config_.ssl_cert_path)) {
+      utils::Logger::error("SSL certificate file not found: {}",
+                           network_config_.ssl_cert_path);
+      return false;
+    }
+
+    if (!std::filesystem::exists(network_config_.ssl_key_path)) {
+      utils::Logger::error("SSL key file not found: {}",
+                           network_config_.ssl_key_path);
       return false;
     }
   }
 
+  // Logging validation
   if (logging_config_.max_file_size_mb <= 0) {
-    utils::Logger::error("Invalid log file size: {}",
+    utils::Logger::error("Invalid log file size: {} (must be > 0)",
                          logging_config_.max_file_size_mb);
+    return false;
+  }
+
+  if (logging_config_.max_files <= 0) {
+    utils::Logger::error("Invalid max log files: {} (must be > 0)",
+                         logging_config_.max_files);
+    return false;
+  }
+
+  // Monitoring validation
+  if (monitoring_config_.metrics_interval_seconds <= 0) {
+    utils::Logger::error("Invalid metrics interval: {} (must be > 0)",
+                         monitoring_config_.metrics_interval_seconds);
     return false;
   }
 
   return true;
 }
 
-bool ConfigManager::set_hardware_config(const HardwareConfig &config) {
-  hardware_config_ = config;
-  return validate_config();
-}
+// Hardware config methods removed - STM32 handles all hardware
 
 bool ConfigManager::set_network_config(const NetworkConfig &config) {
   network_config_ = config;
@@ -203,22 +189,7 @@ bool ConfigManager::load_from_file() {
 
     file >> raw_config_;
 
-    if (raw_config_.contains("hardware")) {
-      auto hw = raw_config_["hardware"];
-      hardware_config_.gpio_base_pin =
-          hw.value("gpio_base_pin", hardware_config_.gpio_base_pin);
-      hardware_config_.spi_device =
-          hw.value("spi_device", hardware_config_.spi_device);
-      hardware_config_.i2c_device =
-          hw.value("i2c_device", hardware_config_.i2c_device);
-      hardware_config_.frequency_detector_address =
-          hw.value("frequency_detector_address",
-                   hardware_config_.frequency_detector_address);
-      hardware_config_.uart_device_prefix =
-          hw.value("uart_device_prefix", hardware_config_.uart_device_prefix);
-      hardware_config_.uart_baud_rate =
-          hw.value("uart_baud_rate", hardware_config_.uart_baud_rate);
-    }
+    // Hardware config loading removed - STM32 handles all hardware
 
     if (raw_config_.contains("network")) {
       auto net = raw_config_["network"];
@@ -252,10 +223,6 @@ bool ConfigManager::load_from_file() {
 
     if (raw_config_.contains("monitoring")) {
       auto mon = raw_config_["monitoring"];
-      monitoring_config_.enable_telegraf =
-          mon.value("enable_telegraf", monitoring_config_.enable_telegraf);
-      monitoring_config_.telegraf_socket =
-          mon.value("telegraf_socket", monitoring_config_.telegraf_socket);
       monitoring_config_.metrics_interval_seconds =
           mon.value("metrics_interval_seconds",
                     monitoring_config_.metrics_interval_seconds);
@@ -282,46 +249,10 @@ bool ConfigManager::create_default_config() {
       port_configs_.push_back({{"id", i},
                                {"name", "Port " + std::to_string(i + 1)},
                                {"enabled", false},
-                               {"auto_enable", false},
-                               {"min_frequency_mhz", 1000.0},
-                               {"max_frequency_mhz", 2000.0},
-                               {"gain_db", 0},
                                {"signal_detection_enabled", true}});
     }
 
-    // Create default config JSON structure
-    nlohmann::json config;
-
-    config["hardware"] = {
-        {"gpio_base_pin", hardware_config_.gpio_base_pin},
-        {"spi_device", hardware_config_.spi_device},
-        {"i2c_device", hardware_config_.i2c_device},
-        {"frequency_detector_address",
-         hardware_config_.frequency_detector_address},
-        {"uart_device_prefix", hardware_config_.uart_device_prefix},
-        {"uart_baud_rate", hardware_config_.uart_baud_rate}};
-
-    config["network"] = {{"netconf_host", network_config_.netconf_host},
-                         {"netconf_port", network_config_.netconf_port},
-                         {"rest_host", network_config_.rest_host},
-                         {"rest_port", network_config_.rest_port},
-                         {"enable_ssl", network_config_.enable_ssl},
-                         {"ssl_cert_path", network_config_.ssl_cert_path},
-                         {"ssl_key_path", network_config_.ssl_key_path}};
-
-    config["logging"] = {{"log_file", logging_config_.log_file},
-                         {"log_level", logging_config_.log_level},
-                         {"max_file_size_mb", logging_config_.max_file_size_mb},
-                         {"max_files", logging_config_.max_files}};
-
-    config["monitoring"] = {
-        {"enable_telegraf", monitoring_config_.enable_telegraf},
-        {"telegraf_socket", monitoring_config_.telegraf_socket},
-        {"metrics_interval_seconds",
-         monitoring_config_.metrics_interval_seconds},
-        {"enable_health_endpoint", monitoring_config_.enable_health_endpoint}};
-
-    config["ports"] = port_configs_;
+    nlohmann::json config = build_config_json();
 
     std::filesystem::create_directories(
         std::filesystem::path(config_file_path_).parent_path());
@@ -345,5 +276,33 @@ bool ConfigManager::create_default_config() {
 }
 
 void ConfigManager::merge_defaults() {}
+
+nlohmann::json ConfigManager::build_config_json() const {
+  nlohmann::json config;
+
+  // Hardware config removed - STM32 handles all hardware
+
+  config["network"] = {{"netconf_host", network_config_.netconf_host},
+                       {"netconf_port", network_config_.netconf_port},
+                       {"rest_host", network_config_.rest_host},
+                       {"rest_port", network_config_.rest_port},
+                       {"enable_ssl", network_config_.enable_ssl},
+                       {"ssl_cert_path", network_config_.ssl_cert_path},
+                       {"ssl_key_path", network_config_.ssl_key_path}};
+
+  config["logging"] = {{"log_file", logging_config_.log_file},
+                       {"log_level", logging_config_.log_level},
+                       {"max_file_size_mb", logging_config_.max_file_size_mb},
+                       {"max_files", logging_config_.max_files}};
+
+  config["monitoring"] = {
+      {"metrics_interval_seconds",
+       monitoring_config_.metrics_interval_seconds},
+      {"enable_health_endpoint", monitoring_config_.enable_health_endpoint}};
+
+  config["ports"] = port_configs_;
+
+  return config;
+}
 
 } // namespace splitter::core

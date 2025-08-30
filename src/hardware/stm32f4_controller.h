@@ -44,21 +44,21 @@ constexpr uint32_t STM32_TIMEOUT_MS = 100;
 
 class STM32F4Controller {
 public:
-  explicit STM32F4Controller(int port_id, const std::string &uart_device);
+  explicit STM32F4Controller(const std::string &uart_device);
   ~STM32F4Controller();
 
   bool initialize();
   void cleanup();
 
   // Frequency and SNR measurement
-  bool read_frequency_and_snr(STM32F4Reading &reading);
-  STM32F4Reading get_last_reading() const;
+  STM32F4Reading get_last_reading(uint8_t port_id) const;
   bool start_continuous_measurement();
   bool stop_continuous_measurement();
   
   // Port state control for autonomous LED behavior
-  bool enable_port(bool enabled);
-  bool set_signal_detection(bool detected);
+  bool enable_port(uint8_t port_id, bool enabled);
+  bool set_signal_detection(uint8_t port_id, bool detected);
+  bool read_frequency_and_snr(uint8_t port_id, STM32F4Reading &reading);
 
 
 
@@ -71,7 +71,7 @@ public:
   bool is_healthy() const;
   bool is_connected() const;
   std::string get_last_error() const;
-  uint8_t get_port_id() const { return port_id_; }
+  // Remove get_port_id() since controller handles all ports
 
   // Static constants
   static constexpr int NUM_PORTS = 32;
@@ -97,11 +97,11 @@ private:
     uint8_t data[protocol::STM32_MAX_PACKET_SIZE - 2];
   };
 
-  bool send_command(uint8_t cmd, const uint8_t *data = nullptr,
+  bool send_command(uint8_t cmd, uint8_t port_id, const uint8_t *data = nullptr,
                     size_t data_len = 0);
   bool receive_response(ResponsePacket &response);
   bool send_command_with_response(uint8_t cmd, ResponsePacket &response,
-                                  const uint8_t *data = nullptr,
+                                  uint8_t port_id, const uint8_t *data = nullptr,
                                   size_t data_len = 0);
 
   void measurement_thread();
@@ -109,11 +109,10 @@ private:
   bool verify_response_checksum(const ResponsePacket &response) const;
 
   std::unique_ptr<UARTInterface> uart_interface_;
-  uint8_t port_id_;
   std::string uart_device_;
 
-  STM32F4Reading last_reading_;
-  mutable std::mutex reading_mutex_;
+  std::vector<STM32F4Reading> last_readings_;
+  mutable std::mutex readings_mutex_;
 
   std::atomic<bool> initialized_{false};
   std::atomic<bool> continuous_measurement_{false};
