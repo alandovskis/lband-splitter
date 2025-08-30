@@ -23,9 +23,7 @@ AlignConsecutiveMacros:
   Enabled: false
 AlignEscapedNewlines: Right
 AlignOperands: Align
-AlignTrailingComments:
-  Kind: Always
-  OverEmptyLines: 0
+AlignTrailingComments: true
 
 # Braces
 BraceWrapping:
@@ -45,8 +43,6 @@ BraceWrapping:
 BreakBeforeBraces: Attach
 
 # Breaking
-AllowAllArgumentsOnNextLine: true
-AllowAllParametersOfDeclarationOnNextLine: true
 AllowShortBlocksOnASingleLine: Never
 AllowShortCaseLabelsOnASingleLine: false
 AllowShortFunctionsOnASingleLine: All
@@ -76,7 +72,6 @@ SpacesInSquareBrackets: false
 
 # Pointers and references
 PointerAlignment: Right
-ReferenceAlignment: Pointer
 
 # Comments
 ReflowComments: true
@@ -101,9 +96,5 @@ NamespaceIndentation: None
 # Misc
 Cpp11BracedListStyle: true
 DerivePointerAlignment: false
-KeepEmptyLines:
-  AtEndOfFile: false
-  AtStartOfBlock: true
-  AtStartOfFile: true
 MaxEmptyLinesToKeep: 1
 Standard: Latest
