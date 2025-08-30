@@ -38,6 +38,37 @@ bool Port::initialize() {
   return true;
 }
 
+bool Port::apply_startup_configuration(const PortConfig &config, bool enabled) {
+  // Apply configuration from config file
+  config_ = config;
+  
+  utils::Logger::info("Applying startup configuration for port {}: name='{}', enabled={}", 
+                      id_, config.name, enabled);
+  
+  // Sync port state with STM32 MCU
+  if (enabled) {
+    if (!enable()) {
+      utils::Logger::error("Failed to enable port {} during startup", id_);
+      return false;
+    }
+  } else {
+    if (!disable()) {
+      utils::Logger::error("Failed to disable port {} during startup", id_);
+      return false;
+    }
+  }
+  
+  // Configure signal detection if needed
+  if (stm32f4_controller_ && config.signal_detection_enabled) {
+    if (!stm32f4_controller_->set_signal_detection(id_, false)) {
+      utils::Logger::warning("Failed to configure signal detection for port {}", id_);
+    }
+  }
+  
+  utils::Logger::debug("Startup configuration applied for port {}", id_);
+  return true;
+}
+
 bool Port::enable() {
   if (!stm32f4_controller_) {
     set_error("STM32F4 controller not available");

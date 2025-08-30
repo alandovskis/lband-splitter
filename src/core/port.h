@@ -38,6 +38,7 @@ public:
   ~Port();
 
   bool initialize();
+  bool apply_startup_configuration(const PortConfig &config, bool enabled);
 
   bool enable();
   bool disable();
