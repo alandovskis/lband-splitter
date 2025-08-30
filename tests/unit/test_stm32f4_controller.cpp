@@ -21,7 +21,7 @@ class STM32F4ControllerTest : public ::testing::Test {
 protected:
   void SetUp() override {
     // Create a controller with a mock UART device path
-    controller_ = std::make_unique<hardware::STM32F4Controller>(0, "/dev/null");
+    controller_ = std::make_unique<hardware::STM32F4Controller>("/dev/null");
   }
 
   void TearDown() override {
@@ -37,7 +37,7 @@ protected:
 TEST_F(STM32F4ControllerTest, DefaultState) {
   EXPECT_FALSE(controller_->is_healthy());
   EXPECT_FALSE(controller_->is_connected());
-  EXPECT_EQ(controller_->get_port_id(), 0);
+  // get_port_id() method removed - controller now handles all ports
   // Error message may be empty initially until first operation fails
 }
 
@@ -75,8 +75,8 @@ TEST_F(STM32F4ControllerTest, ReadingStructure) {
 
 TEST_F(STM32F4ControllerTest, PortStateControl) {
   // Test port state control methods exist and fail when not initialized
-  EXPECT_FALSE(controller_->enable_port(true));
-  EXPECT_FALSE(controller_->set_signal_detection(true));
+  EXPECT_FALSE(controller_->enable_port(0, true));
+  EXPECT_FALSE(controller_->set_signal_detection(0, true));
 }
 
 
@@ -108,10 +108,10 @@ TEST_F(STM32F4ControllerTest, UninitializedOperations) {
   std::string version;
 
   // All operations should fail when not initialized
-  EXPECT_FALSE(controller_->read_frequency_and_snr(reading));
+  EXPECT_FALSE(controller_->read_frequency_and_snr(0, reading));
   EXPECT_FALSE(controller_->start_continuous_measurement());
-  EXPECT_FALSE(controller_->enable_port(true));
-  EXPECT_FALSE(controller_->set_signal_detection(true));
+  EXPECT_FALSE(controller_->enable_port(0, true));
+  EXPECT_FALSE(controller_->set_signal_detection(0, true));
   EXPECT_FALSE(controller_->calibrate_frequency_detector());
   EXPECT_FALSE(controller_->reset_mcu());
   EXPECT_FALSE(controller_->get_firmware_version(version));

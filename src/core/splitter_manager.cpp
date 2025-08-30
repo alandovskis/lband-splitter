@@ -91,7 +91,7 @@ void SplitterManager::shutdown() {
   }
 
   ports_.clear();
-  stm32f4_controllers_.clear();
+  stm32f4_controller_.reset();
 
   initialized_ = false;
   utils::Logger::info("SplitterManager shutdown complete");
@@ -245,10 +245,8 @@ bool SplitterManager::get_system_health() const {
   }
 
   // Check STM32F4 controllers health
-  for (const auto& controller : stm32f4_controllers_) {
-    if (!controller->is_healthy()) {
-      return false;
-    }
+  if (stm32f4_controller_ && !stm32f4_controller_->is_healthy()) {
+    return false;
   }
   return true;
 }

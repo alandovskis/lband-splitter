@@ -113,6 +113,10 @@ private:
 
   std::vector<STM32F4Reading> last_readings_;
   mutable std::mutex readings_mutex_;
+  
+  // Legacy single reading support
+  STM32F4Reading last_reading_;
+  mutable std::mutex reading_mutex_;
 
   std::atomic<bool> initialized_{false};
   std::atomic<bool> continuous_measurement_{false};
