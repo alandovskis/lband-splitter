@@ -10,9 +10,8 @@ public:
   MOCK_METHOD(void, cleanup, (), ());
   MOCK_METHOD(bool, send_data, (const uint8_t *data, size_t length), ());
   MOCK_METHOD(bool, receive_data,
-              (uint8_t *data, size_t max_length, size_t &received_length,
-               uint32_t timeout_ms),
-              ());
+              (uint8_t * data, size_t max_length, size_t &received_length,
+               uint32_t timeout_ms), ());
   MOCK_METHOD(bool, is_connected, (), (const));
   MOCK_METHOD(void, flush_buffers, (), ());
 };
