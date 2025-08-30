@@ -6,9 +6,9 @@ A 32-port L-band RF signal splitter/combiner system with hardware control, frequ
 
 This system provides:
 - **32-port L-band signal control** (950-2150 MHz)
-- **GPIO-based port enable/disable** with LED status indicators
+- **Single STM32 MCU** handling all hardware autonomously
 - **STM32F4 frequency detection** with FFT-based signal analysis
-- **Real-time frequency detection** via UART communication to STM32F4 MCUs
+- **Real-time frequency detection** via UART communication to single STM32 MCU
 - **Web-based control interface** (Angular frontend)
 - **NetConf protocol support** for network management
 - **System monitoring** with Telegraf integration
@@ -65,8 +65,7 @@ graph TB
     end
     
     subgraph "Hardware"
-        GPIO[GPIO Interface<br/>Port enable/disable]
-        UART[UART Interfaces<br/>115200 baud]
+        UART[UART Interface<br/>Single /dev/ttyUSB0<br/>115200 baud]
         RF[RF Hardware<br/>32-port splitter matrix]
     end
     
@@ -78,7 +77,6 @@ graph TB
     NetConfServer <-->|IPC| Daemon
     
     Daemon <-->|Configuration| Database
-    Daemon <-->|GPIO control| GPIO
     Daemon <-->|UART protocol| UART
     
     UART <-->|Binary protocol| STM32
@@ -110,9 +108,7 @@ graph TB
         end
         
         subgraph "Hardware Abstraction"
-            STM32Controller[STM32F4 Controller<br/>UART communication<br/>Hardware coordination]
-            DisplayAbstraction[Display Abstraction<br/>I2C multiplexer control<br/>OLED display management]
-            LEDAbstraction[LED Abstraction<br/>Pattern generation<br/>GPIO LED control]
+            STM32Controller[STM32F4 Controller<br/>Single UART communication<br/>All 32 ports via MCU]
         end
         
         subgraph "Network Interfaces"
@@ -142,10 +138,6 @@ graph TB
     SplitterManager --> PortController
     SplitterManager --> ConfigManager
     PortController --> STM32Controller
-    PortController --> DisplayAbstraction
-    PortController --> LEDAbstraction
-    STM32Controller --> DisplayAbstraction
-    STM32Controller --> LEDAbstraction
     
     RESTServer --> SplitterManager
     WebSocketServer --> SplitterManager
@@ -154,9 +146,7 @@ graph TB
     Monitor --> Logger
     EventLoop --> SplitterManager
     
-    STM32Controller <-->|UART| Hardware
-    DisplayAbstraction <-->|I2C/Multiplexer| Hardware
-    LEDAbstraction <-->|GPIO| Hardware
+    STM32Controller <-->|Single UART| Hardware
     ConfigManager <-->|File I/O| ConfigFiles
     
     classDef core fill:#4299E1,stroke:#2B6CB0,stroke-width:2px,color:#fff
@@ -166,7 +156,7 @@ graph TB
     classDef external fill:#A0AEC0,stroke:#4A5568,stroke-width:2px,color:#fff
     
     class SplitterManager,PortController,ConfigManager core
-    class STM32Controller,DisplayAbstraction,LEDAbstraction hardware
+    class STM32Controller hardware
     class RESTServer,WebSocketServer,NetConfHandler network
     class Logger,Monitor,EventLoop system
     class WebApp,NetConfClient,Hardware,ConfigFiles external
@@ -181,33 +171,22 @@ sequenceDiagram
     participant Manager as Splitter Manager
     participant Port as Port Controller
     participant STM32 as STM32F4 Controller
-    participant LED as LED Abstraction
-    participant Display as Display Abstraction
     participant Hardware as STM32F4 MCU
     
     WebApp->>+REST: POST /api/ports/5/enable
     REST->>+Manager: enablePort for port 5
     Manager->>+Port: enable
     
-    Note over Port: Port uses hardware abstractions
-    Port->>+STM32: enablePort
-    STM32->>Hardware: UART: ENABLE_PORT command
+    Note over Port: Port sends command to STM32 MCU
+    Port->>+STM32: enablePort(port_id=5)
+    STM32->>Hardware: UART: ENABLE_PORT command with port_id
     Hardware-->>STM32: Response: OK
+    Note over Hardware: STM32 MCU autonomously:<br/>- Updates status LED<br/>- Updates OLED display<br/>- Manages all hardware
     STM32-->>-Port: Success
     
-    Port->>+LED: set status LED enabled
-    LED->>LED: Update LED pattern solid on
-    LED->>Hardware: GPIO: Set status LED
-    LED-->>-Port: Success
-    
-    Port->>+Display: show port status
-    Display->>Hardware: I2C: Select mux channel 5
-    Display->>Hardware: I2C: Update OLED display
-    Display-->>-Port: Success
-    
     Port->>Port: updateState
-    Note over Port,Hardware: All hardware updates via abstractions
-    Port-->>-Manager: Port enabled
+    Note over Port,Hardware: All hardware managed by STM32 MCU
+    Port-->>-Manager: Port 5 enabled
     
     Manager->>Manager: notifyStateChange
     Manager-->>-REST: Port 5 enabled
@@ -217,10 +196,11 @@ sequenceDiagram
     Note over WebApp,Hardware: WebSocket notification sent to all connected clients
     Manager->>WebApp: WebSocket portStateChanged event
     
-    Note over LED,Hardware: LED patterns updated autonomously
+    Note over Hardware: STM32 MCU autonomous operation
     loop Continuous Updates
-        LED->>LED: Update blink patterns
-        Display->>Display: Toggle freq/SNR display
+        Hardware->>Hardware: Update LED patterns
+        Hardware->>Hardware: Update display content
+        Hardware->>Hardware: Measure frequencies
     end
 ```
 
@@ -243,8 +223,7 @@ graph TB
             end
             
             subgraph "Hardware Interfaces"
-                GPIOSysfs[GPIO sysfs<br/>/sys/class/gpio/gpio*]
-                UARTDevices[UART Devices<br/>/dev/ttyUSB0-31]
+                UARTDevice[UART Device<br/>/dev/ttyUSB0]
             end
         end
         
@@ -272,10 +251,9 @@ graph TB
     
     WebContainer <-->|HTTP:8080| DaemonContainer
     DaemonContainer <-->|Unix socket| MonitorContainer
-    DaemonContainer <-->|GPIO/UART| GPIOSysfs
-    DaemonContainer <-->|UART| UARTDevices
+    DaemonContainer <-->|UART| UARTDevice
     
-    UARTDevices <-->|RS-232/USB| MCU
+    UARTDevice <-->|RS-232/USB| MCU
     
     MCU <-->|Control signals| RFMatrix
     
@@ -287,7 +265,7 @@ graph TB
     classDef service fill:#9F7AEA,stroke:#6B46C1,stroke-width:2px,color:#fff
     
     class DaemonContainer,WebContainer,MonitorContainer container
-    class MCU,RFMatrix,Antennas,GPIOSysfs,UARTDevices hardware
+    class MCU,RFMatrix,Antennas,UARTDevice hardware
     class NetMgmt,WebClients,MonitoringStack external
     class SystemD service
 ```
@@ -418,6 +396,8 @@ npm run dev
 │   │   ├── display_abstraction.c/h  # Display hardware abstraction layer
 │   │   ├── led_abstraction.c/h      # LED hardware abstraction layer
 │   │   ├── port.c/h                 # Port management using abstractions
+│   │   ├── secure_boot.c/h          # Secure boot implementation
+│   │   ├── bootloader_main.c        # Secure bootloader
 │   │   └── abstraction_example.c    # Usage examples
 │   ├── netconf/           # NetConf protocol implementation
 │   ├── web/               # REST/WebSocket API servers
@@ -426,17 +406,21 @@ npm run dev
 ├── tests/                 # Unit and integration tests
 ├── config/                # Configuration files and YANG models
 ├── scripts/               # Build and deployment scripts
+│   ├── firmware_sign.py   # Ed25519 firmware signing utility
+│   ├── firmware_verify.py # Firmware verification utility
+│   └── README.md          # Firmware utilities documentation
+├── docs/                  # System documentation
+│   └── secure_boot.md     # Secure boot system documentation
 └── docker/                # Docker configuration
 ```
 
 ## Hardware Requirements
 
 ### Host System
-- **32 GPIO pins** for port enable control (1 per port × 32 ports)
-- **1 UART interface** for STM32F4 communication
-- **Linux sysfs GPIO interface** (`/sys/class/gpio`)
+- **1 UART interface** for STM32F4 communication (`/dev/ttyUSB0`)
 - **Serial communication** at 115200 baud
-- **Single STM32F4 controller handles autonomous LED control** (reduces host GPIO requirements and eliminates daemon LED management)
+- **No GPIO requirements** - STM32 MCU handles all hardware autonomously
+- **No I2C requirements** - STM32 MCU manages all displays and multiplexers
 
 ### STM32F4 Microcontroller (1 unit)
 - **STM32F407VG** or compatible (168 MHz, 1MB Flash, 192KB RAM)
@@ -469,19 +453,21 @@ system:
   ports: 32
 
 network:
-  web_port: 8080
+  rest_host: "127.0.0.1"
+  rest_port: 8080
+  netconf_host: "0.0.0.0"
   netconf_port: 830
-
-hardware:
-  gpio_base: "/sys/class/gpio"
-  spi_device: "/dev/spidev0.0"
-  i2c_device: "/dev/i2c-1"
+  enable_ssl: false
 
 logging:
   level: "info"
   file: "/var/log/splitter/daemon.log"
   max_size_mb: 100
   max_files: 10
+
+monitoring:
+  metrics_interval_seconds: 30
+  enable_health_endpoint: true
 ```
 
 ## Development
