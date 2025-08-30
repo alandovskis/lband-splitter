@@ -1,0 +1,349 @@
+
+services:
+  # GitLab - Git repository hosting and CI/CD
+  gitlab:
+    image: gitlab/gitlab-ce:16.5.1-ce.0
+    container_name: splitter-gitlab
+    hostname: gitlab.splitter.local
+    restart: unless-stopped
+    environment:
+      GITLAB_OMNIBUS_CONFIG: |
+        external_url 'http://gitlab.splitter.local:8080'
+        gitlab_rails['gitlab_shell_ssh_port'] = 2222
+        gitlab_rails['time_zone'] = 'UTC'
+        gitlab_rails['backup_keep_time'] = 604800
+        nginx['listen_port'] = 80
+        nginx['listen_https'] = false
+        # Print initial root password to stdout
+        gitlab_rails['initial_root_password_show'] = true
+        # Disable unused services to reduce resource usage
+        prometheus_monitoring['enable'] = false
+        grafana['enable'] = false
+        alertmanager['enable'] = false
+        # Database settings
+        postgresql['shared_preload_libraries'] = 'pg_stat_statements'
+        # Redis settings
+        redis['bind'] = '127.0.0.1'
+        redis['port'] = 6379
+        # Unicorn/Puma settings
+        puma['worker_processes'] = 2
+        puma['max_threads'] = 4
+    ports:
+      - "8080:80"
+      - "2222:22"
+    volumes:
+      - gitlab_config:/etc/gitlab
+      - gitlab_logs:/var/log/gitlab
+      - gitlab_data:/var/opt/gitlab
+    networks:
+      - devops_network
+    healthcheck:
+      test: ["CMD-SHELL", "gitlab-ctl status"]
+      interval: 60s
+      timeout: 30s
+      retries: 5
+      start_period: 300s
+
+  # Jenkins - CI/CD automation server
+  jenkins:
+    image: jenkins/jenkins:2.426.1-lts
+    container_name: splitter-jenkins
+    restart: unless-stopped
+    user: root
+    environment:
+      - JENKINS_OPTS=--httpPort=8081
+      - JAVA_OPTS=-Djenkins.install.runSetupWizard=false -Xmx2g -Xms512m
+    ports:
+      - "8081:8081"
+      - "50000:50000"
+    volumes:
+      - jenkins_home:/var/jenkins_home
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./jenkins/plugins.txt:/usr/share/jenkins/ref/plugins.txt:ro
+      - ./jenkins/init.groovy.d:/usr/share/jenkins/ref/init.groovy.d:ro
+    networks:
+      - devops_network
+    depends_on:
+      - gitlab
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8081/login || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 120s
+
+  # SonarQube - Static analysis and code quality
+  sonarqube:
+    image: sonarqube:10.2.1-community
+    container_name: splitter-sonarqube
+    restart: unless-stopped
+    environment:
+      - SONAR_JDBC_URL=jdbc:postgresql://postgres:5432/sonarqube
+      - SONAR_JDBC_USERNAME=sonar
+      - SONAR_JDBC_PASSWORD=sonar123
+      - SONAR_ES_BOOTSTRAP_CHECKS_DISABLE=true
+    ports:
+      - "9000:9000"
+    volumes:
+      - sonarqube_data:/opt/sonarqube/data
+      - sonarqube_logs:/opt/sonarqube/logs
+      - sonarqube_extensions:/opt/sonarqube/extensions
+    networks:
+      - devops_network
+    depends_on:
+      - postgres
+    ulimits:
+      nproc: 131072
+      nofile:
+        soft: 8192
+        hard: 131072
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9000/api/system/status || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 120s
+
+  # PostgreSQL - Database for SonarQube and Jira
+  postgres:
+    image: postgres:15.4-alpine
+    container_name: splitter-postgres
+    restart: unless-stopped
+    environment:
+      - POSTGRES_DB=sonarqube
+      - POSTGRES_USER=sonar
+      - POSTGRES_PASSWORD=sonar123
+      - POSTGRES_MULTIPLE_DATABASES=sonarqube,jiradb
+      - POSTGRES_MULTIPLE_USERS=sonar:sonar123,jira:jira123
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./postgres/init-multiple-databases.sh:/docker-entrypoint-initdb.d/init-multiple-databases.sh:ro
+    networks:
+      - devops_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sonar -d sonarqube"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # Jira - Issue tracking and project management
+  jira:
+    image: atlassian/jira-software:9.12.0
+    container_name: splitter-jira
+    restart: unless-stopped
+    environment:
+      - ATL_PROXY_NAME=jira.splitter.local
+      - ATL_PROXY_PORT=8082
+      - ATL_TOMCAT_SCHEME=http
+      - ATL_JDBC_URL=jdbc:postgresql://postgres:5432/jiradb
+      - ATL_JDBC_USER=jira
+      - ATL_JDBC_PASSWORD=jira123
+      - ATL_DB_DRIVER=org.postgresql.Driver
+      - ATL_DB_TYPE=postgres72
+      - JVM_MINIMUM_MEMORY=1024m
+      - JVM_MAXIMUM_MEMORY=2048m
+    ports:
+      - "8082:8080"
+    volumes:
+      - jira_data:/var/atlassian/application-data/jira
+    networks:
+      - devops_network
+    depends_on:
+      - postgres
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/status || exit 1"]
+      interval: 60s
+      timeout: 30s
+      retries: 5
+      start_period: 300s
+
+  # Confluence - Documentation and knowledge base
+  confluence:
+    image: atlassian/confluence:8.5.3
+    container_name: splitter-confluence
+    restart: unless-stopped
+    environment:
+      - ATL_PROXY_NAME=confluence.splitter.local
+      - ATL_PROXY_PORT=8083
+      - ATL_TOMCAT_SCHEME=http
+      - ATL_JDBC_URL=jdbc:postgresql://postgres:5432/confluencedb
+      - ATL_JDBC_USER=confluence
+      - ATL_JDBC_PASSWORD=confluence123
+      - ATL_DB_DRIVER=org.postgresql.Driver
+      - ATL_DB_TYPE=postgresql
+      - JVM_MINIMUM_MEMORY=1024m
+      - JVM_MAXIMUM_MEMORY=2048m
+    ports:
+      - "8083:8080"
+    volumes:
+      - confluence_data:/var/atlassian/application-data/confluence
+    networks:
+      - devops_network
+    depends_on:
+      - postgres
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/status || exit 1"]
+      interval: 60s
+      timeout: 30s
+      retries: 5
+      start_period: 300s
+
+  # Redis - Cache for GitLab and general caching
+  redis:
+    image: redis:7.2.1-alpine
+    container_name: splitter-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - devops_network
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli ping || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # InfluxDB - Time series database for metrics
+  influxdb:
+    image: influxdb:2.7-alpine
+    container_name: splitter-influxdb
+    restart: unless-stopped
+    environment:
+      - DOCKER_INFLUXDB_INIT_MODE=setup
+      - DOCKER_INFLUXDB_INIT_USERNAME=admin
+      - DOCKER_INFLUXDB_INIT_PASSWORD=admin123
+      - DOCKER_INFLUXDB_INIT_ORG=splitter
+      - DOCKER_INFLUXDB_INIT_BUCKET=metrics
+      - DOCKER_INFLUXDB_INIT_RETENTION=30d
+    ports:
+      - "8086:8086"
+    volumes:
+      - influxdb_data:/var/lib/influxdb2
+      - influxdb_config:/etc/influxdb2
+    networks:
+      - devops_network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8086/ping || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  # Grafana Loki - Log aggregation system
+  loki:
+    image: grafana/loki:2.9.0
+    container_name: splitter-loki
+    restart: unless-stopped
+    ports:
+      - "3100:3100"
+    volumes:
+      - loki_data:/loki
+      - ./loki/loki-config.yaml:/etc/loki/local-config.yaml:ro
+    command: -config.file=/etc/loki/local-config.yaml
+    networks:
+      - devops_network
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:3100/ready || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  # Grafana - Monitoring and observability dashboards
+  grafana:
+    image: grafana/grafana:10.1.0
+    container_name: splitter-grafana
+    restart: unless-stopped
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin123
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_INSTALL_PLUGINS=grafana-clock-panel,grafana-simple-json-datasource
+      - GF_FEATURE_TOGGLES_ENABLE=publicDashboards
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
+    networks:
+      - devops_network
+    depends_on:
+      - influxdb
+      - loki
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:3000/api/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  # Nginx - Reverse proxy and load balancer
+  nginx:
+    image: nginx:1.25.2-alpine
+    container_name: splitter-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+    networks:
+      - devops_network
+    depends_on:
+      - gitlab
+      - jenkins
+      - sonarqube
+      - jira
+      - confluence
+      - grafana
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  gitlab_config:
+    driver: local
+  gitlab_logs:
+    driver: local
+  gitlab_data:
+    driver: local
+  jenkins_home:
+    driver: local
+  sonarqube_data:
+    driver: local
+  sonarqube_logs:
+    driver: local
+  sonarqube_extensions:
+    driver: local
+  postgres_data:
+    driver: local
+  jira_data:
+    driver: local
+  confluence_data:
+    driver: local
+  redis_data:
+    driver: local
+  influxdb_data:
+    driver: local
+  influxdb_config:
+    driver: local
+  loki_data:
+    driver: local
+  grafana_data:
+    driver: local
+
+networks:
+  devops_network:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.25.0.0/16

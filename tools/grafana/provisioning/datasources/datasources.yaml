@@ -1,0 +1,38 @@
+apiVersion: 1
+
+datasources:
+  # InfluxDB datasource for metrics
+  - name: InfluxDB
+    type: influxdb
+    access: proxy
+    url: http://influxdb:8086
+    jsonData:
+      version: Flux
+      organization: splitter
+      defaultBucket: metrics
+      tlsSkipVerify: true
+    secureJsonData:
+      token: # Will be configured during setup
+    isDefault: true
+
+  # Loki datasource for logs
+  - name: Loki
+    type: loki
+    access: proxy
+    url: http://loki:3100
+    jsonData:
+      maxLines: 1000
+
+  # PostgreSQL datasource for SonarQube metrics
+  - name: PostgreSQL
+    type: postgres
+    url: postgres:5432
+    database: sonarqube
+    user: sonar
+    secureJsonData:
+      password: sonar123
+    jsonData:
+      sslmode: disable
+      maxOpenConns: 0
+      maxIdleConns: 2
+      connMaxLifetime: 14400

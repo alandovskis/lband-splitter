@@ -1,0 +1,64 @@
+# Jenkins Plugin Installation List
+# Core plugins for CI/CD functionality
+ant:latest
+build-timeout:latest
+credentials-binding:latest
+timestamper:latest
+ws-cleanup:latest
+pipeline-stage-view:latest
+pipeline-graph-analysis:latest
+pipeline-rest-api:latest
+
+# Source Code Management
+git:latest
+gitlab-plugin:latest
+github:latest
+bitbucket:latest
+
+# Build Tools
+gradle:latest
+maven-plugin:latest
+cmake:latest
+
+# Testing and Quality
+junit:latest
+xvfb:latest
+htmlpublisher:latest
+cobertura:latest
+jacoco:latest
+
+# Static Analysis Integration
+sonar:latest
+warnings-ng:latest
+checkstyle:latest
+pmd:latest
+findbugs:latest
+
+# Docker Integration
+docker-plugin:latest
+docker-workflow:latest
+kubernetes:latest
+
+# Notification and Communication
+email-ext:latest
+slack:latest
+jira:latest
+
+# Security
+matrix-auth:latest
+role-strategy:latest
+authorize-project:latest
+
+# Pipeline and Workflow
+workflow-aggregator:latest
+pipeline-stage-step:latest
+conditional-buildstep:latest
+parameterized-trigger:latest
+build-pipeline-plugin:latest
+
+# Utility Plugins
+envinject:latest
+ssh-agent:latest
+ssh-slaves:latest
+node-iterator-api:latest
+resource-disposer:latest
