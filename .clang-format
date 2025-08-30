@@ -1,98 +1,37 @@
 ---
 Language: Cpp
-# Based on LLVM style with project-specific customizations
 BasedOnStyle: LLVM
 
-# Indentation
+# Basic formatting
 IndentWidth: 2
 TabWidth: 2
 UseTab: Never
 AccessModifierOffset: -2
-ConstructorInitializerIndentWidth: 4
-ContinuationIndentWidth: 4
-
-# Line length
 ColumnLimit: 80
 
 # Braces
-BraceWrapping:
-  AfterClass: false
-  AfterControlStatement: Never
-  AfterEnum: false
-  AfterFunction: false
-  AfterNamespace: false
-  AfterStruct: false
-  AfterUnion: false
-  BeforeCatch: false
-  BeforeElse: false
-  IndentBraces: false
-  SplitEmptyFunction: true
-  SplitEmptyRecord: true
-  SplitEmptyNamespace: true
 BreakBeforeBraces: Attach
+
+# Alignment
+AlignAfterOpenBracket: true
+AlignTrailingComments: true
 
 # Spacing
 SpaceAfterCStyleCast: false
-SpaceAfterTemplateKeyword: true
-SpaceBeforeAssignmentOperators: true
 SpaceBeforeParens: ControlStatements
-SpaceInEmptyBlock: false
 SpacesBeforeTrailingComments: 1
-SpacesInAngles: Never
-SpacesInContainerLiterals: true
-SpacesInParens: Never
-SpacesInSquareBrackets: false
-
-# Alignment
-AlignAfterOpenBracket: Align
-AlignConsecutiveAssignments: false
-AlignConsecutiveDeclarations: false
-AlignConsecutiveMacros: false
-AlignEscapedNewlines: Right
-AlignOperands: Align
-AlignTrailingComments: true
 
 # Breaking
-AllowShortBlocksOnASingleLine: Never
-AllowShortCaseLabelsOnASingleLine: false
-AllowShortFunctionsOnASingleLine: All
-AllowShortIfStatementsOnASingleLine: Never
-AllowShortLambdasOnASingleLine: All
+AllowShortFunctionsOnASingleLine: true
+AllowShortIfStatementsOnASingleLine: false
 AllowShortLoopsOnASingleLine: false
-AlwaysBreakBeforeMultilineStrings: false
 BinPackArguments: true
 BinPackParameters: true
-BreakBeforeBinaryOperators: None
-BreakBeforeTernaryOperators: true
-BreakConstructorInitializers: BeforeColon
-BreakInheritanceList: BeforeColon
-BreakStringLiterals: true
 
-# Pointers and references
+# Pointers
 PointerAlignment: Right
-
-# Comments
-ReflowComments: true
-
-# Includes
-SortIncludes: CaseSensitive
-IncludeCategories:
-  # Project headers
-  - Regex: '^"'
-    Priority: 1
-    SortPriority: 0
-  # System headers
-  - Regex: '^<'
-    Priority: 2
-    SortPriority: 0
-
-# Namespaces
-CompactNamespaces: false
-FixNamespaceComments: true
-NamespaceIndentation: None
 
 # Misc
 Cpp11BracedListStyle: true
 DerivePointerAlignment: false
 MaxEmptyLinesToKeep: 1
-Standard: Latest
