@@ -164,7 +164,7 @@ jobs:
     - name: Package artifacts
       if: matrix.build_type == 'Release'
       run: |
-        cmake --install build/Release --prefix dist/
+        cmake --install build/Release --prefix dist/ --component runtime
         # Include STM32F4 firmware if it was built
         if [ -f build/Release/firmware/stm32f4/stm32f4_frequency_detector.hex ]; then
           mkdir -p dist/share/splitter/firmware/
