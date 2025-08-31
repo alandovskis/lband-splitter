@@ -9,9 +9,11 @@ public:
   MOCK_METHOD(bool, initialize, (uint32_t baud_rate), ());
   MOCK_METHOD(void, cleanup, (), ());
   MOCK_METHOD(bool, send_data, (const uint8_t *data, size_t length), ());
+  // clang-format off
   MOCK_METHOD(bool, receive_data,
               (uint8_t * data, size_t max_length, size_t &received_length,
                uint32_t timeout_ms), ());
+  // clang-format on
   MOCK_METHOD(bool, is_connected, (), (const));
   MOCK_METHOD(void, flush_buffers, (), ());
 };
