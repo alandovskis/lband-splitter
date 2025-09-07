@@ -1,0 +1,376 @@
+openapi: 3.0.3
+info:
+  title: L-Band RF Splitter/Combiner API
+  description: REST API for monitoring and controlling RF splitter/combiner system
+  version: 0.1.0
+  contact:
+    name: RF Splitter System
+    
+servers:
+  - url: http://{host}:8080/api/v1
+    variables:
+      host:
+        default: localhost
+
+paths:
+  /status:
+    get:
+      summary: Get system status
+      operationId: getSystemStatus
+      responses:
+        '200':
+          description: System status information
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SystemStatus'
+
+  /ports:
+    get:
+      summary: Get all RF port information
+      operationId: getAllPorts  
+      responses:
+        '200':
+          description: Array of RF port data
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/RFPort'
+
+  /ports/{portId}:
+    get:
+      summary: Get specific RF port information
+      operationId: getPort
+      parameters:
+        - name: portId
+          in: path
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 34
+      responses:
+        '200':
+          description: RF port data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RFPort'
+        '404':
+          description: Port not found
+
+    post:
+      summary: Enable/disable RF port
+      operationId: updatePortStatus
+      parameters:
+        - name: portId
+          in: path
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 34
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                enabled:
+                  type: boolean
+                  description: Enable or disable the port
+              required:
+                - enabled
+      responses:
+        '200':
+          description: Port status updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RFPort'
+        '400':
+          description: Invalid request
+        '404':
+          description: Port not found
+
+  /power:
+    get:
+      summary: Get power supply status
+      operationId: getPowerStatus
+      responses:
+        '200':
+          description: Power supply information
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PowerSupply'
+
+  /config:
+    get:
+      summary: Get system configuration
+      operationId: getConfiguration
+      responses:
+        '200':
+          description: System configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SystemConfiguration'
+      security:
+        - basicAuth: []
+
+    put:
+      summary: Update system configuration
+      operationId: updateConfiguration
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SystemConfiguration'
+      responses:
+        '200':
+          description: Configuration updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SystemConfiguration'
+        '400':
+          description: Invalid configuration
+        '401':
+          description: Unauthorized
+      security:
+        - basicAuth: []
+
+  /measurements/{portId}:
+    get:
+      summary: Get historical measurements for a port
+      operationId: getPortMeasurements
+      parameters:
+        - name: portId
+          in: path
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 34
+        - name: from
+          in: query
+          schema:
+            type: string
+            format: date-time
+          description: Start time (ISO 8601)
+        - name: to  
+          in: query
+          schema:
+            type: string
+            format: date-time
+          description: End time (ISO 8601)
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 10000
+            default: 1000
+      responses:
+        '200':
+          description: Historical measurement data
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SignalMeasurement'
+
+components:
+  schemas:
+    SystemStatus:
+      type: object
+      properties:
+        uptime_seconds:
+          type: integer
+          description: System uptime in seconds
+        active_ports:
+          type: integer
+          description: Number of ports with active signals
+        power_status:
+          type: string
+          enum: [normal, backup, fault]
+        last_updated:
+          type: string
+          format: date-time
+      required:
+        - uptime_seconds
+        - active_ports  
+        - power_status
+        - last_updated
+
+    RFPort:
+      type: object
+      properties:
+        id:
+          type: integer
+          minimum: 1
+          maximum: 34
+        type:
+          type: string
+          enum: [f_combiner, f_splitter, sma_combiner_out, sma_splitter_in]
+        status:
+          type: string
+          enum: [active, disabled, error, no_signal]
+        center_frequency_mhz:
+          type: number
+          minimum: 950
+          maximum: 2450
+          nullable: true
+        power_level_dbm:
+          type: number
+          minimum: -80
+          maximum: 20
+          nullable: true
+        snr_db:
+          type: number
+          minimum: 0
+          maximum: 50
+          nullable: true
+        modcod:
+          type: string
+          nullable: true
+          description: Detected modulation and coding
+        signal_present:
+          type: boolean
+        last_updated:
+          type: string
+          format: date-time
+      required:
+        - id
+        - type
+        - status
+        - signal_present
+        - last_updated
+
+    PowerSupply:
+      type: object
+      properties:
+        id:
+          type: integer
+          enum: [1, 2]
+        status:
+          type: string
+          enum: [active, standby, failed, unknown]
+        voltage:
+          type: number
+          minimum: 0
+          maximum: 15
+        current:
+          type: number
+          minimum: 0
+          maximum: 10
+        temperature:
+          type: number
+          minimum: -10
+          maximum: 70
+        is_primary:
+          type: boolean
+        last_updated:
+          type: string
+          format: date-time
+      required:
+        - id
+        - status
+        - voltage
+        - current
+        - temperature
+        - is_primary
+        - last_updated
+
+    SystemConfiguration:
+      type: object
+      properties:
+        device_name:
+          type: string
+          maxLength: 64
+        ip_address:
+          type: string
+          format: ipv4
+        netmask:
+          type: string
+          format: ipv4
+        gateway:
+          type: string
+          format: ipv4
+        ntp_server:
+          type: string
+          maxLength: 255
+        ssh_enabled:
+          type: boolean
+        web_enabled:
+          type: boolean
+        netconf_enabled:
+          type: boolean
+        measurement_interval_ms:
+          type: integer
+          minimum: 10
+          maximum: 10000
+        alarm_thresholds:
+          type: object
+          properties:
+            min_power_dbm:
+              type: number
+            max_power_dbm:
+              type: number
+            min_snr_db:
+              type: number
+        config_version:
+          type: string
+        last_modified:
+          type: string
+          format: date-time
+      required:
+        - device_name
+        - ssh_enabled
+        - web_enabled
+        - netconf_enabled
+        - measurement_interval_ms
+
+    SignalMeasurement:
+      type: object
+      properties:
+        port_id:
+          type: integer
+          minimum: 1
+          maximum: 34
+        timestamp:
+          type: string
+          format: date-time
+        center_frequency_mhz:
+          type: number
+          nullable: true
+        power_level_dbm:
+          type: number
+          nullable: true
+        snr_db:
+          type: number
+          nullable: true
+        modcod:
+          type: string
+          nullable: true
+        signal_quality:
+          type: number
+          minimum: 0
+          maximum: 100
+          nullable: true
+      required:
+        - port_id
+        - timestamp
+
+  securitySchemes:
+    basicAuth:
+      type: http
+      scheme: basic
