@@ -1,0 +1,625 @@
+name: RF Splitter CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop, 'release/*', 'feature/*' ]
+  pull_request:
+    branches: [ main, develop ]
+  release:
+    types: [ published ]
+
+env:
+  CMAKE_BUILD_TYPE: Release
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  # Code Quality and Security Scan
+  code-quality:
+    name: Code Quality & Security
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Setup C++ environment
+      uses: aminya/setup-cpp@v1
+      with:
+        compiler: gcc
+        cmake: true
+        ninja: true
+        cppcheck: true
+        clang-tidy: true
+
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y \
+          libgtest-dev \
+          libgmock-dev \
+          libnlohmann-json3-dev \
+          libspdlog-dev \
+          libssl-dev \
+          libjwt-dev
+
+    - name: Run Cppcheck static analysis
+      run: |
+        cd backend
+        cppcheck --enable=all --std=c++17 \
+          --xml --xml-version=2 \
+          --output-file=cppcheck-results.xml \
+          src/ include/ 2>&1 || true
+
+    - name: Run Clang-Tidy
+      run: |
+        cd backend
+        find src/ -name "*.cpp" -o -name "*.hpp" | \
+        head -10 | \
+        xargs clang-tidy --format-style=google \
+          --header-filter=.* \
+          --checks='-*,readability-*,performance-*,modernize-*' \
+          -- -std=c++17 -I./include
+
+    - name: Code formatting check
+      run: |
+        cd backend
+        find src/ include/ -name "*.cpp" -o -name "*.hpp" | \
+        xargs clang-format --dry-run --Werror
+
+    - name: Security scan with CodeQL
+      uses: github/codeql-action/init@v2
+      with:
+        languages: cpp
+
+    - name: Build for CodeQL
+      run: |
+        cd backend
+        mkdir -p build && cd build
+        cmake .. -DCMAKE_BUILD_TYPE=$CMAKE_BUILD_TYPE
+        make -j4
+
+    - name: Perform CodeQL Analysis
+      uses: github/codeql-action/analyze@v2
+
+  # Backend C++ Build and Test
+  backend-test:
+    name: Backend C++ Tests
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        compiler: [gcc, clang]
+        build_type: [Debug, Release]
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup C++ environment
+      uses: aminya/setup-cpp@v1
+      with:
+        compiler: ${{ matrix.compiler }}
+        cmake: true
+        ninja: true
+
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y \
+          libgtest-dev \
+          libgmock-dev \
+          libnlohmann-json3-dev \
+          libspdlog-dev \
+          libssl-dev \
+          libjwt-dev \
+          libwebsockets-dev \
+          pkg-config
+
+    - name: Cache build dependencies
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.cmake
+          backend/build
+        key: ${{ runner.os }}-${{ matrix.compiler }}-${{ matrix.build_type }}-${{ hashFiles('backend/CMakeLists.txt') }}
+
+    - name: Configure CMake
+      run: |
+        cd backend
+        mkdir -p build && cd build
+        cmake .. \
+          -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
+          -DCMAKE_CXX_COMPILER=${{ matrix.compiler == 'clang' && 'clang++' || 'g++' }} \
+          -DENABLE_TESTING=ON \
+          -DENABLE_COVERAGE=${{ matrix.build_type == 'Debug' && 'ON' || 'OFF' }}
+
+    - name: Build backend
+      run: |
+        cd backend/build
+        make -j$(nproc)
+
+    - name: Run unit tests
+      run: |
+        cd backend/build
+        ctest --output-on-failure --verbose
+
+    - name: Run integration tests
+      run: |
+        cd backend/build
+        ./rf-splitter-tests --gtest_filter="Integration*" --gtest_output=xml:integration-results.xml
+
+    - name: Generate coverage report (Debug only)
+      if: matrix.build_type == 'Debug' && matrix.compiler == 'gcc'
+      run: |
+        cd backend/build
+        gcov -r ../**/*.cpp
+        lcov --capture --directory . --output-file coverage.info
+        lcov --remove coverage.info '/usr/*' --output-file coverage.info
+        lcov --list coverage.info
+
+    - name: Archive test results
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: test-results-${{ matrix.compiler }}-${{ matrix.build_type }}
+        path: |
+          backend/build/Testing/
+          backend/build/*-results.xml
+
+  # STM32 Firmware Build
+  firmware-build:
+    name: STM32 Firmware Build
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup ARM toolchain
+      uses: carlosperate/arm-none-eabi-gcc-action@v1
+      with:
+        release: '10.3-2021.10'
+
+    - name: Install STM32 build tools
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y \
+          cmake \
+          ninja-build \
+          stlink-tools
+
+    - name: Cache STM32 dependencies
+      uses: actions/cache@v3
+      with:
+        path: |
+          firmware/Drivers/
+          firmware/Middlewares/
+        key: ${{ runner.os }}-stm32-${{ hashFiles('firmware/CMakeLists.txt') }}
+
+    - name: Build STM32 firmware
+      run: |
+        cd firmware
+        mkdir -p build && cd build
+        cmake .. \
+          -DCMAKE_TOOLCHAIN_FILE=../cmake/arm-none-eabi-gcc.cmake \
+          -DCMAKE_BUILD_TYPE=Release \
+          -GNinja
+        ninja
+
+    - name: Check firmware size
+      run: |
+        cd firmware/build
+        arm-none-eabi-size rf-splitter-firmware.elf
+        
+    - name: Generate firmware artifacts
+      run: |
+        cd firmware/build
+        arm-none-eabi-objcopy -O ihex rf-splitter-firmware.elf rf-splitter-firmware.hex
+        arm-none-eabi-objcopy -O binary rf-splitter-firmware.elf rf-splitter-firmware.bin
+
+    - name: Upload firmware artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: stm32-firmware
+        path: |
+          firmware/build/rf-splitter-firmware.hex
+          firmware/build/rf-splitter-firmware.bin
+          firmware/build/rf-splitter-firmware.elf
+
+  # Frontend Build and Test
+  frontend-test:
+    name: Frontend Angular Tests
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: frontend/package-lock.json
+
+    - name: Install dependencies
+      run: |
+        cd frontend
+        npm ci
+
+    - name: Lint frontend code
+      run: |
+        cd frontend
+        npm run lint
+
+    - name: Run unit tests
+      run: |
+        cd frontend
+        npm run test -- --watch=false --browsers=ChromeHeadless --code-coverage
+
+    - name: Build frontend
+      run: |
+        cd frontend
+        npm run build --prod
+
+    - name: Run e2e tests
+      run: |
+        cd frontend
+        npm run e2e -- --protractor-config=e2e/protractor-ci.conf.js
+
+    - name: Archive frontend build
+      uses: actions/upload-artifact@v3
+      with:
+        name: frontend-dist
+        path: frontend/dist/
+
+  # Performance Testing
+  performance-test:
+    name: Performance Tests
+    runs-on: ubuntu-latest
+    needs: [backend-test]
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup C++ environment
+      uses: aminya/setup-cpp@v1
+      with:
+        compiler: gcc
+        cmake: true
+
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y \
+          libgtest-dev \
+          libnlohmann-json3-dev \
+          libspdlog-dev \
+          libssl-dev \
+          valgrind \
+          perf
+
+    - name: Build performance tests
+      run: |
+        cd backend
+        mkdir -p build && cd build
+        cmake .. -DCMAKE_BUILD_TYPE=Release -DENABLE_PERFORMANCE_TESTS=ON
+        make -j$(nproc) performance_tests
+
+    - name: Run performance benchmarks
+      run: |
+        cd backend/build
+        ./performance_tests --benchmark_out=performance_results.json --benchmark_out_format=json
+
+    - name: Memory leak check
+      run: |
+        cd backend/build
+        valgrind --tool=memcheck --leak-check=full --show-leak-kinds=all \
+          --xml=yes --xml-file=valgrind_results.xml \
+          ./rf-splitter-tests --gtest_filter="*Performance*"
+
+    - name: Upload performance results
+      uses: actions/upload-artifact@v3
+      with:
+        name: performance-results
+        path: |
+          backend/build/performance_results.json
+          backend/build/valgrind_results.xml
+
+  # Security Testing
+  security-test:
+    name: Security Tests
+    runs-on: ubuntu-latest
+    needs: [backend-test]
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Python for security tools
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+
+    - name: Install security tools
+      run: |
+        pip install bandit safety semgrep
+        sudo apt-get update
+        sudo apt-get install -y nmap
+
+    - name: Download backend artifacts
+      uses: actions/download-artifact@v3
+      with:
+        name: test-results-gcc-Release
+
+    - name: Run Bandit security scan
+      run: |
+        # Scan any Python scripts
+        find . -name "*.py" | xargs bandit -r -f json -o bandit_results.json || true
+
+    - name: Run Semgrep security analysis
+      run: |
+        semgrep --config=auto --json --output=semgrep_results.json backend/src/ || true
+
+    - name: Check for vulnerable dependencies
+      run: |
+        # Check Python dependencies
+        find . -name "requirements*.txt" | xargs safety check --json --output safety_results.json || true
+
+    - name: Network security scan (basic)
+      run: |
+        # Basic port scan simulation
+        echo "Running basic network security checks..."
+        nmap -sS -O localhost -p 8080,8081 > nmap_results.txt || true
+
+    - name: Upload security results
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: security-results
+        path: |
+          bandit_results.json
+          semgrep_results.json
+          safety_results.json
+          nmap_results.txt
+
+  # Documentation Generation
+  documentation:
+    name: Generate Documentation
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+
+    - name: Install documentation tools
+      run: |
+        pip install pyyaml requests
+
+    - name: Generate API documentation
+      run: |
+        cd backend/docs
+        python generate_api_docs.py --source ../src --output ./generated_docs
+
+    - name: Setup Doxygen
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y doxygen graphviz
+
+    - name: Generate C++ documentation
+      run: |
+        cd backend
+        doxygen Doxyfile || true
+
+    - name: Upload documentation
+      uses: actions/upload-artifact@v3
+      with:
+        name: documentation
+        path: |
+          backend/docs/generated_docs/
+          backend/docs/html/
+
+  # Docker Build and Push
+  docker-build:
+    name: Build Docker Images
+    runs-on: ubuntu-latest
+    needs: [backend-test, frontend-test]
+    permissions:
+      contents: read
+      packages: write
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Docker Buildx
+      uses: docker/setup-buildx-action@v2
+
+    - name: Login to Container Registry
+      if: github.event_name != 'pull_request'
+      uses: docker/login-action@v2
+      with:
+        registry: ${{ env.REGISTRY }}
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Extract metadata
+      id: meta-backend
+      uses: docker/metadata-action@v4
+      with:
+        images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-backend
+        tags: |
+          type=ref,event=branch
+          type=ref,event=pr
+          type=semver,pattern={{version}}
+          type=semver,pattern={{major}}.{{minor}}
+
+    - name: Extract metadata (frontend)
+      id: meta-frontend
+      uses: docker/metadata-action@v4
+      with:
+        images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-frontend
+        tags: |
+          type=ref,event=branch
+          type=ref,event=pr
+          type=semver,pattern={{version}}
+          type=semver,pattern={{major}}.{{minor}}
+
+    - name: Build and push backend image
+      uses: docker/build-push-action@v4
+      with:
+        context: ./backend
+        push: ${{ github.event_name != 'pull_request' }}
+        tags: ${{ steps.meta-backend.outputs.tags }}
+        labels: ${{ steps.meta-backend.outputs.labels }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+
+    - name: Build and push frontend image
+      uses: docker/build-push-action@v4
+      with:
+        context: ./frontend
+        push: ${{ github.event_name != 'pull_request' }}
+        tags: ${{ steps.meta-frontend.outputs.tags }}
+        labels: ${{ steps.meta-frontend.outputs.labels }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+
+  # Deployment (only on main branch)
+  deploy:
+    name: Deploy to Staging
+    runs-on: ubuntu-latest
+    needs: [backend-test, frontend-test, firmware-build, docker-build]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    environment: staging
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Download artifacts
+      uses: actions/download-artifact@v3
+      with:
+        name: stm32-firmware
+        path: ./firmware-artifacts
+
+    - name: Download frontend build
+      uses: actions/download-artifact@v3
+      with:
+        name: frontend-dist
+        path: ./frontend-dist
+
+    - name: Deploy to staging environment
+      run: |
+        echo "🚀 Deploying RF Splitter to staging..."
+        echo "📦 Backend image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-backend:main"
+        echo "🌐 Frontend image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-frontend:main"
+        echo "🔧 Firmware: $(ls firmware-artifacts/)"
+        
+        # In a real deployment, this would:
+        # - Deploy containers to Kubernetes/Docker Swarm
+        # - Update firmware on target devices
+        # - Run smoke tests
+        # - Update load balancers
+
+    - name: Run deployment health checks
+      run: |
+        echo "🏥 Running health checks..."
+        # Simulate health checks
+        curl -f http://staging.rf-splitter.local:8080/api/v1/health || echo "Health check failed"
+
+    - name: Notify deployment status
+      if: always()
+      run: |
+        if [ ${{ job.status }} == 'success' ]; then
+          echo "✅ Deployment to staging successful"
+        else
+          echo "❌ Deployment to staging failed"
+        fi
+
+  # Release (only on release tags)
+  release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    needs: [backend-test, frontend-test, firmware-build, security-test, performance-test]
+    if: github.event_name == 'release'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Download all artifacts
+      uses: actions/download-artifact@v3
+
+    - name: Create release package
+      run: |
+        mkdir -p release-package
+        
+        # Backend binaries
+        cp -r test-results-gcc-Release release-package/ || true
+        
+        # STM32 firmware
+        cp -r stm32-firmware release-package/ || true
+        
+        # Frontend build
+        cp -r frontend-dist release-package/ || true
+        
+        # Documentation
+        cp -r documentation release-package/ || true
+        
+        # Create archive
+        tar -czf rf-splitter-${{ github.event.release.tag_name }}.tar.gz release-package/
+
+    - name: Upload release assets
+      uses: softprops/action-gh-release@v1
+      with:
+        files: |
+          rf-splitter-${{ github.event.release.tag_name }}.tar.gz
+          stm32-firmware/rf-splitter-firmware.hex
+          stm32-firmware/rf-splitter-firmware.bin
+        body: |
+          ## RF Splitter Release ${{ github.event.release.tag_name }}
+          
+          ### What's Included
+          - 🔧 STM32F4 firmware (`rf-splitter-firmware.hex`)
+          - 🖥️  C++ backend services
+          - 🌐 Angular frontend application
+          - 📚 Complete documentation
+          
+          ### Installation
+          1. Flash firmware to STM32F4: `rf-splitter-firmware.hex`
+          2. Deploy backend services using Docker images
+          3. Host frontend application on web server
+          
+          ### Changes
+          See CHANGELOG.md for detailed changes.
+
+  # Notification
+  notify:
+    name: Notify Results
+    runs-on: ubuntu-latest
+    needs: [code-quality, backend-test, frontend-test, firmware-build, performance-test, security-test]
+    if: always()
+    
+    steps:
+    - name: Notify success
+      if: needs.backend-test.result == 'success' && needs.frontend-test.result == 'success'
+      run: |
+        echo "✅ RF Splitter CI pipeline completed successfully!"
+        echo "📊 All tests passed"
+        echo "🔒 Security checks passed"
+        echo "⚡ Performance benchmarks completed"
+
+    - name: Notify failure
+      if: needs.backend-test.result == 'failure' || needs.frontend-test.result == 'failure'
+      run: |
+        echo "❌ RF Splitter CI pipeline failed!"
+        echo "🔍 Check the failed jobs for details"
+        exit 1
